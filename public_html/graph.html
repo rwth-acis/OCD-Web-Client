@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays detailed information on a single graph. Allows OCD algorithm execution. -->
+    <head>
+        <title>OCD - Graph</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <style type="text/css">
+        </style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/graphTableHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/jquery.panzoom.js"></script>
+        <script src="JS/jquery.mousewheel.js"></script>
+        <script type="text/javascript">
+            /* Id of the graph */
+            var graphId = getUrlVar("id");
+            /* Graph meta information in xml format */
+            var graphMetaXml;
+            /* Graph structure in edge list format */
+            var graphEdgeList;
+            /* Graph visualization in SVG format */
+            var visualization;
+            /* Names of all OCD algorithms */
+            var algorithmNames;
+            /* Executed after page loading */
+            $(document).ready(function() {
+                /* Identifiers for the graph information to be displayed */
+                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
+                    /* Requests the graph meta information */
+                    sendRequest("get", "graph/" + graphId + "/outputFormat/META_XML", "",
+                        /* Response handler */
+                        function(response) {
+                            /* Stores graph meat information and adds it to the table */
+                            graphMetaXml = response;
+                            appendGraphRow($('#graphMetaTable'), graphMetaXml, cells);
+                            /* Registers components and event handlers */
+                            registerGraphTable();
+                            registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
+                            registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                            registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Graph was not received.");
+                    }, "text");
+                /*
+                * Run algorithm form listener.
+                */
+                $('#runAlgorithmForm').submit(function(){
+                    var algo = $('#algorithm').val();
+                    if(algo !== getSelectOptionVal()) {
+                        var params = getParameterXml("#algorithmParams");
+                        var coverName = $("#coverName").val();
+                        if(coverName === "") {
+                            showErrorMessage('Please define a cover name.'); 
+                            return;
+                        }
+                        /* Requests an algorithm execution  */
+                        sendRequest("post", "cover/graph/" + graphId 
+                                + "/name/" + coverName + "/algorithm/" + algo, params,
+                            /* Response handler */
+                            function(response) {
+                                window.location.href = 'index.html';
+                            },
+                            /* Error handler */
+                            function(errorData) {
+                                /*
+                                 * Run algorithm request failed
+                                 */
+                                showConnectionErrorMessage("Algorithm request failed.");
+                        });
+                    }
+                    return false;
+                });
+            });
+            /* Requests the names of all OCD algorithms.
+             * Then executes a callback function */
+            function getAlgorithmNames(callback) {
+                sendRequest("get", "algorithms/names", "",
+                        /* Response handler */
+                        function(response) {
+                            algorithmNames = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Algorithm names were not received.");
+                        });
+            }
+            /* Requests all parameter names for a given algorithm.
+             * Then executes a calllback function */
+            function getAlgorithmParameters(algorithmName, callback) {
+                sendRequest("get", "algorithm/" + algorithmName + "/parameters/default", "",
+                        /* Response handler */
+                        function(response) {
+                            if(typeof callback !== 'undefined') {
+                                callback(response);
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Algorithm parameters were not received.");
+                        });
+            }
+            /* Handles the collapsable element for the algorithm execution. */
+            function runAlgorithmCollapsableHandler() {
+                if(typeof algorithmNames === 'undefined') {
+                    /* Adds all algorithm names to the form */
+                    getAlgorithmNames(function() {
+                        $(algorithmNames).find('Name').each(function() {
+                            if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH') {
+                                $("#algorithm").append(
+                                    '<option value="' + $(this).text()
+                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                            }
+                        });
+                    });
+                    /* Registers the parameter table component for the contentHandler */
+                    registerParameterSelect("#algorithm", "#algorithmParameterRow", getAlgorithmParameters);
+                }
+            }
+            /* Requests and stores the edge list of the graph.
+             * Then executes a callback function */
+            function getEdgeList(callback) {
+                sendRequest("get", "graph/" + graphId + "/outputFormat/WEIGHTED_EDGE_LIST", "",
+                        /* Response handler */
+                        function(response) {
+                            graphEdgeList = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Graph was not received.");
+                        }, "text");
+            }
+            /* Handles the collapsable element for the edge list. */
+            function edgeListCollapsableHandler() {
+                if(typeof graphEdgeList === 'undefined') {
+                    /* Requests the edge list */
+                    getEdgeList(function() {
+                            /* Adds the edge list information to a table */
+                            var lines = graphEdgeList.split('\n');
+                            $.each(lines, function(key, line) {
+                                var parts = line.split(' ');
+                                if($(parts).length === 3) {
+                                    var row = '<tr>'
+                                        + '<td>' + parts[0] + '</td>'
+                                        + '<td>' + parts[1] + '</td>'
+                                        + '<td>' + parts[2] + '</td>'
+                                        + '</tr>';
+                                    $("#graphEdgeTable tbody").append(row);
+                                }
+                            });
+                            $("#graphEdgeTable").tablesorter({sortList: [[0,0], [1,0]]});
+                        });
+                }
+            }
+            /* Handles the collapsable element for the graph visualization */
+            function visualizationCollapsableHandler() {
+                /* Requests the graph visualization */
+                if(typeof visualization === 'undefined') {
+                    getVisualization();
+                }
+                /* Registers the visualization for panzoom */
+                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
+                $panzoom.on('mousewheel', function( e ) {
+                    e.preventDefault();
+                    var delta = e.delta || e.originalEvent.wheelDelta;
+                    var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+                    $panzoom.panzoom('zoom', zoomOut, {
+                        increment: 0.1,
+                        animate: false,
+                        focal: e
+                    });
+                });
+            }
+            /* Requests and stores the graph visualization */
+            function getVisualization() {
+                sendViewerRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+                    /* Request handler */
+                    function(response) {
+                        visualization = response;
+                        $('.visualizationGraphic').append(visualization);
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Visualization was not received.");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Container for error message display -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Table for graph meta information -->
+                    <div class="tableWrapper">
+                        <table id="graphMetaTable">
+                            <thead>
+                            <tr>
+                                <th class="hidden" title="Id"></th>
+                                <th width="300" title="Graph Name">
+                                    Name
+                                </th>
+                                <th width="120" title="Node Count">
+                                    Nodes
+                                </th>
+                                <th width="120" title="Edge Count">
+                                    Edges
+                                </th>
+                                <th width="20" title="Has Directed Edges">
+                                    D
+                                </th>
+                                <th width="20" title="Has Weighted Edges">
+                                    W
+                                </th>
+                                <th width="20" title="Has Zero Edge Weights">
+                                    Z
+                                </th>
+                                <th width="20" title="Has Negative Edge Weights">
+                                    N
+                                </th>
+                                <th width="20" title="Has Self Loops">
+                                    L
+                                </th>
+                                <th width="20" title="Show Covers">
+                                    C
+                                </th>
+                                <th width="20" title="Remove Graph">
+                                    R
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <!-- Collapsable for graph edge list -->
+                    <div id="edgeListCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Edges</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table for graph edge list -->
+                            <div class="tableWrapper">
+                                <table id="graphEdgeTable">
+                                    <thead>
+                                    <tr>
+                                        <th width="300" title="Source Node">
+                                            Source
+                                        </th>
+                                        <th width="120" title="Target Node">
+                                            Target
+                                        </th>
+                                        <th width="120" title="Edge Weight">
+                                            Edges
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Colapsable for algorithm execution -->
+                    <div id="runAlgorithmCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Run Algorithm</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Form for algorithm execution -->
+                            <div class="formWrapper">
+                                <div class="formDiv">
+                                    <form id="runAlgorithmForm" class="parameterized" action="javascript:void(0); return false;">
+                                        <div class="formContentWrapper">
+                                            <table class="formTable">
+                                                <tr>
+                                                    <td>
+                                                        Algorithm:
+                                                    </td>
+                                                    <td>
+                                                        <select id="algorithm" class="nonparameter">
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                <tr id ="algorithmParameterRow" class="hidden">
+                                                    <td>
+                                                        Parameters:
+                                                    </td>
+                                                    <td>
+                                                        <div class="tableWrapper">
+                                                            <table id="algorithmParams">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th title="Parameter Name">Name</th>
+                                                                        <th title="Default Value">Default</th>
+                                                                        <th title="Use Non-Default Parameter">Value</th> 
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody></tbody>
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        Cover Name:
+                                                    </td>
+                                                    <td>
+                                                        <input id="coverName" class="nonparameter" type="text">
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="submitWrapper">
+                                            <input name="submit" id="runAlgorithmBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for graph visualization -->
+                    <div id="visualizationCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Visualization</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Container for graph visualization -->
+                            <div class="visualization">
+                                <div class="visualizationControl">
+                                    <input class="visualizationZoomer" type="range">
+                                </div>
+                                <div class="visualizationContent">
+                                    <div class="visualizationGraphic">
+                                    </div>    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

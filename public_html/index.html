@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays running OCD tasks, i.e. OCD algorithms, benchmarks and metrics in execution -->
+    <head>
+        <title>OCD - Overlapping Community Detection</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <style type="text/css">
+            #welcomeMessage {
+                text-align: center;
+            }
+        </style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/coverTableHandler.js"></script>
+        <script type="text/javascript">
+            /* Information of covers in creation (by OCD algorithm or benchmark) */
+            var algoCoverMetasXml;
+            /* Executed after page laoding */
+            $(document).ready(function() {
+                /*
+                 * Register event handlers
+                 */
+                registerCollapsable("#runningAlgorithmsCollapsable", runningAlgorithmsCollapsableHandler);
+                registerCollapsable("#runningMetricsCollapsable", runningMetricsCollapsableHandler);
+                /*
+                 * Open tables
+                 */
+                $("#runningAlgorithmsCollapsable").find(".collapsableDisplayBtn").click();
+                $("#runningMetricsCollapsable").find(".collapsableDisplayBtn").click();
+            });
+            /* Handles collapsable element for covers in creation */
+            function runningAlgorithmsCollapsableHandler() {
+                if(typeof algoCoverMetasXml === 'undefined') {
+                    /* Requests cover meta information of covers in creation */
+                    getAlgoCoverMetas(function() {
+                        /* Identifiers for the cover information to be displayed */
+                        var cells = ["Name", "Graph", "CreationMethod", "R"];
+                        /* Adds the cover to the table */
+                        $(algoCoverMetasXml).find("Cover").each(function() {
+                            appendCoverRow($('#runningAlgorithmsTable'), $(this), cells);
+                        });
+                        /*
+                         * Sort Table
+                         */
+                        try {
+                            $("#runningAlgorithmsTable").tablesorter({sortList: [[0,0],[1,0]], 
+                                headers: { 5: { sorter: false}}});
+                        } catch(err) { /* table empty */ }
+                        /* Registers the table component */
+                        registerCoverTable("#runningAlgorithmsTable");
+                    });
+                }
+            }
+            /* Requests the meta information of covers in creation */
+            function getAlgoCoverMetas(callback) {
+                sendRequest("get", "covers?executionStatuses=RUNNING-WAITING&includeMeta=TRUE", "",
+                    /* Response handler */
+                    function(response) {
+                         /*
+                         * CoverMetas request succeeded
+                         */
+                        algoCoverMetasXml = response;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Cover metas request failed
+                         */
+                        showConnectionErrorMessage("Cover metas were not received.");
+                });
+            }
+            /* Handles collapsable element for covers with metrics in execution */
+            function runningMetricsCollapsableHandler() {
+                if(typeof metricCoverMetasXml === 'undefined') {
+                    /* Requests the cover information  */
+                    getMetricCoverMetas(function() {
+                        /* Identifiers for the cover information to be displayed */
+                        var cells = ["Name", "Graph", "CreationMethod"];
+                        /* Adds covers to the table */
+                        $(metricCoverMetasXml).find("Cover").each(function() {
+                            var metricIds = [];
+                            $(this).find("Metric").each(function() {
+                                if($(this).find("Status").text() === "RUNNING") {
+                                    metricIds.push($(this).find("Id").text());
+                                }
+                            });
+                            for (var i = 0; i < metricIds.length; i = i + 1) {
+                                appendCoverRow($('#runningMetricsTable'), $(this), cells);
+                                /*
+                                 * Append delete button and metric id.
+                                 */
+                                $('#runningMetricsTable').find('tr').last().append(
+                                    '<td>'
+                                    + '<img class="icon iconBtn delMetric" src="IMG/open-iconic/svg/trash.svg" alt="r">'
+                                    + '</td>'
+                                    + '<td class="hidden metricId">'
+                                    + metricIds[i]
+                                    + '</td>'
+                                );
+                            }   
+                        });
+                        /*
+                         * Sort Table
+                         */
+                        try {
+                            $("#runningMetricsTable").tablesorter({sortList: [[0,0],[1,0]] /*, 
+                                headers: { 5: { sorter: false}}*/ });
+                        } catch(err) { /* table empty */ }
+                        registerCoverTable("#runningMetricsTable");
+                        /*
+                         * Register delete handlers.
+                         */
+                        $("#runningMetricsTable").find('.delMetric').click(function(){
+                            var coverId = $(this).parent().siblings().filter('.coverId');
+                            var graphId = $(this).parent().siblings().filter('.graphId');
+                            var metricId = $(this).parent().siblings().filter('.metricId');
+                            deleteMetric(coverId, graphId, metricId);
+                        });
+                    });
+                }
+            }
+            /* Requests the interruption of a metric execution */
+            function deleteMetric(coverId, graphId, metricId) {
+                sendRequest("delete", "cover/" + coverId.text() + "/graph/" + graphId.text()
+                    + "/metric/" + metricId.text(), "",
+                    /* Response handler */
+                    function(confirmXml) {
+                        var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
+                        var newUrl = "index.html";
+                        window.location.href = newUrl;
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        showConnectionErrorMessage("Cover could not be deleted.");
+                });
+            }
+            /* Requests the cover information of covers with running metrics */
+            function getMetricCoverMetas(callback) {
+                sendRequest("get", "covers?executionStatuses=COMPLETED&metricExecutionStatuses=RUNNING-WAITING&includeMeta=TRUE", "",
+                    /* Response handler */
+                    function(response) {
+                         /*
+                         * CoverMetas request succeeded
+                         */
+                        metricCoverMetasXml = response;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Cover metas request failed
+                         */
+                        showConnectionErrorMessage("Cover metas were not received.");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Container for displaying error messages -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Collapsable for covers in creation -->
+                    <div id="runningAlgorithmsCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Running Benchmarks and Algorithms</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table of covers in creation -->
+                            <div class="tableWrapper">
+                                <table id="runningAlgorithmsTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="hidden" title="CoverId"></th>
+                                            <th class="hidden" title="GraphId"></th>
+                                            <th width="300" title="Cover Name" class="sortable">
+                                                Name
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="300" title="Graph Name" class="sortable">
+                                                Graph
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="300" title="Creation Method Name" class="sortable">
+                                                Creation Method
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="20" title="Stop Execution and Remove Cover">
+                                                R
+                                            </th>
+                                            <th class="hidden" title="MetricId"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for covers with running metrics -->
+                    <div id="runningMetricsCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Running Metrics</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table of covers with running metrics -->
+                            <div class="tableWrapper">
+                                <table id="runningMetricsTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="hidden" title="CoverId"></th>
+                                            <th class="hidden" title="GraphId"></th>
+                                            <th width="300" title="Cover Name" class="sortable">
+                                                Name
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="300" title="Graph Name" class="sortable">
+                                                Graph
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="300" title="Creation Method Name" class="sortable">
+                                                Creation Method
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="20" title="Stop Execution and Remove Metric">
+                                                R
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

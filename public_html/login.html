@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <!-- Login page -->
+    <head>
+        <title>OCD - Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script type="text/javascript">
+            /* Validates the login data */
+            function validateLogin() {
+                /* Stores the login data as session variables */
+                $.session.set('userName', $("#loginName").val());
+                $.session.set('userPw', $("#loginPw").val());
+                /* Requests login data validation */
+                sendRequest("get", "validate", "",
+                    /* Response handler. Login succeeded */
+                    function (data) {
+                        /* Login Succeeded */
+                        $.session.set('isLoggedIn', new Boolean(true));
+                        window.location.replace("index.html");
+                    },
+                    /* Error handler. Login failed (possibly also due to technical reasons) */
+                    function(data) {
+                        alert(data);
+                        showErrorMessage("Login is invalid!");
+                });
+                //requestSender.sendRequestObj(request);
+            }
+            // Login Form Listener
+            $(function() {
+                $('#loginForm').submit(function(){
+                    validateLogin();
+                    return false;
+                });
+            });
+        </script>
+        <script src="login.js"></script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Container for displaying error messages -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Login form -->
+                    <div class="formWrapper">
+                        <div class="formDiv">
+                            <form id="loginForm" name="loginForm" action="javascript:void(0); return false;">
+                                <div class="formContentWrapper">
+                                    <table class="formTable">
+                                        <!-- Login name -->
+                                        <tr>
+                                            <td>
+                                                Name:
+                                            </td>
+                                            <td>
+                                                <input id="loginName" name="loginName" type="text" size="30">
+                                            </td>
+                                        </tr>
+                                        <!-- Login password -->
+                                        <tr>
+                                            <td>
+                                                Password:
+                                            </td>
+                                            <td>
+                                                <input id="loginPw" type="password" size="30">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <!-- Form submit -->
+                                <div class="submitWrapper">
+                                    <input name="submit" id="loginIconBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/account-login.svg" alt="Login">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

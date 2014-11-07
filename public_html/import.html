@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<!--
+Facilitates import / upload of new graphs and covers.
+-->
+<html>
+    <head>
+        <title>OCD - Import</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <style type="text/css">
+            select {
+                width: 350px;
+            }
+            input[type=text] {
+                width: 350px;
+            }
+        </style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/graphTableHandler.js"></script>
+        <script type="text/javascript">
+            /* Names of all input formats */
+            var inputFormatNames;
+            /* Creator/creation type of a graph / cover */
+            var creatorTypes;
+            /* Defaul select option value */
+            var selectOptionVal = "SELECT";
+            /* Graphs displayed per page (for cover upload) */
+            var GRAPHS_PER_PAGE = 20;
+            /* Current graph page number */
+            var pageNumber = 0;
+            /* Default select option code */
+            var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
+            /* Executed after page loading */
+            $(document).ready(function() {
+                /* Import form initialization */
+                $("#objectType").append(
+                        selectOptionStr
+                        + '<option value="graph">Graph</option>'
+                        + '<option value="cover">Cover</option>'
+                );
+                /*
+                * Import form listener.
+                */
+                $('#importForm').submit(function(){
+                    /*
+                     * Verifies input
+                     */
+                    if($("#objectType").val() === selectOptionVal) {
+                        showErrorMessage('Please select an import option.'); 
+                        return;
+                    }
+                    else if($("#objectFormat").val() === selectOptionVal) {
+                        showErrorMessage('Please select an import format.'); 
+                        return;
+                    }
+                    else if($("#objectName").val() === "") {
+                        showErrorMessage('Please define a name.'); 
+                        return;
+                    }
+                    if($("#objectType").val() === "cover") {
+                        if($("#objectCreator").val() === selectOptionVal) {
+                            showErrorMessage('Please select an Algorithm.');
+                            return;
+                        }
+                        var graphId = $("input[name='graphSelect']:checked").val();
+                        if(typeof graphId === 'undefined') {
+                            showErrorMessage('Please select a graph.');
+                            return;
+                        }
+                    }
+                    else if($("#objectType").val() === "graph") {
+                        if($("#objectCreator").val() === selectOptionVal) {
+                            showErrorMessage('Please select a Benchmark.');
+                            return;
+                        }
+                    }
+                    else {
+                        /* Should not happen */
+                        showErrorMessage('Client Error.');
+                        return;
+                    }
+                    /*
+                     * Verifies browser compatibility
+                     */
+                    if (window.File && window.FileReader && window.FileList && window.Blob) {
+                        var file = $("#objectFile").get(0).files[0];
+                        if(file) {
+                            /* Reads input file */
+                            var reader = new FileReader();
+                            reader.onload = function(e) {
+                                var content = e.target.result;
+                                if($("#objectType").val() === "graph") {
+                                    /* Requests graph import */
+                                    postGraph(content);
+                                }
+                                else if($("#objectType").val() === "cover") {
+                                    /* Requests cover import */
+                                    postCover(content);
+                                }
+                                else {
+                                    showErrorMessage("Client Error");
+                                }
+                            };
+                            reader.readAsText(file);
+                        }
+                        else {
+                           showErrorMessage('File could not be loaded.'); 
+                        }
+                    /*
+                     * Browser not compatible
+                     */
+                    } else {
+                      showErrorMessage('Your Browser does not support html file input.');
+                    }
+                });
+                /*
+                 * Object type select listener
+                 */
+                $("#objectType").change(function() {
+                    /* Form initialization */
+                    $("#objectFormat").empty();
+                    $("#objectCreator").empty();
+                    $(".selectorWrapper").css("display", "none");
+                    $(".graphOptionsRow").css("display", "none");
+                    $("#objectType option:selected").each(function() {
+                        if($(this).val() !== selectOptionVal) {
+                            /* Requests input format names and adds them to the form */
+                            getInputFormats(function() {
+                                $("#objectFormat").append(selectOptionStr);
+                                $(inputFormatNames).find('Name').each(function() {
+                                    $("#objectFormat").append(
+                                        '<option value="' + $(this).text()
+                                        + '">' + parseEnumName($(this).text()) + '</option>');
+                                });
+                            });
+                            /* Loads and displays graph table to select a corresponding graph */
+                            if($(this).val() === "cover") { 
+                                loadGraphTable();
+                                $(".selectorWrapper").css("display", "block");
+                            }
+                            /* Displays graph import options */
+                            else if($(this).val() === "graph") {
+                                $(".graphOptionsRow").css("display", "table-row");
+                            }
+                            else {
+                                showErrorMessage("Client Error");
+                            }
+                            /* Loads and displays creator types */
+                            getCreatorTypes(function() {
+                                $("#objectCreator").append(selectOptionStr);
+                                $(creatorTypes).find('Name').each(function() {
+                                    $("#objectCreator").append(
+                                        '<option value="' + $(this).text()
+                                        + '">' + parseEnumName($(this).text()) + '</option>');
+                                });
+                            });
+                            $("#objectCreatorRow").css("display", "table-row");
+                        }
+                        else {
+                            $("#objectCreatorRow").css("display", "none");
+                        }
+                    });
+                });
+            });
+            /* Requests a graph import */
+            function postGraph(content) {
+                var doMakeUndirected = $('#doMakeUndirected').prop('checked');
+                sendRequest("post", "graph/name/" + $("#objectName").val() +
+                                "/creationmethod/" + $("#objectCreator").val() 
+                                + "/inputFormat/" + $("#objectFormat").val()
+                                + "?doMakeUndirected=" + doMakeUndirected, content,
+                            /* Response handler */
+                            function(response) {
+                                window.location.href = 'graphs.html';
+                            },
+                            /* Error handler */
+                            function(errorData) {
+                                /*
+                                 * Request failed
+                                 */
+                                showConnectionErrorMessage("Graph could not be sent.");
+                        });
+            }
+            /* Requests a cover import */
+            function postCover(filecontent) {
+                var graphId = $("input[name='graphSelect']:checked").val();
+                sendRequest("post", "cover/graph/" + graphId + "/name/" + $("#objectName").val() + "/creationmethod/" + 
+                                $("#objectCreator").val() + "/inputFormat/" + $("#objectFormat").val(), filecontent,
+                            /* Response handler */
+                            function(response) {
+                                window.location.href = 'covers.html';
+                            },
+                            /* Error handler */
+                            function(errorData) {
+                                /*
+                                 * Request failed
+                                 */
+                                showConnectionErrorMessage("Cover could not be sent.");
+                        });
+            }
+            /* Requests input format names.
+             * Then executes a callback function. */
+            function getInputFormats(callback) {
+                sendRequest("get", $("#objectType").val() + "s/formats/input/names", "",
+                        /* Response handler */
+                        function(response) {
+                            inputFormatNames = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Request failed
+                             */
+                            showConnectionErrorMessage("Input format names were not received.");
+                        });
+            }
+            /* Requests creator type names.
+             * Then executes a callback function. */
+            function getCreatorTypes(callback) {
+                sendRequest("get", $("#objectType").val() + "s/creationmethods/names", "",
+                        /* Response handler */
+                        function(response) {
+                            creatorTypes = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Request failed
+                             */
+                            var errString;
+                            if($("#objectType").val() === "graph") {
+                                errString = "Graph creation methods were not received.";
+                                showConnectionErrorMessage(errString);
+                            }
+                            else if($("#objectType").val() === "cover") {
+                                errString = "Cover creation methods were not received.";
+                                showConnectionErrorMessage(errString);
+                            }
+                            else {
+                                // Should not happen.
+                                errString = "Client Error";
+                                showErrorMessage(errString);
+                            }
+                        });
+            }
+            /* Requests graph information and displays a graph table */
+            function loadGraphTable() {
+                /* Table initialization */
+                $('#graphTable tbody').empty();
+                $('.pageNumWrapper').empty();
+                $('.pageNumWrapper').append(pageNumber);
+                var firstIndex = GRAPHS_PER_PAGE * pageNumber;
+                /* Identifiers for the graph information to be displayed */
+                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "Select"];
+                /* Requests the graph information */
+                sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
+                    /* Response handler */
+                    function(graphMetasXml) {
+                        /*
+                         * GraphMetas request succeeded
+                         */
+                        if($(graphMetasXml).find("Id").length === 0 && pageNumber > 0) {
+                            pageNumber--;
+                            loadGraphTable();
+                        }
+                        /* Adds graph information to the table */
+                        $(graphMetasXml).find("Graph").each(function() {
+                            appendGraphRow($('#graphTable'), $(this), cells);
+                        });
+                            /*
+                             * Sort Table
+                             */
+                            try {
+                                $("#graphTable").tablesorter({sortList: [[0,0]], 
+                                    headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
+                                        8: {sorter: false}, 9: {sorter: false}}});
+                            } catch(err) { /* table empty */ }
+                    },
+                    function(errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Graphs metas were not received.");
+                });
+                /* Listeners for table page control */
+                $('.pageLeft').click(function(){
+                    if(pageNumber > 0) {
+                        pageNumber--;
+                        loadGraphTable();
+                    }
+                });
+                $('.pageRight').click(function(){
+                    pageNumber++;
+                    loadGraphTable();
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div>
+            <div id="wrapper">
+                <div id="contentWrapper">
+                    <div id="content">
+                        <!-- Container for displaying error messages -->
+                        <div id="errorMessageWrapper">
+                            <div id="errorMessage"></div>
+                        </div>
+                        <!-- Import form -->
+                        <div class="formWrapper">
+                            <div class="formDiv">
+                                <form id="importForm" action="javascript:void(0); return false;">
+                                    <div class="formContentWrapper">
+                                        <table class="formTable">
+                                            <!-- Import object type, i.e. cover or graph -->
+                                            <tr>
+                                                <td>
+                                                    Import:
+                                                </td>
+                                                <td>
+                                                    <select id="objectType">
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <!-- Input format -->
+                                            <tr>
+                                                <td>
+                                                    Format:
+                                                </td>
+                                                <td>
+                                                    <select id="objectFormat">
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <!-- Input file -->
+                                            <tr>
+                                                <td>
+                                                    File:
+                                                </td>
+                                                <td>
+                                                    <input id="objectFile" type="file">
+                                                </td>
+                                            </tr>
+                                            <!-- Name for imported object -->
+                                            <tr>
+                                                <td>
+                                                    Name:
+                                                </td>
+                                                <td>
+                                                    <input id="objectName" type="text">
+                                                </td>
+                                            </tr>
+                                            <!-- Object creator type -->
+                                            <tr id="objectCreatorRow" class="hidden">
+                                                <td>
+                                                    Creation Method:
+                                                </td>
+                                                <td>
+                                                    <select id="objectCreator">
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <!-- Graph import options (i.e. making graphs undirected) -->
+                                            <tr class="graphOptionsRow hidden">
+                                                <td>
+                                                    Make graph undirected:
+                                                </td>
+                                                <td>
+                                                    <input type="checkbox" id="doMakeUndirected">
+                                                </td>
+                                            </tr>
+                                            
+                                        </table>
+                                    </div>
+                                    <!-- Form submit -->
+                                    <div class="submitWrapper">
+                                        <input name="submit" class="icon submit" type="image" src="IMG/open-iconic/svg/data-transfer-upload.svg" alt="Run">
+                                    </div>
+                                    <!-- Graph selector for choosing a corresponding graph for cover import -->
+                                    <div class="selectorWrapper hidden">
+                                        <div class="selectorTitle">
+                                            Select a Graph
+                                        </div>
+                                        <div class="selectorContent">
+                                            <!-- Graph table page control -->
+                                            <div class = "pageControlWrapper">
+                                                <div class="pageControl">
+                                                    <div class="pageLeftWrapper">
+                                                        <img class="icon iconBtn pageLeft" src="IMG/open-iconic/svg/chevron-left.svg" alt="r">
+                                                    </div>
+                                                    <div class = "pageNumWrapper">
+                                                    </div>
+                                                    <div class="pageRightWrapper">
+                                                        <img class="icon iconBtn pageRight" src="IMG/open-iconic/svg/chevron-right.svg" alt="r">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Graph table -->
+                                            <div class="tableWrapper">
+                                                <table id="graphTable">
+                                                    <thead>
+                                                    <tr>
+                                                        <th class="hidden" title="Id"></th>
+                                                        <th width="300" title="Graph Name" class="sortable">
+                                                            Name
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="120" title="Node Count" class="sortable">
+                                                            Nodes
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="120" title="Edge Count" class="sortable">
+                                                            Edges
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="20" title="Has Directed Edges">
+                                                            D
+                                                        </th>
+                                                        <th width="20" title="Has Weighted Edges">
+                                                            W
+                                                        </th>
+                                                        <th width="20" title="Has Zero Edge Weights">
+                                                            Z
+                                                        </th>
+                                                        <th width="20" title="Has Negative Edge Weights">
+                                                            N
+                                                        </th>
+                                                        <th width="20" title="Has Self Loops">
+                                                            L
+                                                        </th>
+                                                        <th width="20" title="Select Graph">
+                                                            Select
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

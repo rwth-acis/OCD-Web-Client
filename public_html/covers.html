@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays basic/meta information on multiple covers -->
+    <head>
+        <title>OCD - Covers</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/coverTableHandler.js"></script>
+        <script type="text/javascript">
+            /*
+             * Defines current page and page size.
+             */
+            var COVERS_PER_PAGE = 20;
+            var pageNumber = 0;
+            /*
+             * Executed after page loading.
+             */
+            $(document).ready(function() {
+                /* Number of the cover table page to display */
+                pageNumber = getUrlVar("page");
+                if(!pageNumber) {
+                    pageNumber = 0;
+                }
+                $('.pageNumWrapper').append(pageNumber);
+                /* Index of the first cover to be displayed */
+                var firstIndex = COVERS_PER_PAGE * pageNumber;
+                /* Identifiers for the cover information to display */
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "C", "G", "R"];
+                var graphIdQueryExtension = getUrlVar("graphId");
+                if(!graphIdQueryExtension) {
+                    graphIdQueryExtension = "";
+                }
+                else {
+                    graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
+                }
+                /* Requests the cover information */
+                sendRequest("get", "covers?executionStatuses=COMPLETED&includeMeta=TRUE&" 
+                        + "firstIndex=" + firstIndex + "&length=" + COVERS_PER_PAGE + graphIdQueryExtension, "",
+                    /* Response handler */
+                    function(coverMetasXml) {
+                        /*
+                         * CoverMetas request succeeded
+                         */
+                        if($(coverMetasXml).find("Id").length === 0 && pageNumber > 0) {
+                            pageNumber--;
+                            var newUrl = "covers.html?page=" + pageNumber;
+                            window.location.href = newUrl;
+                        }
+                        $(coverMetasXml).find("Cover").each(function() {
+                            appendCoverRow($('#coverTable'), $(this), cells);
+                        });
+                        /*
+                         * Sort Table
+                         */
+                        try {
+                            $("#coverTable").tablesorter({sortList: [[1,0],[0,0]], 
+                                headers: { 6: { sorter: false}, 7: {sorter: false}}});
+                        } catch(err) { /* table empty */ }
+                        /*
+                         * Register event handlers
+                         */
+                        registerCoverTable();
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Cover metas were not received.");
+                });
+                /* Page control for the cover page to be displayed */
+                $('.pageLeft').click(function(){
+                    if(pageNumber > 0) {
+                        pageNumber--;
+                        var newUrl = "covers.html?page=" + pageNumber;
+                        window.location.href = newUrl;
+                    }
+                });
+                $('.pageRight').click(function(){
+                    pageNumber++;
+                    var newUrl = "covers.html?page=" + pageNumber;
+                    window.location.href = newUrl;
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Displays error messages -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Page control for the cover table -->
+                    <div class = "pageControlWrapper">
+                        <div class="pageControl">
+                            <div class="pageLeftWrapper">
+                                <img class="icon iconBtn pageLeft" src="IMG/open-iconic/svg/chevron-left.svg" alt="r">
+                            </div>
+                            <div class = "pageNumWrapper">
+                            </div>
+                            <div class="pageRightWrapper">
+                                <img class="icon iconBtn pageRight" src="IMG/open-iconic/svg/chevron-right.svg" alt="r">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Cover meta information table -->
+                    <div class="tableWrapper">
+                        <table id="coverTable">
+                            <thead>
+                                <tr>
+                                    <th class="hidden" title="CoverId"></th>
+                                    <th class="hidden" title="GraphId"></th>
+                                    <th width="300" title="Cover Name" class="sortable">
+                                        Name
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="300" title="Graph Name" class="sortable">
+                                        Graph
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="300" title="Algorithm Name" class="sortable">
+                                        Creation Method
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="100" title="Community Count" class="sortable">
+                                        Communities
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="20" title="Show Cover">
+                                        C
+                                    </th>
+                                    <th width="20" title="Show Graph">
+                                        G
+                                    </th>
+                                    <th width="20" title="Remove Cover">
+                                        R
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

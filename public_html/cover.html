@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<!-- Displays detailed information on a single cover. Allows OCD metric execution. -->
+<html>
+    <head>
+        <title>OCD - Cover</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/coverTableHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/jquery.panzoom.js"></script>
+        <script src="JS/jquery.mousewheel.js"></script>
+        <script type="text/javascript">
+            /* Id of the corresponding graph */
+            var graphId = getUrlVar("graphId");
+            /* Id of the cover */
+            var coverId = getUrlVar("coverId");
+            /* Meta Data Xml */
+            var coverMetaXml;
+            /* Meta Data Xmls of corresponding ground truth candidates (for metric execution) */
+            var groundTruthMetasXml;
+//            var coverDefaultXml;
+            /* SVG for Visualization */
+            var visualization;
+            /* Maximum ground truth candidates (for metric execution) displayed per page */
+            var COVERS_PER_PAGE = 20;
+            /* Current page of ground truth candidates (for metric execution) */
+            var pageNumber = 0;
+            /* Default select option value */
+            var selectOptionVal = "SELECT";
+            /* Default select option code */
+            var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
+            /* Metric names */
+            var metricNames;
+            $(document).ready(function() {
+                /* Identifiers for meta information to be displayed */
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "G", "R"];
+                /* Requests cover meta information */
+                sendRequest("get", "cover/" + coverId + "/graph/" + graphId + "/outputFormat/META_XML", "",
+                    /* Response handler */
+                    function(response) {
+                        /*
+                         * Init meta table
+                         */
+                        coverMetaXml = response;
+                        appendCoverRow($('#coverMetaTable'), coverMetaXml, cells);
+                        /*
+                        * Init run metric collapsable
+                        */
+                       $("#metricType").append(
+                           selectOptionStr
+                           + '<option value="statistical">Statistical Measure</option>'
+                           + '<option value="knowledgedriven">Knowledge Driven Measure</option>'
+                        );
+                        /*
+                        * Init metrics table
+                        */
+                       $(coverMetaXml).find("Metric").each(function() {
+                           var name = $(this).find('Type');
+                           name = parseEnumName(name.text());
+                           var status = $(this).find('Status').text();
+                           if(status === 'COMPLETED') {
+                               status = '<img class="icon" src="IMG/open-iconic/svg/check.svg" alt="y">';
+                           }
+                           else {
+                               status = '<img class="icon" src="IMG/open-iconic/svg/x.svg" alt="y">';
+                           }
+                           var value = parseFloat($(this).find('Value').text());
+                           value = value.toFixed(4);
+                           /* Create table row */
+                           var row = '<tr>'
+                               + '<td>' + name + '</td>'
+                               + '<td>' + status + '</td>'
+                               + '<td>' + value + '</td>'
+                               + '</tr>';
+                           $("#metricsTable tbody").append(row);
+                       });
+                        /*
+                         * Register events/components
+                         */
+                        registerCoverTable();
+                        //registerCollapsable("#metricsCollapsable", metricsCollapsableHandler);
+                        registerCollapsable("#metricsCollapsable");
+                        registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                        registerCollapsable("#runMetricCollapsable");
+                        registerParameterSelect("#metric", "#metricParameterRow", getMetricParameters);
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Cover request failed
+                         */
+                        showConnectionErrorMessage("Cover was not received.");
+                    }, "text");
+                /*
+                 * Submit listener for the run metric form.
+                 */
+                $('#runMetricForm').submit(function(){
+                    if($("#metricType").val() === selectOptionVal) {
+                        showErrorMessage('Please select a metric type.'); 
+                        return;
+                    }
+                    else if($("#metric").val() === selectOptionVal) {
+                        showErrorMessage('Please select a metric.'); 
+                        return;
+                    }
+                    if($("#metricType").val() === "knowledgedriven") {
+                        var coverId = $("input[name='coverSelect']:checked").val();
+                        if(typeof coverId === 'undefined') {
+                            showErrorMessage('Please select a ground truth cover.');
+                            return;
+                        }
+                        /* Request knowledge driven measure execution */
+                        else {
+                            runKnowledgeDrivenMeasure();
+                        }
+                    }
+                    else if($("#metricType").val() === "statistical") {
+                        /* Request statistical measure execution */
+                        runStatisticalMeasure();
+                    }
+                    else {
+                        /* Should not happen */
+                        showErrorMessage('Client Error.');
+                        return;
+                    }
+                });
+                /*
+                 * Change listener for the metric type in the run metric form.
+                 * Executed when a new metric type is selected.
+                 */
+                $("#metricType").change(function() {
+                    $("#metric").empty();
+                    /* Hides ground truth covers */
+                    $(".selectorWrapper").css("display", "none");
+                    $("#metricType option:selected").each(function() {
+                        /* A real metric (i.e. not the default option) is selected */
+                        if($(this).val() !== selectOptionVal) {
+                            getMetrics(function() {
+                                $("#metric").append(selectOptionStr);
+                                $(metricNames).find('Name').each(function() {
+                                    $("#metric").append(
+                                        '<option value="' + $(this).text()
+                                        + '">' + parseEnumName($(this).text()) + '</option>');
+                                });
+                            });
+                            if($(this).val() === "knowledgedriven") {
+                                /* Displays ground truth covers */
+                                loadCoverTable();
+                                $(".selectorWrapper").css("display", "block");
+                            }
+                            else if($(this).val() === "statistical") {
+                            }
+                            else {
+                                showErrorMessage("Client Error");
+                            }
+                            $("#objectCreatorRow").css("display", "table-row");
+                        }
+                        else {
+                            $("#objectCreatorRow").css("display", "none");
+                        }
+                    });
+                });
+            });
+            /* Requests the execution of a knowledge driven measure */
+            function runKnowledgeDrivenMeasure() {
+                var groundTruthId = $("input[name='coverSelect']:checked").val();
+                var params = getParameterXml("#metricParams");
+                sendRequest("post", "cover/" + coverId + "/graph/" + graphId + "/metric/"
+                        + $('#metric').val() + "/groundtruth/" + groundTruthId, params,
+                        /* Response handler */
+                        function(response) {
+                            window.location.href = "index.html";
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Run metric request failed
+                             */
+                            showConnectionErrorMessage("Metric request failed.");
+                        });
+            }
+            /* Requests the execution of a statistical measure */
+            function runStatisticalMeasure() {
+                var params = getParameterXml("#metricParams");
+                sendRequest("post", "cover/" + coverId + "/graph/" + graphId + "/metric/"
+                        + $('#metric').val(), params,
+                        /* Response handler */
+                        function(response) {
+                            window.location.href = "index.html";
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            alert(errorData);
+                            /*
+                             * Run metric request failed
+                             */
+                            showConnectionErrorMessage("Metric request failed.");
+                        });
+            }
+            /* Requests and stores the names of the parameters of a given metric
+             * Then executes a callback function */
+            function getMetricParameters(metricName, callback) {
+                sendRequest("get", "metric/" + metricName + "/parameters/default", "",
+                        /* Response handler */
+                        function(response) {
+                            if(typeof callback !== 'undefined') {
+                                callback(response);
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Metric parameters were not received.");
+                        });
+            }
+            /* Requests and stores the names of all metrics (of a certain metric type)
+             * Then executes a callback function */
+            function getMetrics(callback) {
+                sendRequest("get", "metrics/" + $("#metricType").val() + "/names", "",
+                        /* Response handler */
+                        function(response) {
+                            metricNames = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Request failed
+                             */
+                            showConnectionErrorMessage("Metric names were not received.");
+                        });
+            }
+            /* Requests a potential ground truth covers and adds them to a table */
+            function loadCoverTable() {
+                /* Initializes table */
+                $('#coverTable tbody').empty();
+                $('.pageNumWrapper').empty();
+                $('.pageNumWrapper').append(pageNumber);
+                var firstIndex = COVERS_PER_PAGE * pageNumber;
+                /* Identifiers of the information to be displayed */
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "C", "Select"];
+                /* Requests the covers */
+                sendRequest("get", "covers?graphId=" + graphId + "&executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + COVERS_PER_PAGE , "",
+                    /* Response handler */
+                    function(groundTruthMetasXml) {
+                        /*
+                         * CoverMetas request succeeded
+                         */
+                        if($(groundTruthMetasXml).find("Id").length === 0 && pageNumber > 0) {
+                            pageNumber--;
+                            loadCoverTable();
+                        }
+                        /* Adds each cover to the table */
+                        $(groundTruthMetasXml).find("Cover").each(function() {
+                            appendCoverRow($('#coverTable'), $(this), cells);
+                        });
+                            /*
+                             * Sort Table
+                             */
+                            try {
+                                $("#coverTable").tablesorter({sortList: [[0,0]], 
+                                    headers: { 6: {sorter: false}, 7: {sorter: false}}});
+                            } catch(err) { /* table empty */ }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Ground truth cover request failed
+                         */
+                        showConnectionErrorMessage("Ground truth cover metas were not received.");
+                });
+                /* Listener to show the next page of ground truth covers */
+                $('.pageLeft').click(function(){
+                    if(pageNumber > 0) {
+                        pageNumber--;
+                        loadCoverTable();
+                    }
+                });
+                /* Listener to show the previous page of ground truth covers */
+                $('.pageRight').click(function(){
+                    pageNumber++;
+                    loadCoverTable();
+                });
+            }
+//            function metricsCollapsableHandler() {
+//                if(typeof coverDefaultXml === 'undefined') {
+//                    getDefaultXml(function() {
+//                            /*
+//                             * Init metrics table
+//                             */
+//                            $(coverDefaultXml).find("Metric").each(function() {
+//                                var name = $(this).find('Type');
+//                                name = parseEnumName(name.text());
+//                                var status = $(this).find('Status').text();
+//                                if(status === 'COMPLETED') {
+//                                    status = '<img class="icon" src="IMG/open-iconic/svg/check.svg" alt="y">';
+//                                }
+//                                else {
+//                                    status = '<img class="icon" src="IMG/open-iconic/svg/x.svg" alt="y">';
+//                                }
+//                                var value = parseFloat($(this).find('Value').text());
+//                                value = value.toFixed(4);
+//                                var row = '<tr>'
+//                                    + '<td>' + name + '</td>'
+//                                    + '<td>' + status + '</td>'
+//                                    + '<td>' + value + '</td>'
+//                                    + '</tr>';
+//                                $("#metricsTable tbody").append(row);
+//                            });
+//                        });
+//                }
+//            }
+            /* Requests the default / general information about the cover 
+             * Then executes a callback function */
+            function getDefaultXml(callback) {
+                /* Sends a request for the cover information */
+                sendRequest("get", "cover/" + coverId + "/graph/" + graphId + "/outputFormat/DEFAULT_XML", "",
+                    /* Response handler */
+                    function(response) {
+                        coverDefaultXml = response;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Cover was not received.");
+                    }, "text");
+            }
+            /* Handles the visualization collapsable element */
+            function visualizationCollapsableHandler() {
+                /* Request the visualization */
+                if(typeof visualization === 'undefined') {
+                    getVisualization();
+                }
+                /* Registers the visualization for panzoom */
+                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
+                $panzoom.on('mousewheel', function( e ) {
+                    e.preventDefault();
+                    var delta = e.delta || e.originalEvent.wheelDelta;
+                    var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+                    $panzoom.panzoom('zoom', zoomOut, {
+                        increment: 0.1,
+                        animate: false,
+                        focal: e
+                    });
+                });
+            }
+            /* Requests and stores the visualization of the cover */
+            function getVisualization() {
+                /* Requests the visualization */
+                sendViewerRequest("get", "visualization/cover/" + coverId + "/graph/"
+                        + graphId + "/outputFormat/SVG/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    /* Response handler */
+                    function(response) {
+                        visualization = response;
+                        $('.visualizationGraphic').append(visualization);
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Visualization request failed
+                         */
+                        showConnectionErrorMessage("Visualization was not received.");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Container for display of error messages -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Cover meta information table -->
+                    <div class="tableWrapper">
+                        <table id="coverMetaTable">
+                            <thead>
+                            <tr>
+                                <th class="hidden" title="CoverId"></th>
+                                <th class="hidden" title="GraphId"></th>
+                                <th width="300" title="Cover Name" class="sortable">
+                                    Name
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th width="300" title="Graph Name" class="sortable">
+                                    Graph
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th width="300" title="Algorithm Name" class="sortable">
+                                    Creation Method
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th width="100" title="Community Count" class="sortable">
+                                    Communities
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th width="20" title="Show Graph">
+                                    G
+                                </th>
+                                <th width="20" title="Remove Cover">
+                                    R
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <!-- Collapsable element for metric value display -->
+                    <div id="metricsCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Metrics</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <div class="tableWrapper">
+                                <table id="metricsTable">
+                                    <thead>
+                                    <tr>
+                                        <th title="Metric Name">
+                                            Metric
+                                        </th>
+                                        <th width="20" title="Completed">
+                                            Completed
+                                        </th>
+                                        <th title="Metric Value">
+                                            Value
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable element for metric execution -->
+                    <div id="runMetricCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Run Metric</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <div class="formWrapper">
+                                <div class="formDiv">
+                                    <form id="runMetricForm" class="parameterized" action="javascript:void(0); return false;">
+                                        <div class="formContentWrapper">
+                                            <table class="formTable">
+                                                <tr>
+                                                    <td>
+                                                        Metric Type:
+                                                    </td>
+                                                    <td>
+                                                        <select id="metricType" class="nonparameter">
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        Metric:
+                                                    </td>
+                                                    <td>
+                                                        <select id="metric" class="nonparameter">
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                <tr id="metricParameterRow" class="hidden">
+                                                    <td>
+                                                        Parameters:
+                                                    </td>
+                                                    <td>
+                                                        <div class="tableWrapper">
+                                                            <table id="metricParams">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th title="Parameter Name">Name</th>
+                                                                        <th title="Default Value">Default</th>
+                                                                        <th title="Use Non-Default Parameter">Value</th> 
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody></tbody>
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="submitWrapper">
+                                            <input name="submit" id="runMetricBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
+                                        </div>
+                                        <div class="selectorWrapper hidden">
+                                        <div class="selectorTitle">
+                                            Select a Ground Truth Cover
+                                        </div>
+                                        <div class="selectorContent">
+                                            <!-- Page control for ground truth cover table -->
+                                            <div class = "pageControlWrapper">
+                                                <div class="pageControl">
+                                                    <div class="pageLeftWrapper">
+                                                        <img class="icon iconBtn pageLeft" src="IMG/open-iconic/svg/chevron-left.svg" alt="r">
+                                                    </div>
+                                                    <div class = "pageNumWrapper">
+                                                    </div>
+                                                    <div class="pageRightWrapper">
+                                                        <img class="icon iconBtn pageRight" src="IMG/open-iconic/svg/chevron-right.svg" alt="r">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Table for potential ground truth covers -->
+                                            <div class="tableWrapper">
+                                                <table id="coverTable">
+                                                    <thead>
+                                                    <tr>
+                                                        <th class="hidden" title="CoverId"></th>
+                                                        <th class="hidden" title="GraphId"></th>
+                                                        <th width="300" title="Cover Name" class="sortable">
+                                                            Name
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="300" title="Graph Name" class="sortable">
+                                                            Graph
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="300" title="Algorithm Name" class="sortable">
+                                                            Creation Method
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="100" title="Community Count" class="sortable">
+                                                            Communities
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                                        </th>
+                                                        <th width="20" title="Show Cover">
+                                                            C
+                                                        </th>
+                                                        <th width="20" title="Select Graph">
+                                                            Select
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for cover visualization -->
+                    <div id="visualizationCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Visualization</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <div class="visualization">
+                                <div class="visualizationControl">
+                                    <input class="visualizationZoomer" type="range">
+                                </div>
+                                <div class="visualizationContent">
+                                    <div class="visualizationGraphic">
+                                    </div>    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

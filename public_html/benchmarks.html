@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--
+Benchmarks
+-->
+<html>
+    <head>
+        <title>OCD - Benchmarks</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script type="text/javascript">
+        /* Benchmark Names */
+        var benchmarkNames;
+        /* Document load handler */
+        $(document).ready(function() {
+            /* Obtains benchmark names */
+            getBenchmarkNames(function() {
+                /* Adds benchmark names to select */
+                $(benchmarkNames).find('Name').each(function() {
+                    if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'REAL_WORLD')
+                    $("#benchmark").append(
+                        '<option value="' + $(this).text()
+                        + '">' + parseEnumName($(this).text()) + '</option>');
+                });
+            });
+            /* Registers parameter select */
+            registerParameterSelect("#benchmark", "#benchmarkParamsRow", getBenchmarkParameters);
+            /* 
+             * Submit form handler
+             * Reads in parameters and starts benchmark execution
+             * */
+            $('#runBenchmarkForm').submit(function(){
+                var benchmark = $('#benchmark').val();
+                if(benchmark !== getSelectOptionVal()) {
+                    var params = getParameterXml("#benchmarkParams");
+                    var coverName = $("#coverName").val();
+                    var graphName = $("#graphName").val();
+                    if(graphName === "") {
+                        showErrorMessage('Please define a graph name.'); 
+                        return;
+                    }
+                    if(coverName === "") {
+                        showErrorMessage('Please define a cover name.'); 
+                        return;
+                    }
+                    /* Send benchmark execution request */
+                    sendRequest("post", "cover/name/" + coverName + "/graphname/" + graphName
+                            + "/benchmark/" + benchmark, params,
+                        /* Response handler */
+                        function(response) {
+                            window.location.href = 'index.html';
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Benchmark request failed.");
+                    });
+                }
+                return false;
+            });
+        });
+        /*
+         * Requests and stores benchmark names.
+         */
+        function getBenchmarkNames(callback) {
+                /* Requests benchmark names */
+                sendRequest("get", "benchmarks/groundtruth/names", "",
+                        /* Response handler */
+                        function(response) {
+                            /* Saves names */
+                            benchmarkNames = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Benchmark names were not received.");
+                        });
+            }
+        /*
+         * Requests parameter names for a given benchmark
+         * and passes them to a callback function.
+         */
+        function getBenchmarkParameters(benchmarkName, callback) {
+                /*
+                 * Requests parameters names.
+                 */
+                sendRequest("get", "benchmark/" + benchmarkName + "/parameters/default", "",
+                        /* Response handler */
+                        function(response) {
+                            if(typeof callback !== 'undefined') {
+                                callback(response);
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Benchmark parameters were not received.");
+                        });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Error Messages Container -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Benchmark Execution Form Container -->
+                    <div class="formWrapper">
+                        <div class="formDiv">
+                            <!-- Benchmark Execution Form -->
+                            <form id="runBenchmarkForm" class="parameterized" action="javascript:void(0); return false;">
+                                <div class="formContentWrapper">
+                                    <table class="formTable">
+                                        <!-- Benchmark Types -->
+                                        <tr>
+                                            <td>
+                                                Benchmark:
+                                            </td>
+                                            <td>
+                                                <select id="benchmark" class="nonparameter">
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <!-- Benchmark Parameters -->
+                                        <tr id="benchmarkParamsRow" class="hidden">
+                                            <td>
+                                                Parameters:
+                                            </td>
+                                            <td>
+                                                <div class="tableWrapper">
+                                                    <table id="benchmarkParams">
+                                                        <thead>
+                                                            <tr>
+                                                                <th title="Benchmark Name">Name</th>
+                                                                <th title="Default Value">Default</th>
+                                                                <th title="Use Non-Default Parameter">Value</th> 
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <!-- Name for the graph to be created -->
+                                        <tr>
+                                            <td>
+                                                Graph Name:
+                                            </td>
+                                            <td>
+                                                <input id="graphName" class="nonparameter" type="text">
+                                            </td>
+                                        </tr>
+                                        <!-- Name for the cover to be created -->
+                                        <tr>    
+                                            <td>
+                                                Cover Name:
+                                            </td>
+                                            <td>
+                                                <input id="coverName" class="nonparameter" type="text">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div
+                                <!-- Submit button -->
+                                <div class="submitWrapper">
+                                    <input name="submit" class="icon submit" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

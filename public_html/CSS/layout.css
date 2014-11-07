@@ -1,0 +1,322 @@
+/* 
+    Created on : 15-Aug-2014, 11:57:32
+    Author     : Sebastian
+*/
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    background:  #444;
+}
+
+/* Main content wrappers */
+
+#wrapper {
+    display: table;
+    height: 100%;
+    width: 900px;
+    padding: 10px;
+    margin: 0 auto;
+    background:  #FFF;
+}
+
+#contentWrapper {
+    display: table-row;
+    width: 100%;
+    height: 100%;
+}
+
+#content {
+    height: 100%;
+    overflow: auto;
+    padding: 10px 0px;
+    color: #444;
+}
+
+#headerWrapper {
+   display: table-row;
+   width: 100%;
+}
+
+#header {
+    color: #888;
+    width: 100%;
+    padding: 10px 0px;
+}
+
+#header h1 {
+    text-align: center;
+}
+
+#errorMessageWrapper {
+    margin: 5px auto;
+    background: #ffb5b2;
+    padding: 10px;
+    border-radius: 10px;
+    display: none;
+}
+
+#errorMessage {
+    display: block;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* General table */
+
+.tableWrapper {
+    margin: 5px auto;
+}
+
+.sortable img {
+    display: inline;
+}
+
+table {
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    padding: 100px 10px;
+}
+
+th {
+    padding: 2px 10px;
+    border-right: 2px solid #EEEEEE;
+}
+
+th:last-child {
+    border-right: none;
+}
+
+tr:nth-child(even) {
+    background-color: #DDDDDD;
+}
+
+thead tr {
+    background-color: #DDDDDD;
+}
+
+td {
+    text-align: right;
+    border-right: 2px solid #EEEEEE;
+    padding: 2px 10px;
+}
+
+td:last-child {
+    border-right: none;
+}
+
+/* General icons */
+
+.icon {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    width: 12px;
+    height: 12px;
+}
+
+.iconBtn {
+    cursor: pointer;
+}
+
+.pageControlWrapper {
+    margin: 5px auto;
+    padding: 5px;
+    text-align: center;
+}
+
+.pageControl {
+    display: inline-block;
+    margin: auto auto;
+    padding: 5px 20px;
+    text-align: center;
+    background-color: #DDDDDD;
+    border-radius: 10px;
+}
+
+.pageLeftWrapper {
+    padding: 0 20px;
+    height: auto;
+    width: auto;
+    display: inline-block;
+}
+
+.pageRightWrapper {
+    padding: 0 20px;
+    height: auto;
+    width: auto;
+    display: inline-block;
+}
+
+.pageNumWrapper {
+    padding: 0 5px;
+    height: auto;
+    width: auto;
+    display: inline-block;
+}
+
+.pageLeft {
+}
+
+.pageRight {
+}
+
+/* Form */
+
+.submit {
+    width: 40px;
+    height: 40px;
+    background-color: #2d73b2;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.submit:hover {
+    background-color: #8ebae5;
+}
+
+.submitWrapper {
+    vertical-align: middle;
+    display: inline-block;
+    padding: 10px;
+}
+
+.formContentWrapper {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.formTable {
+    border: none;
+}
+
+.formTable td {
+    border: none;
+    text-align: left;
+    background-color: #DDDDDD;
+}
+
+.formTable tr {
+    border: none;
+}
+
+.formTable th {
+    border: none;
+    background-color: #DDDDDD;
+}
+
+.formDiv {
+    display: table;
+    padding: 20px;
+    background-color: #DDDDDD;
+    border-radius: 5px;
+    margin: 0 auto;
+}
+
+.formWrapper {
+    display: inline;
+    background-color: #EEEEEE;
+}
+
+.selectorWrapper {
+    margin: 10px;
+}
+
+.selectorTitle {
+    background-color: #8ebae5;
+    border-radius: 10px;
+    padding: 5px 20px;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.selectorContent {
+    background-color: #FFF;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* General layout */
+
+.hidden {
+    display: none;
+}
+
+.parameterized .nonparameter {
+    width: 350px;
+}
+
+/* Collapsable elements */
+
+.collapsable {
+    margin: 5px auto;
+}
+
+.collapsableHeader {
+    background-color: #8ebae5;
+    border-radius: 10px;
+    display: table;
+}
+
+.collapsableCollapser {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 5px 20px;
+    width: auto;
+}
+
+.collapsableTitle {
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 5px 20px;
+    display: table-cell;
+    vertical-align: middle;
+    width: 99%;
+}
+
+.collapsableContent {
+    display: none;
+    padding: 5px;
+    border-radius: 10px;
+    border: 3px solid #DDDDDD;
+}
+
+.collapsableCollapseBtn {
+    display: none;
+}
+
+.collapsableDisplayBtn {
+    display: inline;
+}
+
+/* OCD Viewer visualization elements */
+
+.visualization {
+    text-align: center;
+}
+
+.visualizationZoomer {
+    width: 50%;
+}
+
+.visualizationContent {
+    display: block;
+    margin: auto;
+    vertical-align: middle;
+}
+
+.visualizationGraphic { 
+}
