@@ -12,7 +12,7 @@
  * Else initialize request sender.
  */
 
-if(window.location.pathname !== "/OCD/login.html") {
+if(window.location.pathname !== "/OCD-Web-Client/login.html") {
     if($.session.get('isLoggedIn') !== 'true') {
             window.location.replace("login.html");
     }
