@@ -9,9 +9,11 @@
  */
 
 /* Base URL of the OCD Service */
-var baseUrl = "http://127.0.0.1:8080/ocd";
+var baseUrl = "https://api.learning-layers.eu/ocd";
+//var baseUrl = "http://127.0.0.1:8080/ocd";
 /* Base URL of the Viewer Service */
-var viewerBaseUrl = "http://127.0.0.1:8080/ocdViewer";
+var viewerBaseUrl = "https://api.learning-layers.eu/ocdViewer";
+//var viewerBaseUrl = "http://127.0.0.1:8080/ocdViewer";
 /* API */
 var api = i5.las2peer.jsAPI;
 

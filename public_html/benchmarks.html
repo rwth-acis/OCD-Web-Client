@@ -51,8 +51,7 @@ Benchmarks
                         return;
                     }
                     /* Send benchmark execution request */
-                    sendRequest("post", "cover/name/" + coverName + "/graphname/" + graphName
-                            + "/benchmark/" + benchmark, params,
+                    sendRequest("post", "graphs/benchmarks?benchmark=" + benchmark + "&graphName=" + graphName + "&coverName=" + coverName, params,
                         /* Response handler */
                         function(response) {
                             window.location.href = 'index.html';
@@ -73,7 +72,7 @@ Benchmarks
          */
         function getBenchmarkNames(callback) {
                 /* Requests benchmark names */
-                sendRequest("get", "benchmarks/groundtruth/names", "",
+                sendRequest("get", "benchmarks", "",
                         /* Response handler */
                         function(response) {
                             /* Saves names */
@@ -98,7 +97,7 @@ Benchmarks
                 /*
                  * Requests parameters names.
                  */
-                sendRequest("get", "benchmark/" + benchmarkName + "/parameters/default", "",
+                sendRequest("get", "benchmarks/" + benchmarkName + "/parameters/default", "",
                         /* Response handler */
                         function(response) {
                             if(typeof callback !== 'undefined') {
@@ -179,7 +178,7 @@ Benchmarks
                                             </td>
                                         </tr>
                                     </table>
-                                </div
+                                </div>
                                 <!-- Submit button -->
                                 <div class="submitWrapper">
                                     <input name="submit" class="icon submit" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">

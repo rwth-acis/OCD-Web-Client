@@ -106,7 +106,7 @@ function createShowCoverGraphCell() {
  */
 function deleteCover(coverId, graphId) {
     /* Delete request */
-    sendRequest("delete", "cover/" + coverId.text() + "/graph/" + graphId.text(), "",
+    sendRequest("delete", "covers/" + coverId.text() + "/graphs/" + graphId.text(), "",
         /* Response handler */
         function(confirmXml) {
             var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;

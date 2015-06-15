@@ -124,7 +124,7 @@ function getGraphTrueOrFalseIcon(isTrue) {
  */
 function deleteGraph(id) {
     /* Requests deletion */
-    sendRequest("delete", "graph/" + id.text() , "",
+    sendRequest("delete", "graphs/" + id.text() , "",
         /* Response handler */
         function(confirmXml) {
             var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;

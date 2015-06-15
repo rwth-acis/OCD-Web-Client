@@ -54,7 +54,7 @@
             this.content = content;
             this.callback = callback;
             this.errorCallback = errorCallback;
-            if (errorCallback == null) {
+            if (errorCallback === null) {
               errorCallback = function() {};
             }
             this.mimeType = mimeType;
@@ -85,7 +85,7 @@
                 }
               }
             };
-            if (newBaseAjaxObj != null) {
+            if (newBaseAjaxObj !== null) {
               $.extend(true, this.baseAjaxObj, newBaseAjaxObj);
             }
           }
@@ -101,7 +101,7 @@
            */
           RequestSender.prototype.sendRequest = function(method, URI, content, callback, errorCallback, mimeType) {
             var newAjax, requestURI;
-            if (this.baseURI != null) {
+            if (this.baseURI !== null) {
               requestURI = encodeURI(this.baseURI + "/" + URI);
             } else {
               requestURI = URI;
@@ -113,17 +113,17 @@
               /*
                * set mime type
                */
-              dataType: mimeType == null ? "xml" : mimeType,
+              dataType: mimeType === null ? "xml" : mimeType,
               error: function(xhr, errorType, error) {
                 var errorText;
                 errorText = error;
-                if ((xhr.responseText != null) && xhr.responseText.trim().length > 0) {
+                if ((xhr.responseText !== null) && xhr.responseText.trim().length > 0) {
                   errorText = xhr.responseText;
                 }
                 if (xhr.status === 0) {
                   errorText = "WebConnector does not respond";
                 }
-                if (errorCallback != null) {
+                if (errorCallback !== null) {
                   return errorCallback(xhr.status + " " + method + " " + requestURI + "\n" + errorText);
                 }
               },

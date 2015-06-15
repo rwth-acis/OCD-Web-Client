@@ -172,10 +172,10 @@ Facilitates import / upload of new graphs and covers.
             /* Requests a graph import */
             function postGraph(content) {
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
-                sendRequest("post", "graph/name/" + $("#objectName").val() +
-                                "/creationmethod/" + $("#objectCreator").val() 
-                                + "/inputFormat/" + $("#objectFormat").val()
-                                + "?doMakeUndirected=" + doMakeUndirected, content,
+                sendRequest("post", "graphs?name=" + $("#objectName").val() +
+                                "&creationType=" + $("#objectCreator").val() 
+                                + "&inputFormat=" + $("#objectFormat").val()
+                                + "&doMakeUndirected=" + doMakeUndirected, content,
                             /* Response handler */
                             function(response) {
                                 window.location.href = 'graphs.html';
@@ -191,8 +191,8 @@ Facilitates import / upload of new graphs and covers.
             /* Requests a cover import */
             function postCover(filecontent) {
                 var graphId = $("input[name='graphSelect']:checked").val();
-                sendRequest("post", "cover/graph/" + graphId + "/name/" + $("#objectName").val() + "/creationmethod/" + 
-                                $("#objectCreator").val() + "/inputFormat/" + $("#objectFormat").val(), filecontent,
+                sendRequest("post", "covers/graphs/" + graphId + "?name=" + $("#objectName").val() + "&creationType=" + 
+                                $("#objectCreator").val() + "&inputFormat=" + $("#objectFormat").val(), filecontent,
                             /* Response handler */
                             function(response) {
                                 window.location.href = 'covers.html';
@@ -208,7 +208,7 @@ Facilitates import / upload of new graphs and covers.
             /* Requests input format names.
              * Then executes a callback function. */
             function getInputFormats(callback) {
-                sendRequest("get", $("#objectType").val() + "s/formats/input/names", "",
+                sendRequest("get", $("#objectType").val() + "s/formats/input", "",
                         /* Response handler */
                         function(response) {
                             inputFormatNames = response;
@@ -227,7 +227,7 @@ Facilitates import / upload of new graphs and covers.
             /* Requests creator type names.
              * Then executes a callback function. */
             function getCreatorTypes(callback) {
-                sendRequest("get", $("#objectType").val() + "s/creationmethods/names", "",
+                sendRequest("get", $("#objectType").val() + "s/creationtypes", "",
                         /* Response handler */
                         function(response) {
                             creatorTypes = response;

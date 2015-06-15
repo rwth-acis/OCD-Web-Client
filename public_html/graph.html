@@ -35,7 +35,7 @@
                 /* Identifiers for the graph information to be displayed */
                 var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
                     /* Requests the graph meta information */
-                    sendRequest("get", "graph/" + graphId + "/outputFormat/META_XML", "",
+                    sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
                         /* Response handler */
                         function(response) {
                             /* Stores graph meat information and adds it to the table */
@@ -67,8 +67,8 @@
                             return;
                         }
                         /* Requests an algorithm execution  */
-                        sendRequest("post", "cover/graph/" + graphId 
-                                + "/name/" + coverName + "/algorithm/" + algo, params,
+                        sendRequest("post", "covers/graphs/" + graphId 
+                                + "/algorithms?algorithm="+ algo + "&name=" + coverName, params,
                             /* Response handler */
                             function(response) {
                                 window.location.href = 'index.html';
@@ -87,7 +87,7 @@
             /* Requests the names of all OCD algorithms.
              * Then executes a callback function */
             function getAlgorithmNames(callback) {
-                sendRequest("get", "algorithms/names", "",
+                sendRequest("get", "algorithms", "",
                         /* Response handler */
                         function(response) {
                             algorithmNames = response;
@@ -106,7 +106,7 @@
             /* Requests all parameter names for a given algorithm.
              * Then executes a calllback function */
             function getAlgorithmParameters(algorithmName, callback) {
-                sendRequest("get", "algorithm/" + algorithmName + "/parameters/default", "",
+                sendRequest("get", "algorithms/" + algorithmName + "/parameters/default", "",
                         /* Response handler */
                         function(response) {
                             if(typeof callback !== 'undefined') {
@@ -141,7 +141,7 @@
             /* Requests and stores the edge list of the graph.
              * Then executes a callback function */
             function getEdgeList(callback) {
-                sendRequest("get", "graph/" + graphId + "/outputFormat/WEIGHTED_EDGE_LIST", "",
+                sendRequest("get", "graphs/" + graphId + "?outputFormat=WEIGHTED_EDGE_LIST", "",
                         /* Response handler */
                         function(response) {
                             graphEdgeList = response;

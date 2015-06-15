@@ -132,8 +132,9 @@
             }
             /* Requests the interruption of a metric execution */
             function deleteMetric(coverId, graphId, metricId) {
-                sendRequest("delete", "cover/" + coverId.text() + "/graph/" + graphId.text()
-                    + "/metric/" + metricId.text(), "",
+                sendRequest("delete", "covers/" + coverId.text() + "/graphs/"
+                    + graphId.text() + "/metrics/" + metricId.text()
+                    , "",
                     /* Response handler */
                     function(confirmXml) {
                         var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;

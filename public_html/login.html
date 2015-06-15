@@ -6,7 +6,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -29,15 +29,26 @@
                     },
                     /* Error handler. Login failed (possibly also due to technical reasons) */
                     function(data) {
-                        alert(data);
                         showErrorMessage("Login is invalid!");
                 });
-                //requestSender.sendRequestObj(request);
             }
             // Login Form Listener
             $(function() {
                 $('#loginForm').submit(function(){
                     validateLogin();
+                    /* TODO remove
+                    $.session.set('userName', "User");
+                    $.session.set('userPw', "user");
+                    $.session.set('isLoggedIn', new Boolean(true));
+                    sendRequest("get", "graphs", "",
+                        function(graphMetasXml) {
+                            alert("received");
+                        },
+                        function(errorData) {
+                            alert("failed");
+                    });
+                    */
+
                     return false;
                 });
             });

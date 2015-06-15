@@ -43,7 +43,7 @@
                 /* Identifiers for meta information to be displayed */
                 var cells = ["Name", "Graph", "CreationMethod", "Communities", "G", "R"];
                 /* Requests cover meta information */
-                sendRequest("get", "cover/" + coverId + "/graph/" + graphId + "/outputFormat/META_XML", "",
+                sendRequest("get", "covers/" + coverId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
                     /* Response handler */
                     function(response) {
                         /*
@@ -173,8 +173,9 @@
             function runKnowledgeDrivenMeasure() {
                 var groundTruthId = $("input[name='coverSelect']:checked").val();
                 var params = getParameterXml("#metricParams");
-                sendRequest("post", "cover/" + coverId + "/graph/" + graphId + "/metric/"
-                        + $('#metric').val() + "/groundtruth/" + groundTruthId, params,
+                sendRequest("post", "covers/" + coverId + "/graphs/" + graphId +
+                        "/metrics/knowledgedriven/groundtruth/"
+                        + groundTruthId + "?metricType=" + $('#metric').val(), params,
                         /* Response handler */
                         function(response) {
                             window.location.href = "index.html";
@@ -190,15 +191,15 @@
             /* Requests the execution of a statistical measure */
             function runStatisticalMeasure() {
                 var params = getParameterXml("#metricParams");
-                sendRequest("post", "cover/" + coverId + "/graph/" + graphId + "/metric/"
-                        + $('#metric').val(), params,
+                sendRequest("post", "covers/" + coverId + "/graphs/" + graphId
+                        + "/metrics/statistical?metricType=" + $('#metric').val() 
+                        , params,
                         /* Response handler */
                         function(response) {
                             window.location.href = "index.html";
                         },
                         /* Error handler */
                         function(errorData) {
-                            alert(errorData);
                             /*
                              * Run metric request failed
                              */
@@ -208,7 +209,7 @@
             /* Requests and stores the names of the parameters of a given metric
              * Then executes a callback function */
             function getMetricParameters(metricName, callback) {
-                sendRequest("get", "metric/" + metricName + "/parameters/default", "",
+                sendRequest("get", "metrics/" + metricName + "/parameters/default", "",
                         /* Response handler */
                         function(response) {
                             if(typeof callback !== 'undefined') {
@@ -226,7 +227,7 @@
             /* Requests and stores the names of all metrics (of a certain metric type)
              * Then executes a callback function */
             function getMetrics(callback) {
-                sendRequest("get", "metrics/" + $("#metricType").val() + "/names", "",
+                sendRequest("get", "metrics/" + $("#metricType").val(), "",
                         /* Response handler */
                         function(response) {
                             metricNames = response;
@@ -326,7 +327,7 @@
              * Then executes a callback function */
             function getDefaultXml(callback) {
                 /* Sends a request for the cover information */
-                sendRequest("get", "cover/" + coverId + "/graph/" + graphId + "/outputFormat/DEFAULT_XML", "",
+                sendRequest("get", "covers/" + coverId + "/graph/" + graphId + "/outputFormat/DEFAULT_XML", "",
                     /* Response handler */
                     function(response) {
                         coverDefaultXml = response;
