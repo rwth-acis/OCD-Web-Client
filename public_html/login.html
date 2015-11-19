@@ -6,7 +6,31 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+
+<!--    only button related css part of bootstrap -->
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.css">
+<!--         <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css"> -->
+        
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        
+        <!-- OpenID Connect Button - Step 2: resolve dependencies to jQuery, bootstrap, jsjws and jsrsasign -->
+		<!-- import Bootstrap for responsive UI (must) -->
+		<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+		
+		<!-- import JWS and JSRSASIGN (must) -->
+		<script type="text/javascript" src="JS/jws-2.0.min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/ext/base64-min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/ext/jsbn-min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/ext/jsbn2-min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/ext/rsa-min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/ext/rsa2-min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/asn1hex-1.1.min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/base64x-1.1.min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/crypto-1.1.min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/rsapem-1.1.min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/rsasign-1.2.min.js"></script>
+		<script type="text/javascript" src="JS/jsrsasign/x509-1.1.min.js"></script>
+        
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -14,12 +38,13 @@
         <script src="JS/ServiceAPI/serviceAPI.js"></script>
         <script src="JS/requestHandler.js"></script>
         <script type="text/javascript">
-            /* Validates the login data */
-            function validateLogin() {
-                /* Stores the login data as session variables */
-                $.session.set('userName', $("#loginName").val());
-                $.session.set('userPw', $("#loginPw").val());
-                /* Requests login data validation */
+        
+        function signinCallback(result) {
+            if(result === "success"){
+                // after successful sign in, display a welcome string for the user
+                $("#status").html("Hello, " + oidc_idtoken + "!");
+
+	            $.session.set('accessToken', window.localStorage["access_token"]);
                 sendRequest("get", "validate", "",
                     /* Response handler. Login succeeded */
                     function (data) {
@@ -31,29 +56,14 @@
                     function(data) {
                         showErrorMessage("Login is invalid!");
                 });
-            }
-            // Login Form Listener
-            $(function() {
-                $('#loginForm').submit(function(){
-                    validateLogin();
-                    /* TODO remove
-                    $.session.set('userName', "User");
-                    $.session.set('userPw', "user");
-                    $.session.set('isLoggedIn', new Boolean(true));
-                    sendRequest("get", "graphs", "",
-                        function(graphMetasXml) {
-                            alert("received");
-                        },
-                        function(errorData) {
-                            alert("failed");
-                    });
-                    */
 
-                    return false;
-                });
-            });
+            } else {
+                // if sign in was not successful, log the cause of the error on the console
+                console.log(result);
+            }
+        }
+
         </script>
-<!--         <script src="login.js"></script> -->
     </head>
     <body>
         <div id="wrapper">
@@ -63,41 +73,35 @@
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
                     </div>
-                    <!-- Login form -->
-                    <div class="formWrapper">
-                        <div class="formDiv">
-                            <form id="loginForm" name="loginForm" action="javascript:void(0); return false;">
-                                <div class="formContentWrapper">
-                                    <table class="formTable">
-                                        <!-- Login name -->
-                                        <tr>
-                                            <td>
-                                                Name:
-                                            </td>
-                                            <td>
-                                                <input id="loginName" name="loginName" type="text" size="30">
-                                            </td>
-                                        </tr>
-                                        <!-- Login password -->
-                                        <tr>
-                                            <td>
-                                                Password:
-                                            </td>
-                                            <td>
-                                                <input id="loginPw" type="password" size="30">
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <!-- Form submit -->
-                                <div class="submitWrapper">
-                                    <input name="submit" id="loginIconBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/account-login.svg" alt="Login">
-                                </div>
-                            </form>
-                        </div>
+                    
+                    <!-- Login -->
+                    <div style="display:table; margin:0 auto;">
+	                    <span class="oidc-signin"
+						    data-callback="signinCallback"
+						    data-name="OCD"
+						    data-logo="http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png"
+						    data-server="https://api.learning-layers.eu/o/oauth2"
+						    data-clientid="4a109625-9bd2-4563-8d4f-8988df3575d3"
+						    data-scope="openid email profile">
+						</span>
+                    </div>     
+                    
+                    <div id="status">
                     </div>
                 </div>
             </div>
         </div>
+        
+        <script type="text/javascript">
+		  (function() {
+		    var po = document.createElement('script'); 
+		    po.type = 'text/javascript'; 
+		    po.async = true;
+		    po.src = 'JS/oidc-button.js';
+		    var s = document.getElementsByTagName('script')[0]; 
+		    s.parentNode.insertBefore(po, s);
+		  })();
+		</script>
+        
     </body>
 </html>

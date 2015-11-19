@@ -19,7 +19,8 @@
         var LoginTypes;
         LoginTypes = {
           NONE: 0,
-          HTTP_BASIC: 1
+          HTTP_BASIC: 1,
+          OIDC: 2
         };
         this.LoginTypes = LoginTypes;
 
@@ -38,6 +39,14 @@
 
           Login.prototype.getBasicAuthLogin = function() {
             return B64.encode(this.user + ":" + this.password);
+          };
+          
+          Login.prototype.setAccessToken = function(accessToken) {
+            this.accessToken = accessToken;
+          };
+
+          Login.prototype.getAccessToken = function() {
+            return B64.encode(this.accessToken);
           };
 
           return Login;
@@ -82,6 +91,9 @@
               beforeSend: function(xhr) {
                 if (login.loginType === LoginTypes.HTTP_BASIC) {
                   return xhr.setRequestHeader("Authorization", "Basic " + login.getBasicAuthLogin());
+                }
+                else if (login.loginType === LoginTypes.OIDC) {
+                  return xhr.setRequestHeader("access_token", login.getAccessToken());
                 }
               }
             };

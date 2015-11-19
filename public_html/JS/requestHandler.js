@@ -9,10 +9,10 @@
  */
 
 /* Base URL of the OCD Service */
-var baseUrl = "https://api.learning-layers.eu/ocd";
+var baseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocd";
 //var baseUrl = "http://127.0.0.1:8080/ocd";
 /* Base URL of the Viewer Service */
-var viewerBaseUrl = "https://api.learning-layers.eu/ocdViewer";
+var viewerBaseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocdViewer";
 //var viewerBaseUrl = "http://127.0.0.1:8080/ocdViewer";
 /* API */
 var api = i5.las2peer.jsAPI;
@@ -23,8 +23,8 @@ var api = i5.las2peer.jsAPI;
  */
 function sendRequest(method, url, content, callback, errorcallback, mimeType) {
     /* Login */
-    var login = new api.Login(api.LoginTypes.HTTP_BASIC);
-    login.setUserAndPassword($.session.get('userName'), $.session.get('userPw'));
+    var login = new api.Login(api.LoginTypes.OIDC);
+    login.setAccessToken($.session.get('accessToken'));
     /* Request sender */
     var requestSender = new api.RequestSender(baseUrl, login);
     /* Request */
@@ -34,8 +34,8 @@ function sendRequest(method, url, content, callback, errorcallback, mimeType) {
 
 function sendViewerRequest(method, url, content, callback, errorcallback, mimeType) {
     /* Login */
-    var login = new api.Login(api.LoginTypes.HTTP_BASIC);
-    login.setUserAndPassword($.session.get('userName'), $.session.get('userPw'));
+    var login = new api.Login(api.LoginTypes.OIDC);
+    login.setAccessToken($.session.get('accessToken'));
     /* Request sender */
     var requestSender = new api.RequestSender(viewerBaseUrl, login);
     /* Request */
@@ -48,8 +48,8 @@ function sendViewerRequest(method, url, content, callback, errorcallback, mimeTy
  */
 function sendRequestsAsync(requestObjArray, callback) {
     /* Login */
-    var login = new api.Login(api.LoginTypes.HTTP_BASIC);
-    login.setUserAndPassword($.session.get('userName'), $.session.get('userPw'));
+    var login = new api.Login(api.LoginTypes.OIDC);
+    login.setAccessToken($.session.get('accessToken'));
     /* Request sender */
     var requestSender = new api.RequestSender(baseUrl, login);
     /* Asynchronous request */

@@ -12,6 +12,8 @@
         <script type="text/javascript">
             /* Clear session scope */
             $.session.clear();
+            //
+            localStorage.removeItem("access_token");
             /* Redirect to login page */
             window.location.replace("login.html");
         </script>
