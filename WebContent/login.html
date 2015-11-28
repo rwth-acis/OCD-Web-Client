@@ -7,9 +7,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
 
-<!--    only button related css part of bootstrap -->
-        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.css">
-<!--         <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css"> -->
+        <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+        <link rel="stylesheet" type="text/css" href="CSS/navbar.css">
         
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         
@@ -65,32 +64,69 @@
 
         </script>
     </head>
-    <body>
-        <div id="wrapper">
-            <div id="contentWrapper">
-                <div id="content">
-                    <!-- Container for displaying error messages -->
-                    <div id="errorMessageWrapper">
-                        <div id="errorMessage"></div>
-                    </div>
-                    
-                    <!-- Login -->
-                    <div style="display:table; margin:0 auto;">
-	                    <span class="oidc-signin"
-						    data-callback="signinCallback"
-						    data-name="OCD"
-						    data-logo="http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png"
-						    data-server="https://api.learning-layers.eu/o/oauth2"
-						    data-clientid="4a109625-9bd2-4563-8d4f-8988df3575d3"
-						    data-scope="openid email profile">
-						</span>
-                    </div>     
-                    
-                    <div id="status">
-                    </div>
-                </div>
+    <body class="login-body">
+    
+	    <nav class="navbar navbar-fixed-top mynavbar-custom">
+	      <div class="container">
+  	        <div class="nav-pills pull-left">
+  	          <a class="navbar-brand" href="#">Overlapping Community Detection</a>
+  	        </div>
+	        <div class="nav-pills pull-right">
+	          <form class="navbar-form navbar-right">
+<!-- for local host: data-clientid="15cdbd81-f6c1-4862-bb7a-7344deed3aaa" -->
+	       	    <span class="oidc-signin"
+				    data-callback="signinCallback"
+				    data-name="Learning Layers"
+				    data-logo="http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png"
+				    data-server="https://api.learning-layers.eu/o/oauth2"
+				    data-clientid="9c04fe4a-2b6b-436b-9896-83383377c497"
+				    data-scope="openid email profile">
+				</span>
+	          </form>
+	        </div>
+	      </div>
+	    </nav>
+
+	      <!-- Example row of columns -->
+	      <div class="row myrow">
+	        <div class="col-md-6">
+	        	<img class="img-responsive" src="IMG/Zacharyx2.png"/>
+	        </div>
+	        <div class="col-md-6">
+	          <h2>Analyse Your Network</h2>
+	          <p>OCD lets users and researchers to evaluate their dataset. </p>
+	       </div>
+	      </div>
+	      
+	      <div class="row separate-row myrow">
+	      	<div class="col-md-6">
+	          <h2>How It Works!</h2>
+	          <p>1. Upload your dataset through import or generate a synthetic dataset through benchmarks</p>
+	          <p>2. Select an algorithm</p>
+	          <p>3. Run it and observe the results</p>
+	       </div>
+	        <div class="col-md-6">
+	        	<img class="img-responsive" src="IMG/Zacharyx2.png"/>
+	        </div>
+	      </div>
+	      
+	      <div class="row myrow">
+	        <div class="col-md-12">
+	          <h2>Contact</h2>
+	          <p>shahriari@dbis.rwth-aachen.de</p>
+	       </div>
+	      </div>
+	      
+	    
+	    <div class="row myrow">
+            <!-- Container for displaying error messages -->
+            <div id="errorMessageWrapper">
+                <div id="errorMessage"></div>
+            </div>
+            <div id="status">
             </div>
         </div>
+	    
         
         <script type="text/javascript">
 		  (function() {

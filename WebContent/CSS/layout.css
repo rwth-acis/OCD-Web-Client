@@ -24,7 +24,7 @@ body {
 #wrapper {
     display: table;
     height: 100%;
-    width: 900px;
+    width: 100%;
     padding: 10px;
     margin: 0 auto;
     background:  #FFF;
@@ -319,4 +319,29 @@ td:last-child {
 }
 
 .visualizationGraphic { 
+}
+
+/* Additional */
+
+.mynavbar-custom {
+    background-color: #2d73b2;
+}
+.mynavbar-custom .navbar-brand {
+    color: #fafafa;
+    line-height: 30px;
+}
+
+/* Move down content because we have a fixed navbar */
+.login-body {
+  padding-top: 60px;
+  padding-bottom: 20px;
+}
+
+.separate-row{
+    background-color: #2d73b2;
+    color: #fafafa;
+}
+
+.myrow{
+  padding: 20px;
 }
