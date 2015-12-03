@@ -16,7 +16,7 @@ html {
 body {
     height: 100%;
     width: 100%;
-    background:  #444;
+/*     background:  #444; */
 }
 
 /* Main content wrappers */
@@ -37,7 +37,7 @@ body {
 }
 
 #content {
-    height: 100%;
+/*     height: 100%; */
     overflow: auto;
     padding: 10px 0px;
     color: #444;
@@ -333,15 +333,17 @@ td:last-child {
 
 /* Move down content because we have a fixed navbar */
 .login-body {
-  padding-top: 60px;
-  padding-bottom: 20px;
+	padding-top: 60px;
+	padding-bottom: 20px;
+}
+
+.myrow{
+	padding: 15px;
+	margin: 0px;
+	background-color: #fff;
 }
 
 .separate-row{
     background-color: #2d73b2;
     color: #fafafa;
-}
-
-.myrow{
-  padding: 20px;
 }

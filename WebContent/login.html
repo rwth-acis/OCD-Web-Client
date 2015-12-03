@@ -5,9 +5,8 @@
         <title>OCD - Login</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-
         <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <link rel="stylesheet" type="text/css" href="CSS/navbar.css">
         
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
@@ -40,9 +39,6 @@
         
         function signinCallback(result) {
             if(result === "success"){
-                // after successful sign in, display a welcome string for the user
-                $("#status").html("Hello, " + oidc_idtoken + "!");
-
 	            $.session.set('accessToken', window.localStorage["access_token"]);
                 sendRequest("get", "validate", "",
                     /* Response handler. Login succeeded */
@@ -87,38 +83,7 @@
 	      </div>
 	    </nav>
 
-	      <!-- Example row of columns -->
-	      <div class="row myrow">
-	        <div class="col-md-6">
-	        	<img class="img-responsive" src="IMG/Zacharyx2.png"/>
-	        </div>
-	        <div class="col-md-6">
-	          <h2>Analyse Your Network</h2>
-	          <p>OCD lets users and researchers to evaluate their dataset. </p>
-	       </div>
-	      </div>
-	      
-	      <div class="row separate-row myrow">
-	      	<div class="col-md-6">
-	          <h2>How It Works!</h2>
-	          <p>1. Upload your dataset through import or generate a synthetic dataset through benchmarks</p>
-	          <p>2. Select an algorithm</p>
-	          <p>3. Run it and observe the results</p>
-	       </div>
-	        <div class="col-md-6">
-	        	<img class="img-responsive" src="IMG/Zacharyx2.png"/>
-	        </div>
-	      </div>
-	      
-	      <div class="row myrow">
-	        <div class="col-md-12">
-	          <h2>Contact</h2>
-	          <p>shahriari@dbis.rwth-aachen.de</p>
-	       </div>
-	      </div>
-	      
-	    
-	    <div class="row myrow">
+		<div class="row myrow">
             <!-- Container for displaying error messages -->
             <div id="errorMessageWrapper">
                 <div id="errorMessage"></div>
@@ -126,6 +91,35 @@
             <div id="status">
             </div>
         </div>
+	    <!-- Example row of columns -->
+	    <div class="row myrow">
+	    	<div class="col-md-6">
+	        	<img class="img-responsive" src="IMG/Zacharyx2.png"/>
+	      	</div>
+		    <div class="col-md-6">
+		        <h2>Analyse Your Network</h2>
+		        <p>OCD lets users and researchers to evaluate their dataset. </p>
+		    </div>
+	    </div>
+	      
+	    <div class="row separate-row myrow">
+	        <div class="col-md-6">
+	        	<h2>How It Works!</h2>
+	        	<p>1. Upload your dataset through import or generate a synthetic dataset through benchmarks</p>
+	        	<p>2. Select an algorithm</p>
+	        	<p>3. Run it and observe the results</p>
+	      	</div>
+		    <div class="col-md-6">
+		      	<img class="img-responsive" src="IMG/Zacharyx2.png"/>
+		    </div>
+	    </div>
+	      
+	    <div class="row myrow">
+	        <div class="col-md-12">
+	        	<h2>Contact</h2>
+	        	<p>shahriari@dbis.rwth-aachen.de</p>
+	     	</div>
+	    </div>
 	    
         
         <script type="text/javascript">
