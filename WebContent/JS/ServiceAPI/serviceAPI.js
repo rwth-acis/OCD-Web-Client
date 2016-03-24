@@ -46,7 +46,7 @@
           };
 
           Login.prototype.getAccessToken = function() {
-            return B64.encode(this.accessToken);
+            return String(this.accessToken);
           };
 
           return Login;
