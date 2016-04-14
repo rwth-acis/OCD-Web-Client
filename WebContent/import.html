@@ -80,6 +80,18 @@ Facilitates import / upload of new graphs and covers.
                             showErrorMessage('Please select a Benchmark.');
                             return;
                         }
+                        
+                    	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
+                    		if($("#startDate").val() === ""){
+                                showErrorMessage('Please enter Start Date.'); 
+                                return;
+                    		}
+                    		if($("#endDate").val() === ""){
+                                showErrorMessage('Please enter End Date.'); 
+                                return;
+                    		}
+                    	}
+                    	
                     }
                     else {
                         /* Should not happen */
@@ -168,14 +180,27 @@ Facilitates import / upload of new graphs and covers.
                         }
                     });
                 });
+                $("#objectFormat").change(function() {
+                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
+                		$("#startDatetr").removeClass('hidden');
+                		$("#endDatetr").removeClass('hidden');
+                	} else {
+                		$("#startDatetr").addClass('hidden');
+                		$("#endDatetr").addClass('hidden');
+                	}
+                });
             });
             /* Requests a graph import */
             function postGraph(content) {
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
-                sendRequest("post", "graphs?name=" + $("#objectName").val() +
-                                "&creationType=" + $("#objectCreator").val() 
-                                + "&inputFormat=" + $("#objectFormat").val()
-                                + "&doMakeUndirected=" + doMakeUndirected, content,
+                var restUrl = "graphs?name=" + $("#objectName").val() +
+                "&creationType=" + $("#objectCreator").val() 
+                + "&inputFormat=" + $("#objectFormat").val()
+                + "&doMakeUndirected=" + doMakeUndirected;
+                if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
+                	restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
+                }
+                sendRequest("post", restUrl, content,
                             /* Response handler */
                             function(response) {
                                 window.location.href = 'graphs.html';
@@ -351,6 +376,24 @@ Facilitates import / upload of new graphs and covers.
                                                 </td>
                                                 <td>
                                                     <input id="objectFile" type="file">
+                                                </td>
+                                            </tr>
+                                            <!-- Input Start Date -->
+                                            <tr id="startDatetr" class="hidden">
+                                                <td>
+                                                    Start Date:
+                                                </td>
+                                                <td>
+                                                    <input id="startDate" type="text" placeholder="YYYY-MM-DD">
+                                                </td>
+                                            </tr>
+                                            <!-- Input End Date -->
+                                            <tr id="endDatetr" class="hidden">
+                                                <td>
+                                                    End Date:
+                                                </td>
+                                                <td>
+                                                    <input id="endDate" type="text" placeholder="YYYY-MM-DD">
                                                 </td>
                                             </tr>
                                             <!-- Name for imported object -->
