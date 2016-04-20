@@ -62,13 +62,14 @@
                     if(algo !== getSelectOptionVal()) {
                         var params = getParameterXml("#algorithmParams");
                         var coverName = $("#coverName").val();
+                        var contentWeighting = $("#contentWeighting").is(':checked');
                         if(coverName === "") {
                             showErrorMessage('Please define a cover name.'); 
                             return;
                         }
                         /* Requests an algorithm execution  */
                         sendRequest("post", "covers/graphs/" + graphId 
-                                + "/algorithms?algorithm="+ algo + "&name=" + coverName, params,
+                                + "/algorithms?algorithm="+ algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
                             /* Response handler */
                             function(response) {
                                 window.location.href = 'index.html';
@@ -338,6 +339,14 @@
                                                                 <tbody></tbody>
                                                             </table>
                                                         </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        Content Weighting:
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="contentWeighting" />
                                                     </td>
                                                 </tr>
                                                 <tr>
