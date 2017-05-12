@@ -1,6 +1,6 @@
 /*
  * Extends the Service API to facilitate service communication.
- * 
+ *
  * requires b64.js
  * requires moduleHelper.js
  * requires serviceAPI.js
@@ -9,11 +9,13 @@
  */
 
 /* Base URL of the OCD Service */
-var baseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocd";
-//var baseUrl = "http://127.0.0.1:8080/ocd";
+var baseUrl = "http://127.0.0.1:8080/ocd";
+//var baseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocd";
+
 /* Base URL of the Viewer Service */
-var viewerBaseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocdViewer";
-//var viewerBaseUrl = "http://127.0.0.1:8080/ocdViewer";
+var viewerBaseUrl = "http://127.0.0.1:8080/ocdViewer";
+//var viewerBaseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocdViewer";
+
 /* API */
 var api = i5.las2peer.jsAPI;
 
@@ -56,7 +58,7 @@ function sendRequestsAsync(requestObjArray, callback) {
     requestSender.sendRequestsAsync(requestObjArray, callback);
 }
 
-/* 
+/*
  * Creates a request using the service api.
  * Adds an additional check whether an error xml is returned.
  */
@@ -73,7 +75,7 @@ function createRequest(method, url, content, callback, errorcallback, mimeType) 
  */
 function checkForErrorXML(data, successCallback) {
     if($(data).is("Error")) {
-        /* 
+        /*
          * Error xml was returned.
          * Displays the error message via the content handler.
          */
