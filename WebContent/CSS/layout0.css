@@ -1,7 +1,12 @@
-/*
+/* 
     Created on : 15-Aug-2014, 11:57:32
     Author     : Sebastian
 */
+
+* {
+    margin: 0;
+    padding: 0;
+}
 
 html {
     height: 100%;
@@ -11,12 +16,13 @@ html {
 body {
     height: 100%;
     width: 100%;
+/*     background:  #444; */
 }
 
 /* Main content wrappers */
 
 #wrapper {
-
+    display: table;
     height: 100%;
     width: 100%;
     padding: 10px;
@@ -25,7 +31,7 @@ body {
 }
 
 #contentWrapper {
-
+    display: table-row;
     width: 100%;
     height: 100%;
 }
@@ -35,8 +41,6 @@ body {
     overflow: auto;
     padding: 10px 0px;
     color: #444;
-    margin: 0 auto;
-    max-width: 1000px;
 }
 
 #headerWrapper {
@@ -55,8 +59,9 @@ body {
 }
 
 #errorMessageWrapper {
-    margin: 2px auto;
-    padding: 2px;
+    margin: 5px auto;
+    background: #ffb5b2;
+    padding: 10px;
     border-radius: 10px;
     display: none;
 }
@@ -68,16 +73,10 @@ body {
     margin-right: auto;
 }
 
-.row {
-
-}
-
 /* General table */
 
 .tableWrapper {
-  margin: auto auto;
-  padding: auto auto;
-  max-width: 820px;
+    margin: 5px auto;
 }
 
 .sortable img {
@@ -85,40 +84,33 @@ body {
 }
 
 table {
-    float: none;
-    margin: auto auto;
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    padding: 100px 10px;
 }
 
 th {
-  white-space: nowrap;
-  text-align: center;
+    padding: 2px 10px;
+    border-right: 2px solid #EEEEEE;
 }
 
 th:last-child {
-
+    border-right: none;
 }
 
-
-
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: #e3f2fd;
-}
-
-#groupTable table tbody tr:nth-of-type(odd) {
-  background-color: #F7F8E0;
-}
-
-.cover tbody tr:nth-of-type(odd) {
-  background-color: #a9ddc7;
+tr:nth-child(even) {
+    background-color: #DDDDDD;
 }
 
 thead tr {
-
+    background-color: #DDDDDD;
 }
 
 td {
     text-align: right;
-
+    border-right: 2px solid #EEEEEE;
+    padding: 2px 10px;
 }
 
 td:last-child {
@@ -130,6 +122,7 @@ td:last-child {
 .icon {
     margin-left: auto;
     margin-right: auto;
+    display: block;
     width: 12px;
     height: 12px;
 }
@@ -149,6 +142,7 @@ td:last-child {
     margin: auto auto;
     padding: 5px 20px;
     text-align: center;
+    background-color: #DDDDDD;
     border-radius: 10px;
 }
 
@@ -211,6 +205,7 @@ td:last-child {
 .formTable td {
     border: none;
     text-align: left;
+    background-color: #DDDDDD;
 }
 
 .formTable tr {
@@ -219,17 +214,20 @@ td:last-child {
 
 .formTable th {
     border: none;
+    background-color: #DDDDDD;
 }
 
 .formDiv {
     display: table;
     padding: 20px;
+    background-color: #DDDDDD;
     border-radius: 5px;
     margin: 0 auto;
 }
 
 .formWrapper {
     display: inline;
+    background-color: #EEEEEE;
 }
 
 .selectorWrapper {
@@ -268,8 +266,8 @@ td:last-child {
 }
 
 .collapsableHeader {
-    background-color: #aecad5;
-    border-radius: 2px;
+    background-color: #8ebae5;
+    border-radius: 10px;
     display: table;
 }
 
@@ -281,6 +279,7 @@ td:last-child {
 }
 
 .collapsableTitle {
+    text-transform: uppercase;
     font-weight: bold;
     padding: 5px 20px;
     display: table-cell;
@@ -291,8 +290,8 @@ td:last-child {
 .collapsableContent {
     display: none;
     padding: 5px;
-    border-radius: 1px;
-    border: 1px solid #DDDDDD;
+    border-radius: 10px;
+    border: 3px solid #DDDDDD;
 }
 
 .collapsableCollapseBtn {
@@ -319,7 +318,7 @@ td:last-child {
     vertical-align: middle;
 }
 
-.visualizationGraphic {
+.visualizationGraphic { 
 }
 
 /* Additional */
@@ -330,38 +329,6 @@ td:last-child {
 .mynavbar-custom .navbar-brand {
     color: #fafafa;
     line-height: 30px;
-}
-
-/* Color */
-.graphColor {
-  background-color: #e3f2fd;
-}
-
-.graphColor .jumbotron {
-  background-color: #e3f2fd;
-  margin-bottom: 1rem;
-}
-
-.coverColor {
-  background-color: #ccffcc;
-}
-
-.simulationColor {
-  background-color: #F7F8E0;
-}
-
-.simulationColor .jumbotron {
-  background-color: #F7F8E0;
-  margin-bottom: 0;
-}
-
-/* side-nav */
-
-.side-nav ul li {
-  padding:0px 4px;
-  margin: auto auto;
-  width:100%;
-  text-align: center;
 }
 
 /* Move down content because we have a fixed navbar */

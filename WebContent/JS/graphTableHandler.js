@@ -1,6 +1,6 @@
 /*
  * Handles the content of graph tables.
- * 
+ *
  * requires jQuery
  * requires requestHandler.js
  */
@@ -149,6 +149,13 @@ function showGraph(id) {
  * Shows graph covers.
  */
 function showGraphCovers(id) {
+    window.location.href = "covers.html?graphId=" + id.text();
+}
+
+/*
+ * Shows graph simulations.
+ */
+function showGraphSimulations(id) {
     window.location.href = "covers.html?graphId=" + id.text();
 }
 

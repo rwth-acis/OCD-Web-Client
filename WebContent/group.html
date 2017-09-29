@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Cooperation & Defection</title>
+
+  <!-- CSS Stylesheets -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/layout.css" rel="stylesheet">
+
+  <!-- JavaScript -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="js/jquery.session.js"></script>
+  <script src="js/jquery.tablesorter.js"></script>
+  <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="JS/bootstrap.min.js"></script>
+  <script src="js/simulation/bootstrap-select.js"></script>
+  <script src="js/contentHandler.js"></script>
+  <script src="js/ServiceAPI/b64.js"></script>
+  <script src="js/ServiceAPI/moduleHelper.js"></script>
+  <script src="js/simulation/serviceAPI.js"></script>
+  <script src="js/jws-2.0.min.js"></script>
+  <script src="js/simulation/requestHandler.js"></script>
+  <script src="js/simulation/simulationForm.js"></script>
+  <script src="js/simulation/Chart.min.js"></script>
+
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <div id="navigation">
+  </div>
+
+  <!-- Page Content -->
+  <div class="container">
+
+    <div class="row">
+      <div class="col-lg-12" id="content">
+
+        <!-- Container for error message display -->
+        <div id="errorMessageWrapper">
+            <div id="errorMessage"></div>
+        </div>
+
+        <div id="simulationViewContainer">
+
+          <div id="simulationHeader" class="col-sm-12 col-md-12 simulationColor">
+
+          </div>
+        </div>
+
+          <div id="optionsCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Options</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="optionsContainer" class="collapsableContent">
+              <div class="container">
+                <div class="card-block row" style="width: 100%;">
+                  <div class="col-sm-6">
+                    <button id="create" class="btn btn-secondary">Export Table</button>
+                  </div>
+                  <div class="col-sm-6">
+                    <button id="deleteButton" class="btn btn-secondary">Delete</button>
+                 </div>
+              </div>
+            </div>
+            </div>
+            </div>
+
+
+
+          <div id="parametersCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Simulation Series</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="parametersContainer" class="collapsableContent">
+              <form id="targetForm">
+                <div id="seriesTable" class="table-responsive">
+                  <table class="table tablesorter table-striped">
+                    <thead>
+                      <tr>
+                        <th onMouseOver="style.cursor='pointer'"></th>
+                        <th onMouseOver="style.cursor='pointer'">Cooperation</th>
+                        <th onMouseOver="style.cursor='pointer'">Deviation</th>
+                        <th onMouseOver="style.cursor='pointer'">Network</th>
+                        <th onMouseOver="style.cursor='pointer'">Game</th>
+                        <th onMouseOver="style.cursor='pointer'"></th>
+                        <th onMouseOver="style.cursor='pointer'">Dynamic</th>
+                        <th onMouseOver="style.cursor='pointer'">Iterations</th>
+                      </tr>
+                    </thead>
+                    <tbody id="seriesTableBody">
+                    </tbody>
+                  </table>
+                </div>
+              <div id="options">
+              </div>
+            </form>
+            </div>
+          </div>
+
+          <div id="evaluationCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Evaluation</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="evaluationContainer" class="collapsableContent">
+              <div class="tableWrapper table-responsive">
+                  <table id="evaluationTable" class = "table table-striped">
+                      <thead>
+                      <tr>
+                          <th title=""></th>
+                          <th title="">Cooperation</th>
+                          <th title="">Payoff</th>
+                      </tr>
+                      </thead>
+                      <tbody></tbody>
+                  </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="networkCorrelationCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Network Correlation</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="networkCorrelationContainer" class="collapsableContent">
+              <div class="tableWrapper table-responsive">
+                  <table id="networkCorrelationTable" class = "table table-striped">
+                      <thead>
+                      <tr>
+                          <th title="">Property</th>
+                          <th title="">Covariance</th>
+                          <th title="">Pearson</th>
+                          <th title="">Spearman</th>
+                          <th title="">Kendall</th>
+                      </tr>
+                      </thead>
+                      <tbody></tbody>
+                  </table>
+              </div>
+            </div>
+          </div>
+
+          
+        </div>
+
+
+
+      </div>
+    </div>
+  </div>
+  <!-- /.row -->
+
+  </div>
+  <!-- /.container -->
+
+
+
+  <script>
+    var groupId = getParameterByName('groupId');
+
+    $(document).ready(function() {
+
+
+
+      registerCollapsable("#parametersCollapsable", seriesCollapsableHandler);
+      registerCollapsable("#evaluationCollapsable", cooperationCollapsableHandler);
+      registerCollapsable("#optionsCollapsable", cooperationCollapsableHandler);
+      registerCollapsable("#networkCorrelationCollapsable", networkCollapsableHandler);
+      registerCollapsable("#communityCorrelationCollapsable", cooperationCollapsableHandler);
+
+      function cooperationCollapsableHandler() {};
+
+      function networkCollapsableHandler() {
+
+        sendRequest("get", "simulation/group/"+ groupId + "/mapping", "",
+          /* Response handler */
+          function(response) {
+            var obj = JSON.parse(response);
+              var coopValues = obj.cooperationValues;
+              var density = obj.densityCorrelation;
+              var degree = obj.averageDegreeCorrelation;
+              var cc = obj.clusteringCoefficientCorrelation;
+              var size = obj.sizeCorrelation;
+              var degdev = obj.degreeDeviationCorrelation;
+
+              function getLine(name, val) {
+                return '<tr>\
+                <td>'+ name +'</td><td>'+ val.covariance +'</td><td>'+ val.pearson +'</td>><td>'+ val.spearman +'</td>><td>'+ val.kendall +'</td>\
+                </tr>';
+              }
+
+              var string = getLine("Size", size);
+              string += getLine("Density", density);
+              string += getLine("Avg Degree", degree);
+              string += getLine("Std Degree", degdev);
+              string += getLine("CC", cc);
+
+              $('#networkCorrelationTable').find("tbody").html(string);
+
+            },
+
+          /* Error handler */
+          function(errorData) {
+            //window.location.href = 'index.html';
+            /*
+             * GraphIds request failed
+             */
+            showConnectionErrorMessage("Simulation request failed.");
+          }, "");
+
+      };
+
+      function seriesCollapsableHandler() {
+        sendRequest("get", "simulation/meta", "",
+          /* Response handler */
+          function(response) {
+            var meta = JSON.parse(response);
+            var tableString = "";
+            jQuery.each(meta, function(index, value) {
+              var seriesId = value.id;
+              var name = value.name;
+              var parameters = value.parameters;
+              var evaluation = value.evaluation;
+              var game = parameters.game;
+              var dynamic = parameters.dynamic;
+              var graphId = value.graphId;
+              var graphName = value.graphName;
+              var payoff = new Array(parameters.payoffCC.toFixed(2), parameters.payoffCD.toFixed(2), parameters.payoffDC.toFixed(2), parameters.payoffDD.toFixed(2));
+              var iterations = parameters.iterations;
+
+              var cooperation = evaluation.average.toFixed(4);
+              var deviation = evaluation.deviation.toFixed(4);
+
+              if (game === "PRISONERS_DILEMMA")
+                game = "PD";
+              if (game === "CHICKEN")
+                game = "SD";
+
+              if (dynamic === "UNCONDITIONAL_IMITATION")
+                dynamic = "UI";
+              if (dynamic === "REPLICATOR")
+                dynamic = "REP";
+              if (dynamic === "MORAN")
+                dynamic = "MOR";
+
+
+              tableString = tableString + getSimulationTableRow(seriesId, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations);
+            });
+
+          //  var optionsString = getOptionsDiv();
+
+            $("#seriesTableBody").html(tableString);
+          //  $("#options").html(getOptionsDiv());
+            $('table').tablesorter();
+
+
+            //window.location.href = 'index.html';
+          },
+          /* Error handler */
+          function(errorData) {
+            //window.location.href = 'index.html';
+            /*
+             * GraphIds request failed
+             */
+            showConnectionErrorMessage("Simulation request failed.");
+          }, "");
+      };
+
+      var seriesId = getParameterByName('groupId');
+      $("#errorMessage").empty();
+      $("#errorMessage").html(writeAlertInfo("Info ", "Receiving simulation data"));
+      $("#errorMessageWrapper").show();
+      sendRequest("get", "simulation/group/" + seriesId, "",
+        /* Response handler */
+        function(response) {
+
+          $("#errorMessage").empty();
+          var obj = JSON.parse(response);
+          var name = obj.name;
+          var coopEval = obj.cooperationEvaluation;
+          var payoffEval = obj.payoffEvaluation;
+
+          $('#simulationHeader').html(getHeadLine(name, ""));
+
+          $('#simulationExport').html('<a download="' + name + '" id="downloadlink" style="" >Export Table</a>');
+          $('#simulationDelete').html('<a href="simulations.html">Delete</a>');
+
+          var evalString = '\
+          <tr>\
+          <td>Average</td><td>'+ coopEval.average +'</td><td>'+ payoffEval.average +'</td>\
+          </tr>\
+          <tr>\
+          <td>Variance</td><td>'+ coopEval.variance +'</td><td>'+ payoffEval.variance +'</td>\
+          </tr>\
+          <tr>\
+          <td>Deviation</td><td>'+ coopEval.deviation +'</td><td>'+ payoffEval.deviation +'</td>\
+          </tr>\
+          <tr>\
+          <td>Maximum</td><td>'+ coopEval.max +'</td><td>'+ payoffEval.max +'</td>\
+          </tr>\
+          <tr>\
+          <td>Minimum</td><td>'+ coopEval.min +'</td><td>'+ payoffEval.min +'</td>\
+          </tr>\
+          ';
+
+          $('#evaluationTable').find("tbody").html(evalString);
+
+          textFileDownload(getParameterByName('groupId'));
+          deleteButtonHandler(getParameterByName('groupId'));
+
+        },
+        /* Error handler */
+        function(errorData) {
+          showConnectionErrorMessage("Request failed.");
+        }, "");
+
+      });
+
+    function writeNetworkMeta(id, name, nodes, edges) {
+      var string =
+        '<div class="col-md-12"><a href="/OCD-Web-Client/graph.html?id=' + id + '">'+ name +'</a></div>\
+        <div class="col-md-12">' + nodes + ' Nodes</div>\
+        <div class="col-md-12">' + edges + ' Edges</div>';
+
+      return string;
+    }
+
+    function getChartData(dataArray) {
+
+      var intDatasets = dataArray.length;
+      var intGenerations = 5;
+      for (var i = 0; i < intDatasets; i++) {
+        var length = dataArray[i].length;
+        if (intGenerations < length) {
+          intGenerations = length;
+        }
+      }
+      var labelArray = new Array(intGenerations);
+      for (var i = 0; i < intGenerations; i++) {
+        labelArray[i] = i;
+      }
+
+      var data = {
+        type: 'line',
+        data: {
+          labels: labelArray,
+          datasets: dataSetsObject(dataArray)
+        }
+      };
+
+      return data;
+    }
+
+
+    function generateCooperationChart(dataArray) {
+
+      var data = getChartData(dataArray);
+      var ctx = document.getElementById("chartCoop").getContext("2d");
+      var myChart = new Chart(ctx, data);
+    }
+
+    function generatePayoffChart(dataArray) {
+      var data = getChartData(dataArray);
+      var ctx = document.getElementById("chartPayoff").getContext("2d");
+      var myChart = new Chart(ctx, data);
+    }
+
+    var randomColor = function() {
+      var r = Math.floor(Math.random() * 255);
+      var g = Math.floor(Math.random() * 255);
+      var b = Math.floor(Math.random() * 255);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    }
+
+    var dataObject = function(id, dataArray) {
+      return {
+        label: id,
+        data: dataArray,
+        backgroundColor: 'transparent',
+        borderColor: randomColor()
+      };
+    }
+
+    var dataSetsObject = function(dataArray) {
+
+      var dataSets = new Array();
+      for (var i = 0; i < dataArray.length; i++) {
+        dataSets.push(dataObject(i + 1, dataArray[i]));
+      }
+      return dataSets;
+    };
+
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+
+        function getSimulationTableRow(seriesId, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations) {
+          return '<tr>\
+              <td><a href="result.html?seriesId=' + seriesId + '">show</a></td>\
+              <td>' + cooperation + '</td>\
+              <td>' + deviation + '</td>\
+              <td><a href="graph.html?id=' + graphId + '">' + graphName + '</a></td></td>\
+              <td>' + game + '</td>\
+              <td>' + payoff + '</td>\
+              <td>' + dynamic + '</td>\
+              <td>' + iterations + '</td>\
+            </tr>'
+        }
+
+    function makeTextFile(text) {
+      var textFile = null
+      var data = new Blob([text], {
+        type: 'text/plain'
+      });
+      if (textFile !== null) {
+        window.URL.revokeObjectURL(textFile);
+      }
+      textFile = window.URL.createObjectURL(data);
+      return textFile;
+    };
+
+    function textFileDownload(simulationId) {
+      var create = document.getElementById('create');
+
+      create.addEventListener('click', function() {
+        create.disabled="disabled";
+        $("#errorMessage").empty();
+        $("#errorMessage").html(writeAlertInfo("Info ", "export table"));
+        $("#errorMessageWrapper").show();
+        sendRequest("get", "simulation/group/" + simulationId + "/table", "",
+          /* Response handler */
+          function(response) {
+
+            var info = '<a download="'+ response.name +'" id="downloadlink" style="display: none">Download</a>';
+            $("#errorMessage").empty();
+            $("#errorMessage").html(writeAlertSuccess("Exported ", info));
+            $("#errorMessageWrapper").show();
+            var link = document.getElementById('downloadlink');
+            link.href = makeTextFile(response);
+            link.style.display = 'block';
+
+          },
+          /* Error handler */
+          function(errorData) {
+            showErrorMessage("table request failed.");
+          }, "");
+
+
+      }, false);
+    };
+function deleteButtonHandler(simulationId) {
+    deleteButton.addEventListener('click', function() {
+      deleteButton.disabled="disabled";
+      $("#errorMessage").empty();
+      $("#errorMessage").html(writeAlertInfo("Info ", "delete Group"));
+      $("#errorMessageWrapper").show();
+      sendRequest("delete", "simulation/group/" + simulationId, "",
+        /* Response handler */
+        function(response) {
+
+          $("#errorMessage").empty();
+          $("#errorMessage").html(writeAlertSuccess("Deleted ", info));
+          $("#errorMessageWrapper").show();
+
+        },
+        /* Error handler */
+        function(errorData) {
+          showErrorMessage(errorData);
+        }, "");
+
+
+    }, false);
+  };
+
+  </script>
+
+
+
+</body>
+
+</html>

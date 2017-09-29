@@ -18,6 +18,10 @@
     margin: 0 auto;
 }
 
+#topNav {
+  background-color: #aecad5;
+}
+
 #menu {
     margin-left: auto;
     margin-right: auto;
@@ -62,14 +66,14 @@
 #menu ul {
     list-style: none;
     margin: 0;
-    padding: 0;    
+    padding: 0;
     display: none;
     position: absolute;
     top: 35px;
     left: 0;
-    z-index: 99999;    
-    background-color: #2d73b2;   
-    //background-image: linear-gradient(#8ebae5, #2d73b2);    
+    z-index: 99999;
+    background-color: #2d73b2;
+    //background-image: linear-gradient(#8ebae5, #2d73b2);
     -moz-border-radius: 5px;
     border-radius: 5px;
 }
@@ -78,16 +82,16 @@
     float: none;
     margin: 0;
     padding: 0;
-    display: block;  
-    box-shadow: 0 1px 0 #111111, 
+    display: block;
+    box-shadow: 0 1px 0 #111111,
                 0 2px 0 #777777;
 }
 
-#menu ul li:last-child { 
-    box-shadow: none;    
+#menu ul li:last-child {
+    box-shadow: none;
 }
 
-#menu ul a {    
+#menu ul a {
     padding: 10px;
     height: auto;
     line-height: 1;
@@ -97,12 +101,12 @@
     text-transform: none;
 }
 
-*html #menu ul a { /* IE6 */   
+*html #menu ul a { /* IE6 */
     height: 10px;
     width: 150px;
 }
 
-*:first-child+html #menu ul a { /* IE7 */    
+*:first-child+html #menu ul a { /* IE7 */
     height: 10px;
     width: 150px;
 }

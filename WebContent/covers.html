@@ -5,8 +5,11 @@
         <title>OCD - Covers</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -43,7 +46,7 @@
                     graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
                 }
                 /* Requests the cover information */
-                sendRequest("get", "covers?executionStatuses=COMPLETED&includeMeta=TRUE&" 
+                sendRequest("get", "covers?executionStatuses=COMPLETED&includeMeta=TRUE&"
                         + "firstIndex=" + firstIndex + "&length=" + COVERS_PER_PAGE + graphIdQueryExtension, "",
                     /* Response handler */
                     function(coverMetasXml) {
@@ -62,7 +65,7 @@
                          * Sort Table
                          */
                         try {
-                            $("#coverTable").tablesorter({sortList: [[1,0],[0,0]], 
+                            $("#coverTable").tablesorter({sortList: [[1,0],[0,0]],
                                 headers: { 6: { sorter: false}, 7: {sorter: false}}});
                         } catch(err) { /* table empty */ }
                         /*
@@ -101,6 +104,7 @@
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
                     </div>
+
                     <!-- Page control for the cover table -->
                     <div class = "pageControlWrapper">
                         <div class="pageControl">
@@ -115,8 +119,8 @@
                         </div>
                     </div>
                     <!-- Cover meta information table -->
-                    <div class="tableWrapper">
-                        <table id="coverTable">
+                    <div class="tableWrapper table-responsive">
+                        <table id="coverTable" class="cover table table-striped">
                             <thead>
                                 <tr>
                                     <th class="hidden" title="CoverId"></th>

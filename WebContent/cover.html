@@ -5,8 +5,11 @@
         <title>OCD - Cover</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -104,11 +107,11 @@
                  */
                 $('#runMetricForm').submit(function(){
                     if($("#metricType").val() === selectOptionVal) {
-                        showErrorMessage('Please select a metric type.'); 
+                        showErrorMessage('Please select a metric type.');
                         return;
                     }
                     else if($("#metric").val() === selectOptionVal) {
-                        showErrorMessage('Please select a metric.'); 
+                        showErrorMessage('Please select a metric.');
                         return;
                     }
                     if($("#metricType").val() === "knowledgedriven") {
@@ -192,7 +195,7 @@
             function runStatisticalMeasure() {
                 var params = getParameterXml("#metricParams");
                 sendRequest("post", "covers/" + coverId + "/graphs/" + graphId
-                        + "/metrics/statistical?metricType=" + $('#metric').val() 
+                        + "/metrics/statistical?metricType=" + $('#metric').val()
                         , params,
                         /* Response handler */
                         function(response) {
@@ -271,7 +274,7 @@
                              * Sort Table
                              */
                             try {
-                                $("#coverTable").tablesorter({sortList: [[0,0]], 
+                                $("#coverTable").tablesorter({sortList: [[0,0]],
                                     headers: { 6: {sorter: false}, 7: {sorter: false}}});
                             } catch(err) { /* table empty */ }
                     },
@@ -323,7 +326,7 @@
 //                        });
 //                }
 //            }
-            /* Requests the default / general information about the cover 
+            /* Requests the default / general information about the cover
              * Then executes a callback function */
             function getDefaultXml(callback) {
                 /* Sends a request for the cover information */
@@ -365,7 +368,7 @@
             /* Requests and stores the visualization of the cover */
             function getVisualization() {
                 /* Requests the visualization */
-                sendViewerRequest("get", "visualization/cover/" + coverId + "/graph/"
+                sendRequest("get", "visualization/cover/" + coverId + "/graph/"
                         + graphId + "/outputFormat/SVG/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
                     /* Response handler */
                     function(response) {
@@ -434,8 +437,8 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <div class="tableWrapper">
-                                <table id="metricsTable">
+                            <div class="tableWrapper table-responsive">
+                                <table id="metricsTable" class="table">
                                     <thead>
                                     <tr>
                                         <th title="Metric Name">
@@ -498,7 +501,7 @@
                                                                     <tr>
                                                                         <th title="Parameter Name">Name</th>
                                                                         <th title="Default Value">Default</th>
-                                                                        <th title="Use Non-Default Parameter">Value</th> 
+                                                                        <th title="Use Non-Default Parameter">Value</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody></tbody>
@@ -586,7 +589,7 @@
                                 </div>
                                 <div class="visualizationContent">
                                     <div class="visualizationGraphic">
-                                    </div>    
+                                    </div>
                                 </div>
                             </div>
                         </div>

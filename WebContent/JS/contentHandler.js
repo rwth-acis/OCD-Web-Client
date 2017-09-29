@@ -1,6 +1,6 @@
-/* 
+/*
  * Loads general content (e.g. header, menu) and provides common functionalities.
- * 
+ *
  * requires jQuery 2.1.1
  * requires jquery.session.js
  * requires jquery.tablesorter.js
@@ -30,35 +30,28 @@ $(document).ready(function(){
      */
     var menuString =
             '\
-                <div id="menuWrapper">\
-                    <div id="menuOuterWrapper">\
-                        <div id="menuInnerWrapper">\
-                            <ul id="menu">\
-                                <li><a href="index.html">Home</a></li>\
-                                <li><a href="graphs.html">Graphs</a></li>\
-                                <li><a href="covers.html">Covers</a></li>\
-                                <li><a href="benchmarks.html">Benchmarks</a></li>\
-                                <li><a href="import.html">Import</a></li>\
-                                <li><a href="logout.html">Logout</a></li>\
-                            </ul>\
-                        </div>\
-                    </div>\
-                </div>\
+            <nav class="navbar navbar-toggleable-sm navbar-light bg-faded" id="topNav">\
+              <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">\
+                <span class="navbar-toggler-icon"></span>\
+              </button>\
+              <a class="navbar-brand" href="index.html">Network Analysis</a>\
+              <div class="collapse navbar-collapse" id="navbarText">\
+                <ul class="navbar-nav mr-auto">\
+                  <li class="nav-item"><a class="nav-link" href="graphs.html">Networks</a></li>\
+                  <li class="nav-item"><a class="nav-link" href="covers.html">Community Detection</a></li>\
+                  <li class="nav-item"><a class="nav-link" href="benchmarks.html">Benchmarks</a></li>\
+                  <li class="nav-item"><a class="nav-link" href="simulations.html">Simulations</a></li>\
+                </ul>\
+                <ul class="navbar-nav navbar-right">\
+                  <li class="nav-item"><a class="nav-link" href="import.html">Import</a></li>\
+                  <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>\
+                </ul>\
+              </div>\
+            </nav>\
         ';
-    /*
-     * Header definition.
-     */
-    var headerString = 
-        '\
-            <div id="headerWrapper">\
-                <div id="header">\
-                    <h1>Overlapping Community Detection</h1>\
-                </div>\
-            </div>\
-        ';
+
     var navbarStyleString = '<link rel="stylesheet" type="text/css" href="CSS/navbar.css">';
-    $('#wrapper').prepend(menuString);
-    $('#wrapper').prepend(headerString);
+    $('body').prepend(menuString);
     $('head').append(navbarStyleString);
 });
 
@@ -69,7 +62,40 @@ $(document).ready(function(){
  */
 function showErrorMessage(message) {
     $("#errorMessage").empty();
-    $("#errorMessage").append("<p>Error: " + message + "<p>");
+    $("#errorMessage").html(writeAlertError("Error!", message));
+    $("#errorMessageWrapper").show();
+};
+
+/*
+ * Displays an warning message.
+ * @param {type} message A message string.
+ * @returns {undefined}
+ */
+function showWarning(message) {
+    $("#errorMessage").empty();
+    $("#errorMessage").html(writeAlertWarning("Warning!", message));
+    $("#errorMessageWrapper").show();
+};
+
+/*
+ * Displays an info message.
+ * @param {type} message A message string.
+ * @returns {undefined}
+ */
+function showInfo(message) {
+    $("#errorMessage").empty();
+    $("#errorMessage").html(writeAlertInfo("Info ", message));
+    $("#errorMessageWrapper").show();
+};
+
+/*
+ * Displays an success message.
+ * @param {type} message A message string.
+ * @returns {undefined}
+ */
+function showSuccess(message) {
+    $("#errorMessage").empty();
+    $("#errorMessage").html(writeAlertInfo("Success!", message));
     $("#errorMessageWrapper").show();
 };
 
@@ -79,8 +105,8 @@ function showErrorMessage(message) {
  */
 function showConnectionErrorMessage(message) {
     $("#errorMessage").empty();
-    $("#errorMessage").append("<p>Service Connection Failure: " + message
-            + "</p><p>Please refresh the page or reexecute the operation.</p>");
+    $("#errorMessage").html(writeAlertWarning("Service Connection Failure!", message
+            + "<p>Please refresh the page or reexecute the operation.</p>"));
     $("#errorMessageWrapper").show();
 };
 
@@ -171,32 +197,35 @@ function registerParameterSelect(selectId, paramTableRowId, getOptions) {
     $(selectId).prepend('<option value="' + getSelectOptionVal() + '">--SELECT--</option>');
     /* Change listener on the select element */
     $(selectId).change(function() {
-        $(paramTableRowId).find("tbody").empty();
+        $(paramDiv).html("");
         $(selectId + " option:selected").each(function() {
             if($(this).val() !== getSelectOptionVal()) {
                 var selected = $(this).val();
                 /* Requests the parameter names for the currently selected option */
                 getOptions(selected, function(response) {
-                    /* Adds the names to the parameter table */
-                    $(response).find("Parameter").each(function() {
-                        var paramRow = '<tr><td>' + $(this).find("Name").first().text() + '</td>'
-                            + '<td>' + $(this).find("Value").first().text() + '</td>'
-                            + '<td><input type="text" class="parameter" name="' + $(this).find("Name").first().text() + '"</td></tr>';
-                        $(paramTableRowId).find("tbody").append(paramRow);
-                    });
-                    /* Displays the parameter table  */
-                    if($(paramTableRowId).find("tbody").find("tr").length > 0) {
-                        $(paramTableRowId).css("display", "table-row");
-                    }
-                    else {
-                        $(paramTableRowId).css("display", "none");
-                    }
+
+                    /* Check if the option have parameters */
+                    if($(response).find("Parameter").size() > 0) {
+                        var parameterString = '<label class="col-sm-2 col-form-label">Parameters</label>\
+                        <div class="col-sm-10" id="paramRows">';
+
+                       /* Adds the parameters to the form */
+                        $(response).find("Parameter").each(function() {
+                            var paramRow = '<div class="form-group row">'
+                            + '<label class="col-sm-5 col-form-label">' + $(this).find("Name").first().text() + '</label>'
+                            + '<div class="col-sm-7">'
+                            + '<input type="text" class="form-control" name="' + $(this).find("Name").first().text() + '" placeholder="' + $(this).find("Value").first().text() + '">'
+                            + '</div></div>'
+                            parameterString += paramRow;
+                        });
+
+                        /* Write the parameter string into the parameter form */
+                        parameterString +=  '</div>';
+                        $(paramDiv).html(parameterString);
+                  }
                 });
             }
-            else {
-                /* SELECT selected */
-                $(paramTableRowId).css("display", "none");
-            }
+
         });
     });
 }
@@ -221,4 +250,29 @@ function getParameterXml(paramTableId) {
     });
     parametersXml += '</Parameters>';
     return parametersXml;
+}
+
+/* Get Information Divs */
+function writeAlertInfo(strong, string) {
+    return '<div class="alert alert-info"><strong>'+ strong +'</strong> ' + string + '</div>';
+}
+
+function writeAlertSuccess(strong, string) {
+    return '<div class="alert alert-success"><strong>'+ strong +'</strong> ' + string + '</div>';
+}
+
+function writeAlertWarning(strong, string) {
+    return '<div class="alert alert-warning"><strong>'+ strong +'</strong> ' + string + '</div>';
+}
+
+function writeAlertError(strong, string) {
+    return '<div class="alert alert-danger"><strong>'+ strong +'</strong> ' + string + '</div>';
+}
+
+/*getHeadLine */
+function getHeadLine(header, description) {
+return '<div class="jumbotron">\
+  <h1 display-6>'+ header +'</h1>\
+  <p>'+ description +'</p>\
+</div>';
 }

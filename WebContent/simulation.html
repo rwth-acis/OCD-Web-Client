@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Cooperation & Defection</title>
+
+    <!-- CSS Stylesheets -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/layout.css" rel="stylesheet">
+
+    <!-- JavaScript -->
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.session.js"></script>
+    <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/simulation/bootstrap-select.js"></script>
+    <script src="js/contentHandler.js"></script>
+    <script src="js/ServiceAPI/b64.js"></script>
+    <script src="js/ServiceAPI/moduleHelper.js"></script>
+    <script src="js/simulation/serviceAPI.js"></script>
+    <script src="js/jws-2.0.min.js"></script>
+    <script src="js/simulation/requestHandler.js"></script>
+    <script src="js/simulation/simulationForm.js"></script>
+    <script src="js/simulation/Chart.min.js"></script>
+
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <div id="navigation">
+    </div>
+
+    <!-- Page Content -->
+    <div class="container">
+
+        <div id = "contentWrapper" class="row">
+            <div id="content" class="col-lg-12">
+
+                <!-- Container for error message display -->
+                <div id="errorMessageWrapper">
+                    <div id="errorMessage"></div>
+                </div>
+
+            <div id="runningSimulationCollapsable" class="collapsable">
+                <div class="collapsableHeader">
+                    <div class="collapsableTitle">Start Simulation Series</div>
+                    <div class="collapsableCollapser">
+                        <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                        <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    </div>
+                </div>
+                <div id="simulationContainer" class="collapsableContent">
+                </div>
+            </div>
+
+
+
+            <div class="panel-collapse collapse" id="startSimulationCollapse" style="padding:2em">
+                <div id="simulationContainer">
+                </div>
+
+            </div>
+        </div>
+
+           </div>
+            </div>
+        </div>
+        <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+
+
+<script>
+$(document).ready(function(){
+
+    registerCollapsable("#runningSimulationCollapsable", runningSimulationCollapsableHandler);
+
+    /*
+     * Open tables
+     */
+    $("#runningSimulationCollapsable").find(".collapsableDisplayBtn").click();
+
+    function runningSimulationCollapsableHandler() {
+
+
+    };
+
+
+    $( "#MultipleSimulationForm" ).submit(function( event ) {
+
+            event.preventDefault();
+
+             var content = JSON.stringify($("#MultipleSimulationFrom").serializeObject());
+              $( "#confirmationDiv" ).html(writeAlertInfo("simulation in progress"));
+
+                sendRequest("post", "simulation/series", content,
+                /* Response handler */
+                function(response) {
+             $( "#confirmationDiv" ).html(writeAlertSuccess("simulation done"));
+              //window.location.href = 'index.html';
+              },
+                /* Error handler */
+              function(errorData) {
+                   $( "#confirmationDiv" ).html(writeAlertWarning(errorData));
+                 //window.location.href = 'index.html';
+                /*
+                * GraphIds request failed
+                */
+                //showConnectionErrorMessage("Benchmark request failed.");
+            }, "application/json");
+    });
+
+    $( "#GetMultipleSimulationButton" ).submit(function( event ) {
+
+            event.preventDefault();
+
+              $( "#confirmationDiv" ).html("get series");
+
+                sendRequest("get", "simulation/series", "",
+                /* Response handler */
+                function(response) {
+             $( "#confirmationDiv" ).html(writeAlertSuccess("done"));
+              //window.location.href = 'index.html';
+              },
+                /* Error handler */
+              function(errorData) {
+                   $( "#confirmationDiv" ).html(writeAlertWarning(errorData));
+                 //window.location.href = 'index.html';
+                /*
+                * GraphIds request failed
+                */
+                //showConnectionErrorMessage("Benchmark request failed.");
+              }, "");
+    });
+
+
+});
+
+
+
+</script>
+
+
+
+</body>
+
+</html>

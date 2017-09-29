@@ -8,24 +8,24 @@
  * requires contentHandler.js
  */
 
-/* Base URL of the OCD Service */
-var baseUrl = "http://127.0.0.1:8080/ocd";
-//var baseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocd";
-
+ /* Base URL of the Cooperation & Defection Service */
+ var BaseUrl = "http://127.0.0.1:8080/ocd";
 
 /* API */
 var api = i5.las2peer.jsAPI;
 
 /*
  * Sends a request using the service api.
- * If an error xml is returned, the error is displayed.
+ * If an error is returned, the error is displayed.
  */
 function sendRequest(method, url, content, callback, errorcallback, mimeType) {
+
     /* Login */
     var login = new api.Login(api.LoginTypes.OIDC);
     login.setAccessToken($.session.get('accessToken'));
+
     /* Request sender */
-    var requestSender = new api.RequestSender(baseUrl, login);
+    var requestSender = new api.RequestSender(BaseUrl, login);
     /* Request */
     var request = createRequest(method, url, content, callback, errorcallback, mimeType);
     requestSender.sendRequestObj(request);
@@ -49,10 +49,8 @@ function sendRequestsAsync(requestObjArray, callback) {
  * Adds an additional check whether an error xml is returned.
  */
 function createRequest(method, url, content, callback, errorcallback, mimeType) {
-    return new api.Request(method, url, content,
-        function(data) {
-            checkForErrorXML(data, callback);
-        },
+
+    return new api.Request(method, url, content, callback,
         errorcallback, mimeType);
 }
 

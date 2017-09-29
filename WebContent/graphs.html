@@ -5,8 +5,11 @@
         <title>OCD - Graphs</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -52,7 +55,7 @@
                              * Sort Table
                              */
                             try {
-                                $("#graphTable").tablesorter({sortList: [[0,0]], 
+                                $("#graphTable").tablesorter({sortList: [[0,0]],
                                     headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
                                         8: {sorter: false}, 9: {sorter: false}, 10: {sorter: false}, 11: {sorter: false}}});
                             } catch(err) { /* table empty */ }
@@ -105,20 +108,20 @@
                         </div>
                     </div>
                     <!-- Graph table -->
-                    <div class="tableWrapper">
-                        <table id="graphTable">
+                    <div class="tableWrapper table-responsive">
+                        <table id="graphTable" class = "table table-striped">
                             <thead>
                             <tr>
                                 <th class="hidden" title="Id"></th>
-                                <th width="300" title="Graph Name" class="sortable">
+                                <th  title="Graph Name" class="sortable">
                                     Name
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
-                                <th width="120" title="Node Count" class="sortable">
+                                <th  title="Node Count" class="sortable">
                                     Nodes
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
-                                <th width="120" title="Edge Count" class="sortable">
+                                <th  title="Edge Count" class="sortable">
                                     Edges
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>

@@ -86,7 +86,6 @@
             this.baseURI = baseURI;
             this.login = login;
             this.baseAjaxObj = {
-              contentType: "text/plain",
               crossDomain: true,
               beforeSend: function(xhr) {
                 if (login.loginType === LoginTypes.HTTP_BASIC) {
@@ -122,10 +121,7 @@
               url: requestURI,
               method: method.toUpperCase(),
               data: content,
-              /*
-               * set mime type
-               */
-              dataType: mimeType === null ? "xml" : mimeType,
+              contentType: mimeType,
               error: function(xhr, errorType, error) {
                 var errorText;
                 errorText = error;

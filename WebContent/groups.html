@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Cooperation & Defection</title>
+
+  <!-- CSS Stylesheets -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/layout.css" rel="stylesheet">
+
+  <!-- JavaScript -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="js/jquery.session.js"></script>
+  <script src="js/jquery.tablesorter.js"></script>
+  <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="JS/bootstrap.min.js"></script>
+  <script src="js/simulation/bootstrap-select.js"></script>
+  <script src="js/contentHandler.js"></script>
+  <script src="js/ServiceAPI/b64.js"></script>
+  <script src="js/ServiceAPI/moduleHelper.js"></script>
+  <script src="js/simulation/serviceAPI.js"></script>
+  <script src="js/jws-2.0.min.js"></script>
+  <script src="js/simulation/requestHandler.js"></script>
+  <script src="js/simulation/simulationForm.js"></script>
+  <script src="js/simulation/Chart.min.js"></script>
+
+
+</head>
+
+<body>
+
+  <div id="wrapper">
+    <div id="contentWrapper">
+      <div id="content">
+        <!-- Displays error messages -->
+        <div id="errorMessageWrapper">
+          <div id="errorMessage"></div>
+        </div>
+
+        <div id="filterContainer">
+        </div>
+
+        <!-- Page control -->
+        <div class = "container">
+        <div>
+          <a href="simulations.html">Simulations</a>
+        </div>
+        <div class="pageControlWrapper">
+          <div class="pageControl">
+            <div class="pageLeftWrapper">
+              <img class="icon iconBtn pageLeft" src="IMG/open-iconic/svg/chevron-left.svg" alt="r">
+            </div>
+            <div class="pageNumWrapper">
+            </div>
+            <div class="pageRightWrapper">
+              <img class="icon iconBtn pageRight" src="IMG/open-iconic/svg/chevron-right.svg" alt="r">
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <form id="targetForm">
+          <div id="groupTable" class="table-responsive">
+            <table class="table tablesorter table-striped">
+              <thead>
+                <tr>
+                  <th onMouseOver="style.cursor='pointer'"><span class="checkall"></span></th>
+                  <th onMouseOver="style.cursor='pointer'">Name</th>
+                  <th onMouseOver="style.cursor='pointer'">Size</th>
+                  <th onMouseOver="style.cursor='pointer'">Cooperativity</th>
+                  <th onMouseOver="style.cursor='pointer'">Deviation</th>
+                </tr>
+              </thead>
+              <tbody id="seriesTableBody">
+              </tbody>
+            </table>
+          </div>
+        <div id="options">
+
+        </div>
+      </form>
+      </div>
+
+
+    </div>
+    <!-- /.row -->
+
+  </div>
+  <!-- /.container -->
+
+
+
+  <script>
+    var SIMULATIONS_PER_PAGE = 20;
+    var pageNumber = 0;
+
+    $(document).ready(function() {
+
+      pageNumber = getUrlVar("si");
+      if (!pageNumber) {
+        pageNumber = 0;
+      }
+      $('.pageNumWrapper').append(pageNumber);
+      var firstIndex = SIMULATIONS_PER_PAGE * pageNumber;
+
+
+      registerCollapsable("#runningSimulationCollapsable", runningSimulationCollapsableHandler);
+
+      function runningSimulationCollapsableHandler() {
+
+      };
+
+      /* Listeners for the table page control */
+      $('.pageLeft').click(function() {
+        if (pageNumber > 0) {
+          pageNumber--;
+          var newUrl = "groups.html?si=" + pageNumber;
+          window.location.href = newUrl;
+        }
+      });
+      $('.pageRight').click(function() {
+        pageNumber++;
+        var newUrl = "groups.html?si=" + pageNumber;
+        window.location.href = newUrl;
+      });
+
+
+      sendRequest("get", "simulation/group/meta?firstIndex=" + firstIndex + "&length=" + SIMULATIONS_PER_PAGE, "",
+        /* Response handler */
+        function(response) {
+          var meta = JSON.parse(response);
+          var tableString = "";
+          jQuery.each(meta, function(index, value) {
+            var groupId = value.id;
+            var groupName = value.name;
+            var groupSize = value.size;
+            var cooperation = value.evaluation.average.toFixed(4);
+            var deviation = value.evaluation.deviation.toFixed(4);
+
+            tableString = tableString + getSimulationTableRow(groupId, groupName, groupSize, cooperation, deviation);
+          });
+
+          var optionsString = getOptionsDiv();
+
+          $("#seriesTableBody").html(tableString);
+          $("#options").html(getOptionsDiv());
+          $('table').tablesorter();
+
+
+          //window.location.href = 'index.html';
+        },
+        /* Error handler */
+        function(errorData) {
+          //window.location.href = 'index.html';
+          /*
+           * GraphIds request failed
+           */
+          showConnectionErrorMessage("Simulation request failed.");
+        }, "");
+
+
+      $(".checkall").click(function() {
+        var cblist = $("input[name=check\\[\\]]");
+        cblist.attr("checked", !cblist.attr("checked"));
+      });
+
+
+      $("#targetForm").submit(function(event) {
+
+        event.preventDefault();
+
+        var jsonObject = $('form').serializeObject();
+        var name = document.getElementById('nameInput').value;
+        console.log(name);
+        var content = JSON.stringify(jsonObject.check);
+        console.log(content);
+        sendRequest("put", "simulation/group", content,
+          /* Response handler */
+          function(response) {
+
+            showSuccess(response);
+          },
+          /* Error handler */
+          function(errorData) {
+            showErrorMessage(errorData);
+          }, "application/json");
+      });
+
+    });
+
+    function getSimulationTableRow(Id, name, size, cooperation, deviation) {
+      return '<tr>\
+        <td><input type="checkbox" name="check" value="' + Id + '"/></td>\
+          <td><a href="group.html?groupId=' + Id + '">'+ name +'</a></td>\
+          <td>' + size + '</td>\
+          <td>' + cooperation + '</td>\
+          <td>' + deviation + '</td>\
+        </tr>'
+    }
+
+    function getOptionsDiv() {
+
+    /*  var string = '\
+      <div class="container">\
+        <div class="row">\
+          <div class="">\
+            <button type="submit" class="btn btn-secondary">Network Correlation</button>\
+          </div>\
+          <div class="">\
+            <button type="submit" class="btn btn-secondary">Community Correlation</button>\
+          </div>\
+        <div class="">\
+        </div>\
+      </div>\
+      ';
+      return string;
+*/
+    }
+  </script>
+
+
+
+</body>
+
+</html>

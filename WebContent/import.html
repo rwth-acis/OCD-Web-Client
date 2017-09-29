@@ -7,6 +7,7 @@ Facilitates import / upload of new graphs and covers.
         <title>OCD - Import</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <style type="text/css">
             select {
@@ -17,6 +18,8 @@ Facilitates import / upload of new graphs and covers.
             }
         </style>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -53,15 +56,15 @@ Facilitates import / upload of new graphs and covers.
                      * Verifies input
                      */
                     if($("#objectType").val() === selectOptionVal) {
-                        showErrorMessage('Please select an import option.'); 
+                        showErrorMessage('Please select an import option.');
                         return;
                     }
                     else if($("#objectFormat").val() === selectOptionVal) {
-                        showErrorMessage('Please select an import format.'); 
+                        showErrorMessage('Please select an import format.');
                         return;
                     }
                     else if($("#objectName").val() === "") {
-                        showErrorMessage('Please define a name.'); 
+                        showErrorMessage('Please define a name.');
                         return;
                     }
                     if($("#objectType").val() === "cover") {
@@ -80,18 +83,18 @@ Facilitates import / upload of new graphs and covers.
                             showErrorMessage('Please select a Benchmark.');
                             return;
                         }
-                        
+
                     	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
                     		if($("#startDate").val() === ""){
-                                showErrorMessage('Please enter Start Date.'); 
+                                showErrorMessage('Please enter Start Date.');
                                 return;
                     		}
                     		if($("#endDate").val() === ""){
-                                showErrorMessage('Please enter End Date.'); 
+                                showErrorMessage('Please enter End Date.');
                                 return;
                     		}
                     	}
-                    	
+
                     }
                     else {
                         /* Should not happen */
@@ -123,7 +126,7 @@ Facilitates import / upload of new graphs and covers.
                             reader.readAsText(file);
                         }
                         else {
-                           showErrorMessage('File could not be loaded.'); 
+                           showErrorMessage('File could not be loaded.');
                         }
                     /*
                      * Browser not compatible
@@ -153,7 +156,7 @@ Facilitates import / upload of new graphs and covers.
                                 });
                             });
                             /* Loads and displays graph table to select a corresponding graph */
-                            if($(this).val() === "cover") { 
+                            if($(this).val() === "cover") {
                                 loadGraphTable();
                                 $(".selectorWrapper").css("display", "block");
                             }
@@ -194,7 +197,7 @@ Facilitates import / upload of new graphs and covers.
             function postGraph(content) {
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
                 var restUrl = "graphs?name=" + $("#objectName").val() +
-                "&creationType=" + $("#objectCreator").val() 
+                "&creationType=" + $("#objectCreator").val()
                 + "&inputFormat=" + $("#objectFormat").val()
                 + "&doMakeUndirected=" + doMakeUndirected;
                 if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
@@ -216,7 +219,7 @@ Facilitates import / upload of new graphs and covers.
             /* Requests a cover import */
             function postCover(filecontent) {
                 var graphId = $("input[name='graphSelect']:checked").val();
-                sendRequest("post", "covers/graphs/" + graphId + "?name=" + $("#objectName").val() + "&creationType=" + 
+                sendRequest("post", "covers/graphs/" + graphId + "?name=" + $("#objectName").val() + "&creationType=" +
                                 $("#objectCreator").val() + "&inputFormat=" + $("#objectFormat").val(), filecontent,
                             /* Response handler */
                             function(response) {
@@ -309,7 +312,7 @@ Facilitates import / upload of new graphs and covers.
                              * Sort Table
                              */
                             try {
-                                $("#graphTable").tablesorter({sortList: [[0,0]], 
+                                $("#graphTable").tablesorter({sortList: [[0,0]],
                                     headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
                                         8: {sorter: false}, 9: {sorter: false}}});
                             } catch(err) { /* table empty */ }
@@ -424,7 +427,7 @@ Facilitates import / upload of new graphs and covers.
                                                     <input type="checkbox" id="doMakeUndirected">
                                                 </td>
                                             </tr>
-                                            
+
                                         </table>
                                     </div>
                                     <!-- Form submit -->

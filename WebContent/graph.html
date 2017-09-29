@@ -5,10 +5,11 @@
         <title>OCD - Graph</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <style type="text/css">
-        </style>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -19,11 +20,15 @@
         <script src="JS/jquery.tablesorter.js"></script>
         <script src="JS/jquery.panzoom.js"></script>
         <script src="JS/jquery.mousewheel.js"></script>
+        <script src="JS/simulation/jsonRequestHandler.js"></script>
+        <script src="JS/simulation/simulationForm.js"></script>
         <script type="text/javascript">
             /* Id of the graph */
             var graphId = getUrlVar("id");
             /* Graph meta information in xml format */
             var graphMetaXml;
+            /* Graph structure in edge list format */
+            var graphProperties;
             /* Graph structure in edge list format */
             var graphEdgeList;
             /* Graph visualization in SVG format */
@@ -40,12 +45,38 @@
                         function(response) {
                             /* Stores graph meat information and adds it to the table */
                             graphMetaXml = response;
-                            appendGraphRow($('#graphMetaTable'), graphMetaXml, cells);
+                            var name = $(graphMetaXml).find('Name').text();
+                            var nodes = $(graphMetaXml).find('NodeCount').text();
+                            var edges = $(graphMetaXml).find('EdgeCount').text();
+                            /* Graph types */
+                            var types = [];
+                            $(graphMetaXml).children('Types').find('Type').each(function() {
+                                types.push($(this).text());
+                            });
+                            var directed =  $.inArray("DIRECTED", types);
+                            var weighted =  $.inArray("WEIGHTED", types);
+
+                            var description = "A";
+                            if(!directed && !weighted)
+                              description += " simple ";
+                            if(directed)
+                              description += " directed ";
+                            if(directed)
+                                description += " weighted ";
+
+                            description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
+                            $('#graphHeader').html(getHeadLine(name, description));
+                            $('#graphCovers').html('<a href="covers.html?graphId=' + graphId +'">Covers</a>');
+                            $('#graphSimulations').html('<a href="simulations.html">Simulations</a>');
+                            $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
+
                             /* Registers components and event handlers */
                             registerGraphTable();
+                            registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
                             registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
                             registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
                             registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
+                            registerCollapsable("#runSimulationCollapsable", runSimulationCollapsableHandler);
                         },
                         /* Error handler */
                         function(errorData) {
@@ -64,11 +95,11 @@
                         var coverName = $("#coverName").val();
                         var contentWeighting = $("#contentWeighting").is(':checked');
                         if(coverName === "") {
-                            showErrorMessage('Please define a cover name.'); 
+                            showErrorMessage('Please define a cover name.');
                             return;
                         }
                         /* Requests an algorithm execution  */
-                        sendRequest("post", "covers/graphs/" + graphId 
+                        sendRequest("post", "covers/graphs/" + graphId
                                 + "/algorithms?algorithm="+ algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
                             /* Response handler */
                             function(response) {
@@ -139,6 +170,42 @@
                     registerParameterSelect("#algorithm", "#algorithmParameterRow", getAlgorithmParameters);
                 }
             }
+            /* Handles the collapsable element for the algorithm execution. */
+            function runSimulationCollapsableHandler() {
+                if(typeof algorithmNames === 'undefined') {
+                    /* Adds all algorithm names to the form */
+                    getAlgorithmNames(function() {
+                        $(algorithmNames).find('Name').each(function() {
+                            if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH') {
+                                $("#algorithm").append(
+                                    '<option value="' + $(this).text()
+                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                            }
+                        });
+                    });
+                    /* Registers the parameter table component for the contentHandler */
+                    registerParameterSelect("#algorithm", "#algorithmParameterRow", getAlgorithmParameters);
+                }
+            }
+            /* Requests and stores the properties of the graph.
+             * Then executes a callback function */
+            function getProperties(callback) {
+                sendRequest("get", "graphs/" + graphId + "?outputFormat=PROPERTIES_XML", "",
+                        /* Response handler */
+                        function(response) {
+                            graphProperties = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * GraphIds request failed
+                             */
+                            showConnectionErrorMessage("Graph Properties was not received.");
+                        }, "text");
+            }
             /* Requests and stores the edge list of the graph.
              * Then executes a callback function */
             function getEdgeList(callback) {
@@ -157,6 +224,29 @@
                              */
                             showConnectionErrorMessage("Graph was not received.");
                         }, "text");
+            }
+            /* Handles the collapsable element for the properties. */
+            function propertiesCollapsableHandler() {
+                if(typeof graphProperties === 'undefined') {
+                    /* Requests the edge list */
+                    getProperties(function() {
+                            /* Adds properties information to a table */
+                            var properties = $(graphProperties).children();
+                            for (i = 0; i < properties.length; i++) {
+                              var name = $(properties)[i].nodeName;
+                              var value = $(graphProperties).find($(properties)[i].nodeName).text();
+                                if(name !== 'ID' &&  name !== 'NAME') {
+                                  name = name.replace("_", " ");
+                                  var row = '<tr>'
+                                      + '<td>' + name + '</td>'
+                                      + '<td>' + value + '</td>'
+                                      + '</tr>';
+                                    $("#graphPropertiesTable tbody").append(row);
+                                }
+                              }
+                            });
+
+                }
             }
             /* Handles the collapsable element for the edge list. */
             function edgeListCollapsableHandler() {
@@ -201,7 +291,7 @@
             }
             /* Requests and stores the graph visualization */
             function getVisualization() {
-                sendViewerRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
                     /* Request handler */
                     function(response) {
                         visualization = response;
@@ -215,6 +305,23 @@
                         showConnectionErrorMessage("Visualization was not received.");
                 });
             }
+
+            function deleteGraph() {
+              sendRequest("delete", "graphs/" + graphId, "",
+                  /* Request handler */
+                  function(response) {
+                    showSuccess(response);
+                  },
+                  /* Error handler */
+                  function(errorData) {
+                      /*
+                       * GraphIds request failed
+                       */
+                      showConnectionErrorMessage(errorData);
+              });
+            }
+
+
         </script>
     </head>
     <body>
@@ -226,45 +333,51 @@
                         <div id="errorMessage"></div>
                     </div>
                     <!-- Table for graph meta information -->
-                    <div class="tableWrapper">
-                        <table id="graphMetaTable">
-                            <thead>
-                            <tr>
-                                <th class="hidden" title="Id"></th>
-                                <th width="300" title="Graph Name">
-                                    Name
-                                </th>
-                                <th width="120" title="Node Count">
-                                    Nodes
-                                </th>
-                                <th width="120" title="Edge Count">
-                                    Edges
-                                </th>
-                                <th width="20" title="Has Directed Edges">
-                                    D
-                                </th>
-                                <th width="20" title="Has Weighted Edges">
-                                    W
-                                </th>
-                                <th width="20" title="Has Zero Edge Weights">
-                                    Z
-                                </th>
-                                <th width="20" title="Has Negative Edge Weights">
-                                    N
-                                </th>
-                                <th width="20" title="Has Self Loops">
-                                    L
-                                </th>
-                                <th width="20" title="Show Covers">
-                                    C
-                                </th>
-                                <th width="20" title="Remove Graph">
-                                    R
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div>
+                      <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
+
+                      </div>
+                      <div class="side-nav">
+                      <ul class="nav justify-content-end">
+                        <li id="graphCovers" class="nav-item coverColor">
+
+                        </li>
+                        <li id="graphSimulations" class="nav-item simulationColor">
+
+                        </li>
+                        <li id="graphDelete" class="nav-item">
+
+                        </li>
+                      </ul>
+                    </div>
+                    </div>
+                    <!-- Collapsable for graph properties -->
+                    <div id="propertiesCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Properties</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table for graph edge list -->
+                            <div class="tableWrapper table-responsive">
+                                <table id="graphPropertiesTable" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th title="Property">
+                                            Property
+                                        </th>
+                                        <th title="Value">
+                                            Value
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <!-- Collapsable for graph edge list -->
                     <div id="edgeListCollapsable" class="collapsable">
@@ -277,17 +390,17 @@
                         </div>
                         <div class="collapsableContent">
                             <!-- Table for graph edge list -->
-                            <div class="tableWrapper">
-                                <table id="graphEdgeTable">
+                            <div class="tableWrapper table-responsive">
+                                <table id="graphEdgeTable" class="table">
                                     <thead>
                                     <tr>
-                                        <th width="300" title="Source Node">
+                                        <th title="Source Node">
                                             Source
                                         </th>
-                                        <th width="120" title="Target Node">
+                                        <th title="Target Node">
                                             Target
                                         </th>
-                                        <th width="120" title="Edge Weight">
+                                        <th title="Edge Weight">
                                             Edges
                                         </th>
                                     </tr>
@@ -312,52 +425,31 @@
                                 <div class="formDiv">
                                     <form id="runAlgorithmForm" class="parameterized" action="javascript:void(0); return false;">
                                         <div class="formContentWrapper">
-                                            <table class="formTable">
-                                                <tr>
-                                                    <td>
-                                                        Algorithm:
-                                                    </td>
-                                                    <td>
-                                                        <select id="algorithm" class="nonparameter">
-                                                        </select>
-                                                    </td>
-                                                </tr>
-                                                <tr id ="algorithmParameterRow" class="hidden">
-                                                    <td>
-                                                        Parameters:
-                                                    </td>
-                                                    <td>
-                                                        <div class="tableWrapper">
-                                                            <table id="algorithmParams">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th title="Parameter Name">Name</th>
-                                                                        <th title="Default Value">Default</th>
-                                                                        <th title="Use Non-Default Parameter">Value</th> 
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody></tbody>
-                                                            </table>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        Content Weighting:
-                                                    </td>
-                                                    <td>
-                                                        <input type="checkbox" id="contentWeighting" />
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        Cover Name:
-                                                    </td>
-                                                    <td>
-                                                        <input id="coverName" class="nonparameter" type="text">
-                                                    </td>
-                                                </tr>
-                                            </table>
+
+                                          <div class="form-group row">
+                                          <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                                            <div class="col-sm-10">
+                                              <select id="algorithm" class="form-control nonparameter">
+                                              </select>
+                                            </div>
+                                          </div>
+
+                                          <div class="form-group row" id="paramDiv">
+                                          </div>
+                                        <!-- Cover Name -->
+                                        <div class="form-group row">
+                                          <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
+                                          <div class="col-sm-10">
+                                            <input id="coverName" type="text" class="form-control" placeholder="">
+                                          </div>
+                                        </div>
+
+                                          <label class="custom-control custom-checkbox">
+                                                <input id="contentWeighting" type="checkbox" class="custom-control-input">
+                                                <span class="custom-control-indicator"></span>
+                                                <span class="custom-control-description">Content Weighting</span>
+                                          </label>
+
                                         </div>
                                         <div class="submitWrapper">
                                             <input name="submit" id="runAlgorithmBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
@@ -365,6 +457,22 @@
                                     </form>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <!-- Colapsable for simulation execution -->
+                    <div id="runSimulationCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Run Simulation</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Form for simulation execution -->
+                                <div id="simulationContainer" class="container">
+
+                                </div>
                         </div>
                     </div>
                     <!-- Collapsable for graph visualization -->
@@ -384,7 +492,7 @@
                                 </div>
                                 <div class="visualizationContent">
                                     <div class="visualizationGraphic">
-                                    </div>    
+                                    </div>
                                 </div>
                             </div>
                         </div>

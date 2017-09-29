@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Cooperation & Defection</title>
+
+  <!-- CSS Stylesheets -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/layout.css" rel="stylesheet">
+
+  <!-- JavaScript -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="js/jquery.session.js"></script>
+  <script src="js/jquery.tablesorter.js"></script>
+  <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="JS/bootstrap.min.js"></script>
+  <script src="js/simulation/bootstrap-select.js"></script>
+  <script src="js/contentHandler.js"></script>
+  <script src="js/ServiceAPI/b64.js"></script>
+  <script src="js/ServiceAPI/moduleHelper.js"></script>
+  <script src="js/simulation/serviceAPI.js"></script>
+  <script src="js/jws-2.0.min.js"></script>
+  <script src="js/simulation/requestHandler.js"></script>
+  <script src="js/simulation/simulationForm.js"></script>
+  <script src="js/simulation/Chart.min.js"></script>
+
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <div id="navigation">
+  </div>
+
+  <!-- Page Content -->
+  <div class="container">
+
+    <div class="row">
+      <div class="col-lg-12" id="content">
+
+        <!-- Container for error message display -->
+        <div id="errorMessageWrapper">
+            <div id="errorMessage"></div>
+        </div>
+
+        <div id="simulationViewContainer">
+
+
+
+
+          <div id="simulationHeader">
+
+          </div>
+            <button id="create" class="btn btn-secondary">Export Table</button>
+          <div id="parametersCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Parameters</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="parametersContainer" class="collapsableContent">
+
+            </div>
+          </div>
+
+          <div id="evaluationCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Evaluation</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="evaluationContainer" class="collapsableContent">
+              <div class="tableWrapper table-responsive">
+                  <table id="evaluationTable" class = "table table-striped">
+                      <thead>
+                      <tr>
+                          <th title=""></th>
+                          <th title="">Cooperation</th>
+                          <th title="">Payoff</th>
+                      </tr>
+                      </thead>
+                      <tbody></tbody>
+                  </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="cooperationCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Cooperation Evolution</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="cooperationContainer" class="collapsableContent">
+              <canvas id="chartCoop"></canvas>
+            </div>
+          </div>
+
+          <div id="payoffCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Payoff Evolution</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="payoffContainer" class="collapsableContent">
+              <canvas id="chartPayoff"></canvas>
+            </div>
+          </div>
+
+
+
+        </div>
+
+
+
+      </div>
+    </div>
+  </div>
+  <!-- /.row -->
+
+  </div>
+  <!-- /.container -->
+
+
+
+  <script>
+    $(document).ready(function() {
+
+      registerCollapsable("#cooperationCollapsable", cooperationCollapsableHandler);
+      registerCollapsable("#payoffCollapsable", cooperationCollapsableHandler);
+      registerCollapsable("#parametersCollapsable", cooperationCollapsableHandler);
+      registerCollapsable("#evaluationCollapsable", cooperationCollapsableHandler);
+
+      function cooperationCollapsableHandler() {};
+
+      var seriesId = getParameterByName('seriesId');
+      $("#errorMessage").empty();
+      $("#errorMessage").html(writeAlertInfo("Info ", "Receiving simulation data"));
+      $("#errorMessageWrapper").show();
+      sendRequest("get", "simulation/" + seriesId, "",
+        /* Response handler */
+        function(response) {
+
+          $("#errorMessage").empty();
+          var obj = JSON.parse(response);
+          var name = obj.name;
+          var parameters = obj.parameters;
+
+            $('#simulationHeader').html(getHeadLine("Simulation Series " + name, ""));
+
+          var datasets = obj.simulationDatasets;
+          var coopEval = obj.cooperationEvaluation;
+          var payoffEval = obj.payoffEvaluation;
+          var genEval = obj.generationEvaluation;
+          var graphId = parameters.graphId;
+          var parameterString = '\
+              <div class="row">\
+                  <div class="col-sm-4">\
+                    <div>Game</div>\
+                    <div>Dynamic</div>\
+                    <div>Network</div>\
+                  </div>\
+                  <div class="col-sm-8">\
+                    <div>' + parameters.game + '</div>\
+                    <div>' + parameters.dynamic + '</div>\
+                    <div id="NetworkDiv"></div>\
+                  </div>\
+              </div>';
+
+          $('#parametersContainer').html(parameterString);
+          $('#simulationExport').html('<a download="' + name + '" id="downloadlink" style="" >Export Table</a>');
+          $('#simulationDelete').html('<a onclick="deleteSeries()" href="#">Delete</a>');
+
+          var evalString = '\
+          <tr>\
+          <td>Average</td><td>'+ coopEval.average +'</td><td>'+ payoffEval.average +'</td>\
+          </tr>\
+          <tr>\
+          <td>Variance</td><td>'+ coopEval.variance +'</td><td>'+ payoffEval.variance +'</td>\
+          </tr>\
+          <tr>\
+          <td>Deviation</td><td>'+ coopEval.deviation +'</td><td>'+ payoffEval.deviation +'</td>\
+          </tr>\
+          <tr>\
+          <td>Maximum</td><td>'+ coopEval.max +'</td><td>'+ payoffEval.max +'</td>\
+          </tr>\
+          <tr>\
+          <td>Minimum</td><td>'+ coopEval.min +'</td><td>'+ payoffEval.min +'</td>\
+          </tr>\
+          ';
+
+          $('#evaluationTable').find("tbody").html(evalString);
+
+
+          var dataArrayCoop = new Array(datasets.length);
+          var dataArrayPayoff = new Array(datasets.length);
+          datasets.forEach(function(value, index) {
+            dataArrayCoop[index] = value.cooperationValues;
+            dataArrayPayoff[index] = value.payoffValues;
+          });
+
+          generateCooperationChart(dataArrayCoop);
+          generatePayoffChart(dataArrayPayoff);
+
+          textFileDownload(getParameterByName('seriesId'));
+
+          sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
+            /* Response handler */
+            function(response) {
+              /* Stores graph meat information and adds it to the table */
+              graphMeta = $.parseXML(response);
+              console.log(graphMeta);
+              var name = $(graphMeta).find("Name").text();
+              var nodes = $(graphMeta).find("NodeCount").text();
+              var edges = $(graphMeta).find("EdgeCount").text();
+              var row = writeNetworkMeta(graphId, name, nodes, edges)
+              $("#NetworkDiv").html('<a href="/OCD-Web-Client/graph.html?id=' + graphId + '">'+ name +'</a>');
+            },
+            /* Error handler */
+            function(errorData) {
+
+            }, "text/plain");
+        },
+        /* Error handler */
+        function(errorData) {
+          showConnectionErrorMessage("Request failed.");
+        }, "");
+
+      sendRequest("get", "mapping/simulation/" + seriesId, "",
+        /* Response handler */
+        function(response) {
+          console.log(response);
+
+
+          //window.location.href = 'index.html';
+        },
+        /* Error handler */
+        function(errorData) {
+          //window.location.href = 'index.html';
+          /*
+           * GraphIds request failed
+           */
+          //showConnectionErrorMessage("Benchmark request failed.");
+        }, "");
+
+
+
+
+    });
+
+    function writeNetworkMeta(id, name, nodes, edges) {
+      var string =
+        '<div class="col-md-12"><a href="/OCD-Web-Client/graph.html?id=' + id + '">'+ name +'</a></div>\
+        <div class="col-md-12">' + nodes + ' Nodes</div>\
+        <div class="col-md-12">' + edges + ' Edges</div>';
+
+      return string;
+    }
+
+    function getChartData(dataArray) {
+
+      var intDatasets = dataArray.length;
+      var intGenerations = 5;
+      for (var i = 0; i < intDatasets; i++) {
+        var length = dataArray[i].length;
+        if (intGenerations < length) {
+          intGenerations = length;
+        }
+      }
+      var labelArray = new Array(intGenerations);
+      for (var i = 0; i < intGenerations; i++) {
+        labelArray[i] = i;
+      }
+
+      var data = {
+        type: 'line',
+        data: {
+          labels: labelArray,
+          datasets: dataSetsObject(dataArray)
+        }
+      };
+
+      return data;
+    }
+
+
+    function generateCooperationChart(dataArray) {
+
+      var data = getChartData(dataArray);
+      var ctx = document.getElementById("chartCoop").getContext("2d");
+      var myChart = new Chart(ctx, data);
+    }
+
+    function generatePayoffChart(dataArray) {
+      var data = getChartData(dataArray);
+      var ctx = document.getElementById("chartPayoff").getContext("2d");
+      var myChart = new Chart(ctx, data);
+    }
+
+    var randomColor = function() {
+      var r = Math.floor(Math.random() * 255);
+      var g = Math.floor(Math.random() * 255);
+      var b = Math.floor(Math.random() * 255);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    }
+
+    var dataObject = function(id, dataArray) {
+      return {
+        label: id,
+        data: dataArray,
+        backgroundColor: 'transparent',
+        borderColor: randomColor()
+      };
+    }
+
+    var dataSetsObject = function(dataArray) {
+
+      var dataSets = new Array();
+      for (var i = 0; i < dataArray.length; i++) {
+        dataSets.push(dataObject(i + 1, dataArray[i]));
+      }
+      return dataSets;
+    };
+
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    function makeTextFile(text) {
+      var textFile = null
+      var data = new Blob([text], {
+        type: 'text/plain'
+      });
+      if (textFile !== null) {
+        window.URL.revokeObjectURL(textFile);
+      }
+      textFile = window.URL.createObjectURL(data);
+      return textFile;
+    };
+
+    function textFileDownload(simulationId) {
+      var create = document.getElementById('create');
+
+      create.addEventListener('click', function() {
+        create.disabled="disabled";
+        $("#errorMessage").empty();
+        $("#errorMessage").html(writeAlertInfo("Info ", "export table"));
+        $("#errorMessageWrapper").show();
+        sendRequest("get", "simulation/" + simulationId + "/table", "",
+          /* Response handler */
+          function(response) {
+
+            var info = '<a download="'+ response.name +'" id="downloadlink" style="display: none">Download</a>';
+            $("#errorMessage").empty();
+            $("#errorMessage").html(writeAlertSuccess("Exported ", info));
+            $("#errorMessageWrapper").show();
+            var link = document.getElementById('downloadlink');
+            link.href = makeTextFile(response);
+            link.style.display = 'block';
+
+          },
+          /* Error handler */
+          function(errorData) {
+            showConnectionErrorMessage("Benchmark request failed.");
+          }, "");
+
+
+      }, false);
+    };
+  </script>
+
+
+
+</body>
+
+</html>
