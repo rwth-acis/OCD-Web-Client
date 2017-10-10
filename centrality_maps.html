@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
-    <!-- Displays basic/meta information on multiple covers -->
+    <!-- Displays basic/meta information on all calculated centrality maps -->
     <head>
-        <title>OCD - Covers</title>
+        <title>Calculated Centrality Maps</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
@@ -17,27 +17,27 @@
         <script src="JS/ServiceAPI/serviceAPI.js"></script>
         <script src="JS/requestHandler.js"></script>
         <script src="JS/jquery.tablesorter.js"></script>
-        <script src="JS/coverTableHandler.js"></script>
+        <script src="JS/centralityTableHandler.js"></script>
         <script type="text/javascript">
             /*
              * Defines current page and page size.
              */
-            var COVERS_PER_PAGE = 20;
+            var ENTRIES_PER_PAGE = 20;
             var pageNumber = 0;
             /*
              * Executed after page loading.
              */
             $(document).ready(function() {
-                /* Number of the cover table page to display */
+                /* Maximum number of the centrality maps to display on each table page */
                 pageNumber = getUrlVar("page");
                 if(!pageNumber) {
                     pageNumber = 0;
                 }
                 $('.pageNumWrapper').append(pageNumber);
-                /* Index of the first cover to be displayed */
-                var firstIndex = COVERS_PER_PAGE * pageNumber;
-                /* Identifiers for the cover information to display */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "C", "G", "R"];
+                /* Index of the first entry to be displayed */
+                var firstIndex = ENTRIES_PER_PAGE * pageNumber;
+                /* Identifiers for the centrality map information to display */
+                var cells = ["Centrality Measure", "Graph", "Execution Time", "C", "G", "R"];
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -45,53 +45,56 @@
                 else {
                     graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
                 }
-                /* Requests the cover information */
-                sendRequest("get", "covers?executionStatuses=COMPLETED&includeMeta=TRUE&"
-                        + "firstIndex=" + firstIndex + "&length=" + COVERS_PER_PAGE + graphIdQueryExtension, "",
+                /* Requests the CentralityMaps information */
+                sendRequest("get", "maps?executionStatuses=COMPLETED&includeMeta=TRUE&"
+                        + "firstIndex=" + firstIndex + "&length=" + ENTRIES_PER_PAGE + graphIdQueryExtension, "",
                     /* Response handler */
-                    function(coverMetasXml) {
+                    function(mapMetasXml) {
                         /*
-                         * CoverMetas request succeeded
+                         * Centrality map metas request succeeded
                          */
-                        if($(coverMetasXml).find("Id").length === 0 && pageNumber > 0) {
+                        if($(mapMetasXml).find("Id").length === 0 && pageNumber > 0) {
                             pageNumber--;
-                            var newUrl = "covers.html?page=" + pageNumber;
+                            var newUrl = "centrality_maps.html?page=" + pageNumber;
                             window.location.href = newUrl;
                         }
-                        $(coverMetasXml).find("Cover").each(function() {
-                            appendCoverRow($('#coverTable'), $(this), cells);
+                        $(mapMetasXml).find("CentralityMap").each(function() {
+                            appendCentralityMapRow($('#centralityTable'), $(this), cells);
                         });
                         /*
                          * Sort Table
                          */
                         try {
-                            $("#coverTable").tablesorter({sortList: [[1,0],[0,0]],
-                                headers: { 6: { sorter: false}, 7: {sorter: false}, 8: {sorter: false}}});
+                            $("#centralityTable").tablesorter({sortList: [[1,0],[0,0]],
+                                headers: { 5: {sorter: false}, 6: { sorter: false}, 7: {sorter: false}}});
                         } catch(err) { /* table empty */ }
                         /*
                          * Register event handlers
                          */
-                        registerCoverTable();
+                        registerCentralityTable();
                     },
                     /* Error handler */
                     function(errorData) {
                         /*
                          * GraphIds request failed
                          */
-                        showConnectionErrorMessage("Cover metas were not received.");
+                        showConnectionErrorMessage("Centrality map metas were not received.");
                 });
-                /* Page control for the cover page to be displayed */
+                /* Page control for the centrality map page to be displayed */
                 $('.pageLeft').click(function(){
                     if(pageNumber > 0) {
                         pageNumber--;
-                        var newUrl = "covers.html?page=" + pageNumber;
+                        var newUrl = "centrality_maps.html?page=" + pageNumber;
                         window.location.href = newUrl;
                     }
                 });
                 $('.pageRight').click(function(){
                     pageNumber++;
-                    var newUrl = "covers.html?page=" + pageNumber;
+                    var newUrl = "centrality_maps.html?page=" + pageNumber;
                     window.location.href = newUrl;
+                });
+                $('#evaluate').click(function(){
+                    window.location.href = "centrality_maps_evaluation.html";
                 });
             });
         </script>
@@ -104,8 +107,10 @@
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
                     </div>
-
-                    <!-- Page control for the cover table -->
+                    <div class="buttonWrapper">
+                        <button id="evaluate" type="button" class="btn btn-secondary btn-lg">Enter Evaluation Mode</button>
+                    </div>
+                    <!-- Page control for the centrality table -->
                     <div class = "pageControlWrapper">
                         <div class="pageControl">
                             <div class="pageLeftWrapper">
@@ -118,36 +123,31 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Cover meta information table -->
+                    <!-- Centrality map meta information table -->
                     <div class="tableWrapper table-responsive">
-                        <table id="coverTable" class="cover table table-striped">
+                        <table id="centralityTable" class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th class="hidden" title="CoverId"></th>
+                                    <th class="hidden" title="CentralityMapId"></th>
                                     <th class="hidden" title="GraphId"></th>
-                                    <th width="300" title="Cover Name" class="sortable">
-                                        Name
+                                    <th width="300" title="Centrality Measure Name" class="sortable">
+                                        Centrality Measure
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                     <th width="300" title="Graph Name" class="sortable">
                                         Graph
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
-                                    <th width="300" title="Algorithm Name" class="sortable">
-                                        Creation Method
-                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    <th width="200" title="Execution Time">
+                                        Execution Time (ms)
                                     </th>
-                                    <th width="100" title="Community Count" class="sortable">
-                                        Communities
-                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
-                                    </th>
-                                    <th width="20" title="Show Cover">
+                                    <th width="20" title="Show Centrality Map">
                                         C
                                     </th>
                                     <th width="20" title="Show Graph">
                                         G
                                     </th>
-                                    <th width="20" title="Remove Cover">
+                                    <th width="20" title="Remove Centrality Map">
                                         R
                                     </th>
                                 </tr>

@@ -35,6 +35,10 @@
             var visualization;
             /* Names of all OCD algorithms */
             var algorithmNames;
+            /* Names of all centrality measures */
+            var centralityMeasureNames;
+            /* Names of all centrality simulations */
+            var centralitySimulationNames;
             /* Executed after page loading */
             $(document).ready(function() {
                 /* Identifiers for the graph information to be displayed */
@@ -43,7 +47,7 @@
                     sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
                         /* Response handler */
                         function(response) {
-                            /* Stores graph meat information and adds it to the table */
+                            /* Stores graph meta information and adds it to the graph header */
                             graphMetaXml = response;
                             var name = $(graphMetaXml).find('Name').text();
                             var nodes = $(graphMetaXml).find('NodeCount').text();
@@ -57,26 +61,28 @@
                             var weighted =  $.inArray("WEIGHTED", types);
 
                             var description = "A";
-                            if(!directed && !weighted)
+                            if(directed == -1 && weighted == -1)
                               description += " simple ";
-                            if(directed)
+                            if(directed > -1)
                               description += " directed ";
-                            if(directed)
-                                description += " weighted ";
+                            if(weighted > -1)
+                              description += " weighted ";
 
                             description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
                             $('#graphHeader').html(getHeadLine(name, description));
                             $('#graphCovers').html('<a href="covers.html?graphId=' + graphId +'">Covers</a>');
                             $('#graphSimulations').html('<a href="simulations.html">Simulations</a>');
+                            $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId +'">Node Centralities</a>');
                             $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
 
                             /* Registers components and event handlers */
-                            registerGraphTable();
                             registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
                             registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
                             registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
                             registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
                             registerCollapsable("#runSimulationCollapsable", runSimulationCollapsableHandler);
+                            registerCollapsable("#runCentralityCalculationCollapsable", runCentralityCalculationCollapsableHandler);
+                            registerCollapsable("#runCentralitySimulationCollapsable", runCentralitySimulationCollapsableHandler);
                         },
                         /* Error handler */
                         function(errorData) {
@@ -115,6 +121,52 @@
                     }
                     return false;
                 });
+                /*
+                 * Run centrality calculation form listener.
+                 */
+                 $('#runCentralityCalculationForm').submit(function(){
+                   var c_algo = $('#centralityMeasure').val();
+                   if(c_algo !== getSelectOptionVal()) {
+                     var params = getParameterXml("#centralityMeasureParameterDiv");
+                     sendRequest("post", "centrality/graphs/" + graphId
+                             + "/algorithms?algorithm="+ c_algo, params,
+                         /* Response handler */
+                         function(response) {
+                             //window.location.href = 'index.html';
+                         },
+                         /* Error handler */
+                         function(errorData) {
+                             /*
+                              * Run centrality calculation request failed
+                              */
+                             showConnectionErrorMessage("Centrality calculation request failed.");
+                     });
+                   }
+                   return false;
+                 });
+                 /*
+                  * Run centrality simulation form listener.
+                  */
+                  $('#runCentralitySimulationForm').submit(function(){
+                    var sim = $('#centralitySimulation').val();
+                    if(sim !== getSelectOptionVal()) {
+                      var params = getParameterXml("#centralitySimulationParameterDiv");
+                      sendRequest("post", "simulation/graphs/" + graphId
+                              + "?simulation="+ sim, params,
+                          /* Response handler */
+                          function(response) {
+                              //window.location.href = 'index.html';
+                          },
+                          /* Error handler */
+                          function(errorData) {
+                              /*
+                               * Run centrality simulation request failed
+                               */
+                              showConnectionErrorMessage("Centrality simulation request failed.");
+                      });
+                    }
+                    return false;
+                  });
             });
             /* Requests the names of all OCD algorithms.
              * Then executes a callback function */
@@ -130,9 +182,47 @@
                         /* Error handler */
                         function(errorData) {
                             /*
-                             * GraphIds request failed
+                             * OCD algorithm request failed
                              */
                             showConnectionErrorMessage("Algorithm names were not received.");
+                        });
+            }
+            /* Requests the names of all centrality measures.
+             * Then executes a callback function */
+            function getCentralityMeasureNames(callback) {
+                sendRequest("get", "centralities", "",
+                        /* Response handler */
+                        function(response) {
+                			centralityMeasureNames = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Centrality measure name request failed
+                             */
+                            showConnectionErrorMessage("Centrality measure names were not received.");
+                        });
+            }
+            /* Requests the names of all centrality simulations.
+             * Then executes a callback function */
+            function getCentralitySimulationNames(callback) {
+                sendRequest("get", "simulations", "",
+                        /* Response handler */
+                        function(response) {
+                			centralitySimulationNames = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Centrality simulation name request failed
+                             */
+                            showConnectionErrorMessage("Simulation names were not received.");
                         });
             }
             /* Requests all parameter names for a given algorithm.
@@ -153,6 +243,42 @@
                             showConnectionErrorMessage("Algorithm parameters were not received.");
                         });
             }
+            /* Requests all parameter names for a given centrality measure.
+             * Then executes a calllback function */
+            function getCentralityMeasureParameters(centralityMeasureName, callback) {
+                sendRequest("get", "centralities/" + centralityMeasureName + "/parameters/default", "",
+                        /* Response handler */
+                        function(response) {
+                            if(typeof callback !== 'undefined') {
+                                callback(response);
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Centrality measure parameter request failed
+                             */
+                            showConnectionErrorMessage("Centrality measure parameters were not received.");
+                        });
+            }
+            /* Requests all parameter names for a given centrality simulation.
+             * Then executes a calllback function */
+            function getCentralitySimulationParameters(centralitySimulationName, callback) {
+                sendRequest("get", "simulations/" + centralitySimulationName + "/parameters/default", "",
+                        /* Response handler */
+                        function(response) {
+                            if(typeof callback !== 'undefined') {
+                                callback(response);
+                            }
+                        },
+                        /* Error handler */
+                        function(errorData) {
+                            /*
+                             * Centrality simulation parameter request failed
+                             */
+                            showConnectionErrorMessage("Centrality simulation parameters were not received.");
+                        });
+            }
             /* Handles the collapsable element for the algorithm execution. */
             function runAlgorithmCollapsableHandler() {
                 if(typeof algorithmNames === 'undefined') {
@@ -166,8 +292,8 @@
                             }
                         });
                     });
-                    /* Registers the parameter table component for the contentHandler */
-                    registerParameterSelect("#algorithm", "#algorithmParameterRow", getAlgorithmParameters);
+                    /* Registers the parameter component for the contentHandler */
+                    registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
                 }
             }
             /* Handles the collapsable element for the algorithm execution. */
@@ -183,8 +309,40 @@
                             }
                         });
                     });
-                    /* Registers the parameter table component for the contentHandler */
-                    registerParameterSelect("#algorithm", "#algorithmParameterRow", getAlgorithmParameters);
+                }
+            }
+            /* Handles the collapsable element for the centrality calculation. */
+            function runCentralityCalculationCollapsableHandler() {
+                if(typeof centralityMeasureNames === 'undefined') {
+                    /* Adds all centrality measure names to the form */
+                    getCentralityMeasureNames(function() {
+                        $(centralityMeasureNames).find('Name').each(function() {
+                        	if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH' && $(this).text() !== 'SIMULATION' && $(this).text() !== 'AVERAGE') {
+                                $("#centralityMeasure").append(
+                                    '<option value="' + $(this).text()
+                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                            }
+                        });
+                    });
+                    /* Registers the parameter component for the contentHandler */
+                    registerParameterSelect("#centralityMeasure", "#centralityMeasureParameterDiv", getCentralityMeasureParameters);
+                }
+            }
+            /* Handles the collapsable element for the centrality simulation. */
+            function runCentralitySimulationCollapsableHandler() {
+                if(typeof centralitySimulationNames === 'undefined') {
+                    /* Adds all centrality simulation names to the form */
+                    getCentralitySimulationNames(function() {
+                        $(centralitySimulationNames).find('Name').each(function() {
+                            if($(this).text() !== 'UNDEFINED') {
+                                $("#centralitySimulation").append(
+                                    '<option value="' + $(this).text()
+                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                            }
+                        });
+                    });
+                    /* Registers the parameter component for the contentHandler */
+                    registerParameterSelect("#centralitySimulation", "#centralitySimulationParameterDiv", getCentralitySimulationParameters);
                 }
             }
             /* Requests and stores the properties of the graph.
@@ -320,8 +478,6 @@
                       showConnectionErrorMessage(errorData);
               });
             }
-
-
         </script>
     </head>
     <body>
@@ -332,7 +488,7 @@
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
                     </div>
-                    <!-- Table for graph meta information -->
+                    <!-- Graph meta information and related data -->
                     <div>
                       <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
 
@@ -343,6 +499,8 @@
 
                         </li>
                         <li id="graphSimulations" class="nav-item simulationColor">
+
+                        <li id="graphCentralities" class="nav-item">
 
                         </li>
                         <li id="graphDelete" class="nav-item">
@@ -361,7 +519,7 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <!-- Table for graph edge list -->
+                            <!-- Table for graph properties -->
                             <div class="tableWrapper table-responsive">
                                 <table id="graphPropertiesTable" class="table">
                                     <thead>
@@ -410,7 +568,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Colapsable for algorithm execution -->
+                    <!-- Collapsable for algorithm execution -->
                     <div id="runAlgorithmCollapsable" class="collapsable">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Run Algorithm</div>
@@ -434,15 +592,15 @@
                                             </div>
                                           </div>
 
-                                          <div class="form-group row" id="paramDiv">
+                                          <div class="form-group row" id="algorithmParameterDiv">
                                           </div>
-                                        <!-- Cover Name -->
-                                        <div class="form-group row">
-                                          <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
-                                          <div class="col-sm-10">
-                                            <input id="coverName" type="text" class="form-control" placeholder="">
+                                          <!-- Cover Name -->
+                                          <div class="form-group row">
+                                            <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
+                                            <div class="col-sm-10">
+                                              <input id="coverName" type="text" class="form-control" placeholder="">
+                                            </div>
                                           </div>
-                                        </div>
 
                                           <label class="custom-control custom-checkbox">
                                                 <input id="contentWeighting" type="checkbox" class="custom-control-input">
@@ -459,7 +617,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Colapsable for simulation execution -->
+                    <!-- Collapsable for simulation execution -->
                     <div id="runSimulationCollapsable" class="collapsable">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Run Simulation</div>
@@ -473,6 +631,78 @@
                                 <div id="simulationContainer" class="container">
 
                                 </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for centrality calculation execution -->
+                    <div id="runCentralityCalculationCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Run Centrality Calculation</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Form for centrality calculation execution -->
+                            <div class="formWrapper">
+                                <div class="formDiv">
+                                    <form id="runCentralityCalculationForm" class="parameterized" action="javascript:void(0); return false;">
+                                        <div class="formContentWrapper">
+
+                                          <div class="form-group row">
+                                          <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
+                                            <div class="col-sm-8">
+                                              <select id="centralityMeasure" class="form-control">
+                                              </select>
+                                            </div>
+                                          </div>
+
+                                          <div class="form-group row" id="centralityMeasureParameterDiv">
+                                          </div>
+
+                                        </div>
+                                        <div class="form-group">
+                                            <button type="submit" id="runCentralityCalculationBtn" class="btn btn-secondary">Run</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for centrality simulation execution -->
+                    <div id="runCentralitySimulationCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Run Centrality Simulation</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Form for centrality simulation execution -->
+                            <div class="formWrapper">
+                                <div class="formDiv">
+                                    <form id="runCentralitySimulationForm" class="parameterized" action="javascript:void(0); return false;">
+                                        <div class="formContentWrapper">
+
+                                          <div class="form-group row">
+                                          <label for="centralitySimulation" class="col-sm-2 col-form-label">Simulation</label>
+                                            <div class="col-sm-10">
+                                              <select id=centralitySimulation class="form-control nonparameter">
+                                              </select>
+                                            </div>
+                                          </div>
+
+                                          <div class="form-group row" id="centralitySimulationParameterDiv">
+                                          </div>
+
+                                        </div>
+                                        <div class="form-group">
+                                            <button type="submit" id="runCentralitySimulationBtn" class="btn btn-secondary">Run</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <!-- Collapsable for graph visualization -->
