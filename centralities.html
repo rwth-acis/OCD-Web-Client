@@ -2,7 +2,7 @@
 <html>
     <!-- Displays basic/meta information on all calculated centrality maps -->
     <head>
-        <title>Calculated Centrality Maps</title>
+        <title>Calculated Centralities</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
@@ -55,7 +55,7 @@
                          */
                         if($(mapMetasXml).find("Id").length === 0 && pageNumber > 0) {
                             pageNumber--;
-                            var newUrl = "centrality_maps.html?page=" + pageNumber;
+                            var newUrl = "centralities.html?page=" + pageNumber;
                             window.location.href = newUrl;
                         }
                         $(mapMetasXml).find("CentralityMap").each(function() {
@@ -84,17 +84,17 @@
                 $('.pageLeft').click(function(){
                     if(pageNumber > 0) {
                         pageNumber--;
-                        var newUrl = "centrality_maps.html?page=" + pageNumber;
+                        var newUrl = "centralities.html?page=" + pageNumber;
                         window.location.href = newUrl;
                     }
                 });
                 $('.pageRight').click(function(){
                     pageNumber++;
-                    var newUrl = "centrality_maps.html?page=" + pageNumber;
+                    var newUrl = "centralities.html?page=" + pageNumber;
                     window.location.href = newUrl;
                 });
                 $('#evaluate').click(function(){
-                    window.location.href = "centrality_maps_evaluation.html";
+                    window.location.href = "centralities_evaluation.html";
                 });
             });
         </script>
@@ -141,13 +141,13 @@
                                     <th width="200" title="Execution Time">
                                         Execution Time (ms)
                                     </th>
-                                    <th width="20" title="Show Centrality Map">
+                                    <th width="20" title="Show Centrality">
                                         C
                                     </th>
                                     <th width="20" title="Show Graph">
                                         G
                                     </th>
-                                    <th width="20" title="Remove Centrality Map">
+                                    <th width="20" title="Remove Centrality">
                                         R
                                     </th>
                                 </tr>

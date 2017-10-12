@@ -2,7 +2,7 @@
 <html>
     <!-- Displays basic/meta information on all calculated centrality measures -->
     <head>
-        <title>Calculated Centrality Measures</title>
+        <title>Centrality Correlation</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
@@ -57,6 +57,12 @@
                     }, "text");
                 }
                 displayMatrix(localStorage.getItem("correlationMatrixXml"));
+
+                $("#precisionCheckbox").change(function() {
+                    $("#matrixTable thead").html("");
+                    $("#matrixTable tbody").html("");
+                    displayMatrix(localStorage.getItem("correlationMatrixXml"));
+                });
             });
 
             function afterResponse() {
@@ -78,17 +84,32 @@
                     header += "<th>" + $(this).attr("CentralityMapId") + "</th>";
                 });
                 $("#matrixTable").children("tbody").append(header);
-                $(matrixXml).find("Row").each(function() {
-                    var row = "<tr>"
-                    row += "<th>" + $(this).attr("CentralityMapId") + "</th>";
-                    header += "<th>" + $(this).attr("CentralityMapId") + "</th>";
-                    var cellXml = $(this).find("Cell").each(function() {
-                        var entry = $(this).text();
-                        row += "<td>" + entry + "</td>";
+                if(precisionCheckbox.checked) {
+                    $(matrixXml).find("Row").each(function() {
+                        var row = "<tr>"
+                        row += "<th>" + $(this).attr("CentralityMapId") + "</th>";
+                        header += "<th>" + $(this).attr("CentralityMapId") + "</th>";
+                        var cellXml = $(this).find("Cell").each(function() {
+                            var entry = $(this).text();
+                            row += "<td>" + entry + "</td>";
+                        });
+                        row += "</tr>"
+                        $("#matrixTable").children("tbody").append(row);
                     });
-                    row += "</tr>"
-                    $("#matrixTable").children("tbody").append(row);
-                });
+                }
+                else {
+                    $(matrixXml).find("Row").each(function() {
+                        var row = "<tr>"
+                        row += "<th>" + $(this).attr("CentralityMapId") + "</th>";
+                        header += "<th>" + $(this).attr("CentralityMapId") + "</th>";
+                        var cellXml = $(this).find("Cell").each(function() {
+                            var entry = parseFloat($(this).text());
+                            row += "<td>" + entry.toFixed(4) + "</td>";
+                        });
+                        row += "</tr>"
+                        $("#matrixTable").children("tbody").append(row);
+                    });
+                }
             }
         </script>
     </head>
@@ -120,13 +141,13 @@
                                     <th width="200" title="Execution Time">
                                         Execution Time (ms)
                                     </th>
-                                    <th width="20" title="Show Centrality Map">
+                                    <th width="20" title="Show Centrality">
                                         C
                                     </th>
                                     <th width="20" title="Show Graph">
                                         G
                                     </th>
-                                    <th width="20" title="Remove Centrality Map">
+                                    <th width="20" title="Remove Centrality">
                                         R
                                     </th>
                                 </tr>
@@ -140,6 +161,11 @@
                             <thead></thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                    <div id="tableControls">
+                        <div class="checkbox">
+                            <label><input id="precisionCheckbox" type="checkbox" value="">High Precision</label>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -2,7 +2,7 @@
 <html>
     <!-- Displays basic/meta information on all calculated centrality maps -->
     <head>
-        <title>Calculated Centrality Maps</title>
+        <title>Evaluate Calculated Centralities</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
@@ -74,7 +74,7 @@
                         var graphId1 = graphIds.eq(0).text();
                         var mapId2 = mapIds.eq(1).text();
                         var graphId2 = graphIds.eq(1).text();
-                        window.location.href = "centrality_map_comparison.html?mapId1=" + mapId1 + "&graphId1=" + graphId1 + "&mapId2=" + mapId2 + "&graphId2=" + graphId2;
+                        window.location.href = "centrality_comparison.html?mapId1=" + mapId1 + "&graphId1=" + graphId1 + "&mapId2=" + mapId2 + "&graphId2=" + graphId2;
                     }
                     else {
                         showErrorMessage('Please select exactly two row entries for comparison');
@@ -100,7 +100,7 @@
                             sendRequest("get", "evaluation/average/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                 /* Response handler */
                                 function(averageMapXml) {
-                                    window.location.href = "centrality_maps_evaluation.html";
+                                    window.location.href = "centralities_evaluation.html";
                                 },
                                 /* Error handler */
                                 function(errorData) {
@@ -136,7 +136,7 @@
                             sendRequest("get", "evaluation/correlation/spearman/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                 /* Response handler */
                                 function(resultXml) {
-                                    window.location.href = "centrality_map_correlation.html";
+                                    window.location.href = "centrality_correlation.html";
                                     localStorage.setItem("correlationMatrixXml", resultXml);
                                     localStorage.setItem("mapIds", "&" + mapIdString);
                                     localStorage.setItem("graphId", firstGraphId);
@@ -153,6 +153,16 @@
                         showErrorMessage('Please select at least two row entries for the correlation computation');
                     }
                 });
+                $("#selectAll").click(function() {
+                    $('table tbody tr').each(function(){
+                        $(this).addClass('highlight');
+                    });
+                });
+                $("#deselectAll").click(function() {
+                    $('table tbody tr').each(function(){
+                        $(this).removeClass('highlight');
+                    });
+                });
             });
         </script>
     </head>
@@ -168,6 +178,10 @@
                         <button id="compare" type="button" class="btn btn-outline-primary">Compare</button>
                         <button id="average" type="button" class="btn btn-outline-primary">Average</button>
                         <button id="correlation" type="button" class="btn btn-outline-primary">Correlation</button>
+                    </div>
+                    <div id="selectionControl">
+                        <button id="selectAll" type="button" class="btn transparentButton">Select All</button>
+                        <button id="deselectAll" type="deselectAll" class="btn transparentButton">Deselect All</button>
                     </div>
                     <!-- Centrality map meta information table -->
                     <div class="tableWrapper table-responsive">
@@ -187,13 +201,13 @@
                                     <th width="200" title="Execution Time">
                                         Execution Time (ms)
                                     </th>
-                                    <th width="20" title="Show Centrality Map">
+                                    <th width="20" title="Show Centrality">
                                         C
                                     </th>
                                     <th width="20" title="Show Graph">
                                         G
                                     </th>
-                                    <th width="20" title="Remove Centrality Map">
+                                    <th width="20" title="Remove Centrality">
                                         R
                                     </th>
                                 </tr>

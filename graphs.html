@@ -34,7 +34,7 @@
                 $('.pageNumWrapper').append(pageNumber);
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
                 /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "G", "C", "R"];
+                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "G", "Co", "Cn", "R"];
                 /* Requests the graph meta information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
@@ -144,7 +144,9 @@
                                     G
                                 </th>
                                 <th width="20" title="Show Covers">
-                                    C
+                                    Co
+                                <th width="20" title="Show Centralities">
+                                    Cn
                                 </th>
                                 <th width="20" title="Remove Graph">
                                     R

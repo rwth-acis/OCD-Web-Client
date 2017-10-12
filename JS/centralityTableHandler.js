@@ -107,7 +107,7 @@ function deleteCentralityMap(mapId, graphId) {
         /* Response handler */
         function(confirmXml) {
             var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
-            var newUrl = "centrality_maps.html?page=" + page;
+            var newUrl = "centralities.html?page=" + page;
             window.location.href = newUrl;
         },
         /* Error handler */
@@ -120,7 +120,7 @@ function deleteCentralityMap(mapId, graphId) {
  * Shows a centrality map.
  */
 function showCentralityMap(mapId, graphId) {
-    window.location.href = "centrality_map.html?mapId=" + mapId.text() + "&graphId=" + graphId.text();
+    window.location.href = "centrality.html?mapId=" + mapId.text() + "&graphId=" + graphId.text();
 }
 
 /*

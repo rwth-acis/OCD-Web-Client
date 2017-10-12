@@ -50,7 +50,7 @@ body {
     padding: 10px 0px;
 }
 
-#header h1, .sub-header {
+#header h1, .sub-header, #selectionControl {
     text-align: center;
 }
 
@@ -83,6 +83,11 @@ body {
 .buttonWrapper {
     text-align: center;
     margin-bottom: 10px;
+}
+
+.transparentButton {
+    background-color: transparent;
+    border-color: transparent;
 }
 
 .highlight {
@@ -362,6 +367,14 @@ td:last-child {
 .simulationColor .jumbotron {
   background-color: #F7F8E0;
   margin-bottom: 0;
+}
+
+.centralityColor {
+    background-color: #ffeecc;
+}
+
+.deleteColor {
+    background-color: #ffcccc;
 }
 
 /* side-nav */

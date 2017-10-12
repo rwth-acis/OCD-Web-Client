@@ -41,7 +41,7 @@ $(document).ready(function(){
                   <li class="nav-item"><a class="nav-link" href="covers.html">Community Detection</a></li>\
                   <li class="nav-item"><a class="nav-link" href="benchmarks.html">Benchmarks</a></li>\
                   <li class="nav-item"><a class="nav-link" href="simulations.html">Simulations</a></li>\
-    			  <li class="nav-item"><a class="nav-link" href="centrality_maps.html">Centrality</a></li>\
+    			  <li class="nav-item"><a class="nav-link" href="centralities.html">Centrality</a></li>\
                 </ul>\
                 <ul class="navbar-nav navbar-right">\
                   <li class="nav-item"><a class="nav-link" href="import.html">Import</a></li>\

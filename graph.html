@@ -72,7 +72,7 @@
                             $('#graphHeader').html(getHeadLine(name, description));
                             $('#graphCovers').html('<a href="covers.html?graphId=' + graphId +'">Covers</a>');
                             $('#graphSimulations').html('<a href="simulations.html">Simulations</a>');
-                            $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId +'">Node Centralities</a>');
+                            $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId +'">Centralities</a>');
                             $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
 
                             /* Registers components and event handlers */
@@ -500,10 +500,10 @@
                         </li>
                         <li id="graphSimulations" class="nav-item simulationColor">
 
-                        <li id="graphCentralities" class="nav-item">
+                        <li id="graphCentralities" class="nav-item centralityColor">
 
                         </li>
-                        <li id="graphDelete" class="nav-item">
+                        <li id="graphDelete" class="nav-item deleteColor">
 
                         </li>
                       </ul>
