@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<!-- Displays detailed information on a single centrality map. -->
+<html>
+    <head>
+        <title>Centrality Map</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/centralityTableHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/jquery.panzoom.js"></script>
+        <script src="JS/jquery.mousewheel.js"></script>
+        <script type="text/javascript">
+            /* Id of the corresponding graph */
+            var graphId = getUrlVar("graphId");
+            /* Id of the centrality map */
+            var mapId = getUrlVar("mapId");
+            /* Meta Data Xml */
+            var mapMetaXml;
+            /* Map Data Xml */
+            var mapDefaultXml;
+            /* SVG for Visualization */
+            var visualization;
+            /* Names of all visualization types */
+            var visualizationTypeNames;
+            /* Maximum ground truth candidates (for metric execution) displayed per page */
+            var ENTRIES_PER_PAGE = 20;
+            /* Current page of ground truth candidates (for metric execution) */
+            var pageNumber = 0;
+            /* Default select option value */
+            var selectOptionVal = "SELECT";
+            /* Default select option code */
+            var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
+            /* Indicates whether the values were already added to the table */
+            var valuesAdded = false;
+            /* Indicates whether the parameters were already added to the table */
+            var parametersAdded = false;
+            /* Indicates whether the mapDefaultXml was already requested and saved */
+            var xmlSet = false;
+
+            $(document).ready(function() {
+                /* Identifiers for meta information to be displayed */
+                var cells = ["Centrality Measure", "Graph", "Execution Time", "G", "R"];
+                /* Requests centrality map meta information */
+                sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
+                    /* Response handler */
+                    function(response) {
+                        /*
+                         * Init meta table
+                         */
+                        mapMetaXml = response;
+                        appendCentralityMapRow($('#mapMetaTable'), mapMetaXml, cells);
+
+                        registerCentralityTable();
+                        registerCollapsable("#valuesCollapsable", valuesCollapsableHandler);
+                        registerCollapsable("#parametersCollapsable", parametersCollapsableHandler);
+                        registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Centrality map request failed
+                         */
+                        showConnectionErrorMessage("Centrality map was not received.");
+                    }, "text");
+            });
+
+            function valuesCollapsableHandler() {
+                if(!valuesAdded) {
+                    /*
+                    * Init values table
+                    */
+                    if(!xmlSet) {
+                        getDefaultXml(function() {
+                            $(mapDefaultXml).find("Node").each(function() {
+                                addValues($(this), "#valuesTable");
+                            });
+                            $("#valuesTable").tablesorter({sortList: [[1,1], [0,0]]});
+                        });
+                    }
+                    else {
+                        $(mapDefaultXml).find("Node").each(function() {
+                            addValues($(this), "#valuesTable");
+                        });
+                        /*
+                        * Sort values table
+                        */
+                        $("#valuesTable").tablesorter({sortList: [[1,1], [0,0]]});
+                    }
+                    valuesAdded = true;
+                }
+            }
+
+            function addValues(element, tableid) {
+                var nodeName = element.find('Name');
+                nodeName = nodeName.text();
+                var value = parseFloat(element.find('Value').text());
+                value = value.toFixed(4);
+                var row = '<tr>'
+                    + '<td>' + nodeName + '</td>'
+                    + '<td>' + value + '</td>'
+                    + '</tr>';
+                $(tableid + " tbody").append(row);
+            }
+
+            function parametersCollapsableHandler() {
+                if(!parametersAdded) {
+                    /*
+                    * Init parameters table
+                    */
+                    if(!xmlSet) {
+                        getDefaultXml(function() {
+                            $(mapDefaultXml).find("Parameter").each(function() {
+                                addParameters($(this), "#parametersTable");
+                            });
+                        });
+                    }
+                    else {
+                        $(mapDefaultXml).find("Parameter").each(function() {
+                            addParameters($(this), "#parametersTable");
+                        });
+                    }
+                    parametersAdded = true;
+                }
+            }
+
+            function addParameters(element, tableid) {
+                var parameterName = element.find('Name');
+                parameterName = parameterName.text();
+                var value = parseFloat(element.find('Value').text());
+                value = value.toFixed(4);
+                var row = '<tr>'
+                    + '<td>' + parameterName + '</td>'
+                    + '<td>' + value + '</td>'
+                    + '</tr>';
+                $(tableid + " tbody").append(row);
+            }
+
+            /* Requests the default / general information about the centrality map
+             * Then executes a callback function */
+            function getDefaultXml(callback) {
+                /* Sends a request for the centrality map information */
+                sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=DEFAULT_XML", "",
+                    /* Response handler */
+                    function(response) {
+                        mapDefaultXml = response;
+                        xmlSet = true;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Centrality map request failed
+                         */
+                        showConnectionErrorMessage("Centrality map was not received.");
+                    }, "text");
+            }
+
+            /* Handles the collapsable element for the graph visualization */
+            function visualizationCollapsableHandler() {
+                $("#visualizationType").change(function() {
+                    getVisualization();
+                });
+                if(typeof visualizationTypeNames === "undefined") {
+                  getVisualizationTypeNames(function() {
+                      $(visualizationTypeNames).find('Name').each(function() {
+                          $("#visualizationType").append(
+                              '<option value="' + $(this).text()
+                              + '">' + parseEnumName($(this).text()) + '</option>');
+                      });
+                  });
+                }
+                /* Requests the graph visualization */
+                if(typeof visualization === 'undefined') {
+                    getVisualization();
+                }
+                /* Registers the visualization for panzoom */
+                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
+                $panzoom.on('mousewheel', function( e ) {
+                    e.preventDefault();
+                    var delta = e.delta || e.originalEvent.wheelDelta;
+                    var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+                    $panzoom.panzoom('zoom', zoomOut, {
+                        increment: 0.1,
+                        animate: false,
+                        focal: e
+                    });
+                });
+            }
+            /* Requests and stores the graph visualization */
+            function getVisualization() {
+                if(typeof visualization !== 'undefined') {
+                    $('.visualizationGraphic').empty();
+                }
+                var visualizationType = "NODE_SIZE";
+                if($('#visualizationType').val() !== null) {
+                    visualizationType = $('#visualizationType').val();
+                }
+                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+                    /* Request handler */
+                    function(response) {
+                        visualization = response;
+                        $('.visualizationGraphic').append(visualization);
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Visualization was not received.");
+                });
+            }
+
+            function getVisualizationTypeNames(callback) {
+                sendRequest("get", "visualization/centralityVisualizationTypes/names", "",
+                    /* Response handler */
+                    function(response) {
+                        visualizationTypeNames = response;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Visualization type name request failed
+                         */
+                        showConnectionErrorMessage("Visualization type names were not received.");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Container for display of error messages -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <!-- Centrality map meta information table -->
+                    <div class="tableWrapper table-responsive">
+                        <table id="mapMetaTable" class="table table-striped">
+                            <thead>
+                              <tr>
+                                  <th class="hidden" title="CentralityMapId"></th>
+                                  <th class="hidden" title="GraphId"></th>
+                                  <th width="300" title="Centrality Measure Name" class="sortable">
+                                      Centrality Measure
+                                      <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                  </th>
+                                  <th width="300" title="Graph Name" class="sortable">
+                                      Graph
+                                      <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                  </th>
+                                  <th width="200" title="Execution Time">
+                                      Execution Time (ms)
+                                  </th>
+                                  <th width="20" title="Show Graph">
+                                      G
+                                  </th>
+                                  <th width="20" title="Remove Centrality">
+                                      R
+                                  </th>
+                              </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <!-- Collapsable element for centrality value display -->
+                    <div id="valuesCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Centrality Values</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <div class="tableWrapper table-responsive">
+                                <table id="valuesTable" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th title="Node">
+                                            Node
+                                        </th>
+                                        <th title="Value">
+                                            Value
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable element for algorithm parameter display -->
+                    <div id="parametersCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Parameters</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <div class="tableWrapper table-responsive">
+                                <table id="parametersTable" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th title="Parameter">
+                                            Parameter
+                                        </th>
+                                        <th title="Value">
+                                            Value
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for centrality map visualization -->
+                    <div id="visualizationCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Visualization</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <div class="visualization">
+                                <div class="visualizationControl">
+                                    <select id="visualizationType" class="visualizationTypeSelect">
+                                    </select>
+                                    <input class="visualizationZoomer" type="range">
+                                </div>
+                                <div class="visualizationContent">
+                                    <div class="visualizationGraphic">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -23,9 +23,11 @@
         <script src="JS/requestHandler.js"></script>
         <script src="JS/jquery.tablesorter.js"></script>
         <script src="JS/coverTableHandler.js"></script>
+        <script src="JS/centralityTableHandler.js"></script>
         <script type="text/javascript">
-            /* Information of covers in creation (by OCD algorithm or benchmark) */
-            var algoCoverMetasXml;
+	        /* Information of covers/centrality maps in creation */
+	        var algoCoverMetasXml;
+	        var algoCentralityMetasXml;
             /* Executed after page laoding */
             $(document).ready(function() {
                 /*
@@ -33,11 +35,13 @@
                  */
                 registerCollapsable("#runningAlgorithmsCollapsable", runningAlgorithmsCollapsableHandler);
                 registerCollapsable("#runningMetricsCollapsable", runningMetricsCollapsableHandler);
+                registerCollapsable('#runningCentralityAlgorithmsCollapsable', runningCentralityAlgorithmsCollapsableHandler);
                 /*
                  * Open tables
                  */
                 $("#runningAlgorithmsCollapsable").find(".collapsableDisplayBtn").click();
                 $("#runningMetricsCollapsable").find(".collapsableDisplayBtn").click();
+                $('#runningCentralityAlgorithmsCollapsable').find(".collapsableDisplayBtn").click();
             });
             /* Handles collapsable element for covers in creation */
             function runningAlgorithmsCollapsableHandler() {
@@ -170,6 +174,50 @@
                         showConnectionErrorMessage("Cover metas were not received.");
                 });
             }
+            /* Handles collapsable element for centrality maps in creation */
+            function runningCentralityAlgorithmsCollapsableHandler() {
+                if(typeof algoCentralityMetasXml === 'undefined') {
+                    /* Requests meta information of centrality maps in creation */
+                    getCentralityAlgoMetas(function() {
+                        /* Identifiers for the centrality map information to be displayed */
+                        var cells = ["Centrality Measure", "Graph", "R"];
+                        /* Adds the centrality map to the table */
+                        $(algoCentralityMetasXml).find("CentralityMap").each(function() {
+                            appendCentralityMapRow($('#runningCentralityAlgorithmsTable'), $(this), cells);
+                        });
+                        /*
+                         * Sort Table
+                         */
+                        try {
+                            $("#runningCentralityAlgorithmsTable").tablesorter({sortList: [[1,0],[0,0]],
+                                headers: { 6: { sorter: false}, 7: {sorter: false}}});
+                        } catch(err) { /* table empty */ }
+                        /* Registers the table component */
+                        registerCentralityTable("#runningCentralityAlgorithmsTable");
+                    });
+                }
+            }
+            /* Requests the meta information of centrality maps in creation */
+            function getCentralityAlgoMetas(callback) {
+                sendRequest("get", "maps?executionStatuses=RUNNING-WAITING&includeMeta=TRUE", "",
+                    /* Response handler */
+                    function(response) {
+                         /*
+                         * Centrality map metas request succeeded
+                         */
+                        algoCentralityMetasXml = response;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Centrality map metas request failed
+                         */
+                        showConnectionErrorMessage("Centrality map metas were not received.");
+                });
+            }
         </script>
     </head>
     <body>
@@ -254,6 +302,42 @@
                                             <th width="20" title="Stop Execution and Remove Metric">
                                                 R
                                             </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Collapsable for centrality maps in creation -->
+                    <div id="runningCentralityAlgorithmsCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Running Centrality Calculations and Simulations</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table of centrality maps in creation -->
+                            <div class="tableWrapper">
+                                <table id="runningCentralityAlgorithmsTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="hidden" title="MapId"></th>
+                                            <th class="hidden" title="GraphId"></th>
+                                            <th width="300" title="Graph Name" class="sortable">
+                                                Graph
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="300" title="Creation Method Name" class="sortable">
+                                                Creation Method
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="20" title="Stop Execution and Remove Centrality">
+                                                R
+                                            </th>
+                                            <th class="hidden" title="MetricId"></th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>

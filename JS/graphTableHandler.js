@@ -56,8 +56,12 @@ function appendGraphRow(table, graphElt, cells) {
         row += createShowGraphCell();
     }
     /* Show corresponding covers */
-    if($.inArray("C", cells) > -1) {
+    if($.inArray("Co", cells) > -1) {
         row += createShowGraphCoversCell();
+    }
+    /* Show corresponding centralities */
+    if($.inArray("Cn", cells) > -1) {
+        row += createShowGraphCentralitiesCell();
     }
     /* Delete graph */
     if($.inArray("R", cells) > -1) {
@@ -106,7 +110,14 @@ function createSelectGraphCell(id) {
 /* Creates show covers cell */
 function createShowGraphCoversCell() {
     return '<td>'
-        + '<img class="icon iconBtn showGraphCovers" src="IMG/open-iconic/svg/eye.svg" alt="c">'
+        + '<img class="icon iconBtn showGraphCovers" src="IMG/open-iconic/svg/eye.svg" alt="co">'
+        + '</td>';
+}
+
+/* Creates show centralities cell */
+function createShowGraphCentralitiesCell() {
+    return '<td>'
+        + '<img class="icon iconBtn showGraphCentralities" src="IMG/open-iconic/svg/eye.svg" alt="cn">'
         + '</td>';
 }
 
@@ -153,6 +164,13 @@ function showGraphCovers(id) {
 }
 
 /*
+ * Shows graph covers.
+ */
+function showGraphCentralities(id) {
+    window.location.href = "centralities.html?graphId=" + id.text();
+}
+
+/*
  * Shows graph simulations.
  */
 function showGraphSimulations(id) {
@@ -177,5 +195,10 @@ function registerGraphTable() {
     $('.showGraphCovers').click(function(){
         var id = $(this).parent().siblings().filter('.graphId');
         showGraphCovers(id);
+    });
+    /* Show centralities button handler */
+    $('.showGraphCentralities').click(function(){
+        var id = $(this).parent().siblings().filter('.graphId');
+        showGraphCentralities(id);
     });
 }

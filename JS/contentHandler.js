@@ -41,6 +41,7 @@ $(document).ready(function(){
                   <li class="nav-item"><a class="nav-link" href="covers.html">Community Detection</a></li>\
                   <li class="nav-item"><a class="nav-link" href="benchmarks.html">Benchmarks</a></li>\
                   <li class="nav-item"><a class="nav-link" href="simulations.html">Simulations</a></li>\
+    			  <li class="nav-item"><a class="nav-link" href="centralities.html">Centrality</a></li>\
                 </ul>\
                 <ul class="navbar-nav navbar-right">\
                   <li class="nav-item"><a class="nav-link" href="import.html">Import</a></li>\
@@ -192,36 +193,34 @@ function registerCollapsable(collapsable, displayCallback) {
 }
 
 /* Initializes a parameters table bound to a select element and provides the corresponding event handlers */
-function registerParameterSelect(selectId, paramTableRowId, getOptions) {
+function registerParameterSelect(selectId, paramDivId, getOptions) {
     /* Initialization */
     $(selectId).prepend('<option value="' + getSelectOptionVal() + '">--SELECT--</option>');
     /* Change listener on the select element */
     $(selectId).change(function() {
-        $(paramDiv).html("");
+        $(paramDivId).html("");
         $(selectId + " option:selected").each(function() {
             if($(this).val() !== getSelectOptionVal()) {
                 var selected = $(this).val();
                 /* Requests the parameter names for the currently selected option */
                 getOptions(selected, function(response) {
 
-                    /* Check if the option have parameters */
+                    /* Check if the option has parameters */
                     if($(response).find("Parameter").size() > 0) {
-                        var parameterString = '<label class="col-sm-2 col-form-label">Parameters</label>\
-                        <div class="col-sm-10" id="paramRows">';
+                        var parameterString = '<label>Parameters</label>';
 
                        /* Adds the parameters to the form */
                         $(response).find("Parameter").each(function() {
                             var paramRow = '<div class="form-group row">'
-                            + '<label class="col-sm-5 col-form-label">' + $(this).find("Name").first().text() + '</label>'
-                            + '<div class="col-sm-7">'
-                            + '<input type="text" class="form-control" name="' + $(this).find("Name").first().text() + '" placeholder="' + $(this).find("Value").first().text() + '">'
+                            + '<label class="col-sm-6 col-form-label">' + $(this).find("Name").first().text() + '</label>'
+                            + '<div class="col-sm-6">'
+                            + '<input type="text" class="form-control parameter" name="' + $(this).find("Name").first().text() + '" placeholder="' + $(this).find("Value").first().text() + '">'
                             + '</div></div>'
                             parameterString += paramRow;
                         });
 
                         /* Write the parameter string into the parameter form */
-                        parameterString +=  '</div>';
-                        $(paramDiv).html(parameterString);
+                        $(paramDivId).html(parameterString);
                   }
                 });
             }
@@ -236,9 +235,9 @@ function getSelectOptionVal() {
 }
 
 /* Transforms a parameter table into xml format */
-function getParameterXml(paramTableId) {
+function getParameterXml(paramDivId) {
     var parametersXml = "<Parameters>";
-    $(paramTableId).find(".parameter").each(function() {
+    $(paramDivId).find(".parameter").each(function() {
         var name = $.trim($(this).attr("name"));
         var val = $.trim($(this).val());
         if(val !== "") {

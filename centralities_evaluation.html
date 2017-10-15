@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays basic/meta information on all calculated centrality maps -->
+    <head>
+        <title>Evaluate Calculated Centralities</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="JS/bootstrap.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/centralityTableHandler.js"></script>
+        <script type="text/javascript">
+            /*
+             * Executed after page loading.
+             */
+            $(document).ready(function() {
+                /* Identifiers for the centrality map information to display */
+                var cells = ["Centrality Measure", "Graph", "Execution Time", "C", "G", "R"];
+                var graphIdQueryExtension = getUrlVar("graphId");
+                if(!graphIdQueryExtension) {
+                    graphIdQueryExtension = "";
+                }
+                else {
+                    graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
+                }
+                /* Requests the centrality map information */
+                sendRequest("get", "maps?executionStatuses=COMPLETED&includeMeta=TRUE"
+                        + graphIdQueryExtension, "",
+                    /* Response handler */
+                    function(mapMetasXml) {
+                        /*
+                         * Centrality map metas request succeeded
+                         */
+                        $(mapMetasXml).find("CentralityMap").each(function() {
+                            appendCentralityMapRow($('#centralityTable'), $(this), cells);
+                        });
+                        /*
+                         * Sort Table
+                         */
+                        try {
+                            $("#centralityTable").tablesorter({sortList: [[1,0],[0,0]],
+                                headers: { 5: {sorter: false}, 6: { sorter: false}, 7: {sorter: false}}});
+                        } catch(err) { /* table empty */ }
+                        /*
+                         * Register event handlers
+                         */
+                        registerCentralityTable();
+
+                        $('table tbody tr').click(function(){
+                            $(this).toggleClass('highlight');
+                        });
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Centrality map metas were not received.");
+                });
+                $('#compare').click(function(){
+                    if($('.highlight').length == 2) {
+                        var mapIds = $('.highlight').children().filter('.mapId');
+                        var graphIds = $('.highlight').children().filter('.graphId');
+                        var mapId1 = mapIds.eq(0).text();
+                        var graphId1 = graphIds.eq(0).text();
+                        var mapId2 = mapIds.eq(1).text();
+                        var graphId2 = graphIds.eq(1).text();
+                        window.location.href = "centrality_comparison.html?mapId1=" + mapId1 + "&graphId1=" + graphId1 + "&mapId2=" + mapId2 + "&graphId2=" + graphId2;
+                    }
+                    else {
+                        showErrorMessage('Please select exactly two row entries for comparison');
+                    }
+                });
+                $('#average').click(function(){
+                    if($('.highlight').length > 1) {
+                        var mapIds = $('.highlight').children().filter('.mapId');
+                        var graphIds = $('.highlight').children().filter('.graphId');
+                        var firstGraphId = graphIds.eq(0).text();
+                        var multipleGraphsSelected = false;
+                        var index;
+                        for(index = 0; index < graphIds.length; index++) {
+                            if(graphIds.eq(index).text() != firstGraphId) {
+                                multipleGraphsSelected = true;
+                            }
+                        }
+                        if(!multipleGraphsSelected) {
+                            var mapIdString = "mapIds=" + mapIds.eq(0).text();
+                            for(index = 1; index < mapIds.length; index++) {
+                                mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
+                            }
+                            sendRequest("get", "evaluation/average/graph/" + firstGraphId + "/maps?" + mapIdString, "",
+                                /* Response handler */
+                                function(averageMapXml) {
+                                    window.location.href = "centralities_evaluation.html";
+                                },
+                                /* Error handler */
+                                function(errorData) {
+                            });
+                        }
+                        else {
+                            showErrorMessage('Please select row entries on the same graph');
+                        }
+                    }
+                    else {
+                        showErrorMessage('Please select at least two row entries for averaging');
+                    }
+                });
+                $('#correlation').click(function(){
+                    if($('.highlight').length > 1) {
+                        var mapIds = $('.highlight').children().filter('.mapId');
+                        var mapId1 = mapIds.eq(0).text();
+                        var mapId2 = mapIds.eq(1).text();
+                        var graphIds = $('.highlight').children().filter('.graphId');
+                        var firstGraphId = graphIds.eq(0).text();
+                        var multipleGraphsSelected = false;
+                        var index;
+                        for(index = 0; index < graphIds.length; index++) {
+                            if(graphIds.eq(index).text() != firstGraphId) {
+                                multipleGraphsSelected = true;
+                            }
+                        }
+                        if(!multipleGraphsSelected) {
+                            var mapIdString = "mapIds=" + mapIds.eq(0).text();
+                            for(index = 1; index < mapIds.length; index++) {
+                                mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
+                            }
+                            sendRequest("get", "evaluation/correlation/spearman/graph/" + firstGraphId + "/maps?" + mapIdString, "",
+                                /* Response handler */
+                                function(resultXml) {
+                                    window.location.href = "centrality_correlation.html";
+                                    localStorage.setItem("correlationMatrixXml", resultXml);
+                                    localStorage.setItem("mapIds", "&" + mapIdString);
+                                    localStorage.setItem("graphId", firstGraphId);
+                                },
+                                /* Error handler */
+                                function(errorData) {
+                            });
+                        }
+                        else {
+                            showErrorMessage('Please select row entries on the same graph');
+                        }
+                    }
+                    else {
+                        showErrorMessage('Please select at least two row entries for the correlation computation');
+                    }
+                });
+                $("#selectAll").click(function() {
+                    $('table tbody tr').each(function(){
+                        $(this).addClass('highlight');
+                    });
+                });
+                $("#deselectAll").click(function() {
+                    $('table tbody tr').each(function(){
+                        $(this).removeClass('highlight');
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <!-- Displays error messages -->
+                    <div id="errorMessageWrapper">
+                        <div id="errorMessage"></div>
+                    </div>
+                    <div class="buttonWrapper">
+                        <button id="compare" type="button" class="btn btn-outline-primary">Compare</button>
+                        <button id="average" type="button" class="btn btn-outline-primary">Average</button>
+                        <button id="correlation" type="button" class="btn btn-outline-primary">Correlation</button>
+                    </div>
+                    <div id="selectionControl">
+                        <button id="selectAll" type="button" class="btn transparentButton">Select All</button>
+                        <button id="deselectAll" type="deselectAll" class="btn transparentButton">Deselect All</button>
+                    </div>
+                    <!-- Centrality map meta information table -->
+                    <div class="tableWrapper table-responsive">
+                        <table id="centralityTable" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="hidden" title="CentralityMapId"></th>
+                                    <th class="hidden" title="GraphId"></th>
+                                    <th width="300" title="Centrality Measure Name" class="sortable">
+                                        Centrality Measure
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="300" title="Graph Name" class="sortable">
+                                        Graph
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="200" title="Execution Time">
+                                        Execution Time (ms)
+                                    </th>
+                                    <th width="20" title="Show Centrality">
+                                        C
+                                    </th>
+                                    <th width="20" title="Show Graph">
+                                        G
+                                    </th>
+                                    <th width="20" title="Remove Centrality">
+                                        R
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
