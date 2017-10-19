@@ -19,6 +19,7 @@
   <script src="js/jquery.session.js"></script>
   <script src="js/jquery.tablesorter.js"></script>
   <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
   <script src="JS/bootstrap.min.js"></script>
   <script src="js/simulation/bootstrap-select.js"></script>
   <script src="js/contentHandler.js"></script>
@@ -40,7 +41,7 @@
   </div>
 
   <!-- Page Content -->
-  <div class="container">
+  <div class="container-fluid">
 
     <div class="row">
       <div class="col-lg-12" id="content">
@@ -58,7 +59,29 @@
           <div id="simulationHeader">
 
           </div>
-            <button id="create" class="btn btn-secondary">Export Table</button>
+
+          <div id="optionsCollapsable" class="collapsable">
+            <div class="collapsableHeader">
+              <div class="collapsableTitle">Options</div>
+              <div class="collapsableCollapser">
+                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+              </div>
+            </div>
+            <div id="optionsContainer" class="collapsableContent">
+              <div class="container">
+                <div class="card-block d-flex p-2 justify-content-start" style="width: 100%;">
+                  <div class="p-2">
+                      <button id="create" class="btn btn-info">Export Table</button>
+                  </div>
+                  <div class="p-2 ml-auto">
+                    <button id="deleteButton" class="btn btn-secondary">Delete</button>
+                 </div>
+              </div>
+            </div>
+            </div>
+            </div>
+
           <div id="parametersCollapsable" class="collapsable">
             <div class="collapsableHeader">
               <div class="collapsableTitle">Parameters</div>
@@ -145,6 +168,7 @@
       registerCollapsable("#payoffCollapsable", cooperationCollapsableHandler);
       registerCollapsable("#parametersCollapsable", cooperationCollapsableHandler);
       registerCollapsable("#evaluationCollapsable", cooperationCollapsableHandler);
+      registerCollapsable("#optionsCollapsable", cooperationCollapsableHandler);
 
       function cooperationCollapsableHandler() {};
 
@@ -173,11 +197,13 @@
                   <div class="col-sm-4">\
                     <div>Game</div>\
                     <div>Dynamic</div>\
+                    <div>BreakCondition</div>\
                     <div>Network</div>\
                   </div>\
                   <div class="col-sm-8">\
                     <div>' + parameters.game + '</div>\
                     <div>' + parameters.dynamic + '</div>\
+                    <div>' + parameters.condition + '</div>\
                     <div id="NetworkDiv"></div>\
                   </div>\
               </div>';

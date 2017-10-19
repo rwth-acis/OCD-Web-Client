@@ -9,6 +9,7 @@
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -34,7 +35,7 @@
                 $('.pageNumWrapper').append(pageNumber);
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
                 /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "G", "Co", "Cn", "R"];
+                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R"];
                 /* Requests the graph meta information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
@@ -140,13 +141,13 @@
                                 <th width="20" title="Has Self Loops">
                                     L
                                 </th>
-                                <th width="20" title="Show Graph">
-                                    G
-                                </th>
                                 <th width="20" title="Show Covers">
                                     Co
                                 <th width="20" title="Show Centralities">
                                     Cn
+                                </th>
+                                <th width="20" title="Show Cooperation Simulations">
+                                    CS
                                 </th>
                                 <th width="20" title="Remove Graph">
                                     R

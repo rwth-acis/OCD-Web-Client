@@ -9,16 +9,9 @@ Facilitates import / upload of new graphs and covers.
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <style type="text/css">
-            select {
-                width: 350px;
-            }
-            input[type=text] {
-                width: 350px;
-            }
-        </style>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -162,7 +155,7 @@ Facilitates import / upload of new graphs and covers.
                             }
                             /* Displays graph import options */
                             else if($(this).val() === "graph") {
-                                $(".graphOptionsRow").css("display", "table-row");
+                                $(".graphOptionsRow").css("display", "block");
                             }
                             else {
                                 showErrorMessage("Client Error");
@@ -176,7 +169,7 @@ Facilitates import / upload of new graphs and covers.
                                         + '">' + parseEnumName($(this).text()) + '</option>');
                                 });
                             });
-                            $("#objectCreatorRow").css("display", "table-row");
+                            $("#objectCreatorRow").css("display", "block");
                         }
                         else {
                             $("#objectCreatorRow").css("display", "none");
@@ -340,105 +333,77 @@ Facilitates import / upload of new graphs and covers.
     <body>
         <div>
             <div id="wrapper">
+
                 <div id="contentWrapper">
                     <div id="content">
+
                         <!-- Container for displaying error messages -->
                         <div id="errorMessageWrapper">
                             <div id="errorMessage"></div>
                         </div>
-                        <!-- Import form -->
-                        <div class="formWrapper">
-                            <div class="formDiv">
-                                <form id="importForm" action="javascript:void(0); return false;">
-                                    <div class="formContentWrapper">
-                                        <table class="formTable">
-                                            <!-- Import object type, i.e. cover or graph -->
-                                            <tr>
-                                                <td>
-                                                    Import:
-                                                </td>
-                                                <td>
-                                                    <select id="objectType">
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                            <!-- Input format -->
-                                            <tr>
-                                                <td>
-                                                    Format:
-                                                </td>
-                                                <td>
-                                                    <select id="objectFormat">
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                            <!-- Input file -->
-                                            <tr>
-                                                <td>
-                                                    File:
-                                                </td>
-                                                <td>
-                                                    <input id="objectFile" type="file">
-                                                </td>
-                                            </tr>
-                                            <!-- Input Start Date -->
-                                            <tr id="startDatetr" class="hidden">
-                                                <td>
-                                                    Start Date:
-                                                </td>
-                                                <td>
-                                                    <input id="startDate" type="text" placeholder="YYYY-MM-DD">
-                                                </td>
-                                            </tr>
-                                            <!-- Input End Date -->
-                                            <tr id="endDatetr" class="hidden">
-                                                <td>
-                                                    End Date:
-                                                </td>
-                                                <td>
-                                                    <input id="endDate" type="text" placeholder="YYYY-MM-DD">
-                                                </td>
-                                            </tr>
-                                            <!-- Name for imported object -->
-                                            <tr>
-                                                <td>
-                                                    Name:
-                                                </td>
-                                                <td>
-                                                    <input id="objectName" type="text">
-                                                </td>
-                                            </tr>
-                                            <!-- Object creator type -->
-                                            <tr id="objectCreatorRow" class="hidden">
-                                                <td>
-                                                    Creation Method:
-                                                </td>
-                                                <td>
-                                                    <select id="objectCreator">
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                            <!-- Graph import options (i.e. making graphs undirected) -->
-                                            <tr class="graphOptionsRow hidden">
-                                                <td>
-                                                    Make graph undirected:
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="doMakeUndirected">
-                                                </td>
-                                            </tr>
 
-                                        </table>
-                                    </div>
-                                    <!-- Form submit -->
-                                    <div class="submitWrapper">
-                                        <input name="submit" class="icon submit" type="image" src="IMG/open-iconic/svg/data-transfer-upload.svg" alt="Run">
-                                    </div>
-                                    <!-- Graph selector for choosing a corresponding graph for cover import -->
-                                    <div class="selectorWrapper hidden">
-                                        <div class="selectorTitle">
-                                            Select a Graph
-                                        </div>
+                        <!-- Page Header -->
+                        <div class="page-header graphColor">
+                          <h3>Importing</h3>
+                        </div>
+
+                        <!-- Import form -->
+                        <div class="container-fluid">
+                          <form id="importForm" action="javascript:void(0); return false;">
+                            <div class="">
+                                <!-- Import object type, i.e. cover or graph -->
+                                <div class="form-group">
+                                  <label for="objectType" class="col-form-label">Import</label>
+                                  <select id="objectType" class="form-control custom-select"></select>
+                                </div>
+                                <!-- Input format -->
+                                <div class="form-group">
+                                  <label for="objectFormat" class="col-form-label">Format</label>
+                                  <select id="objectFormat" class="form-control custom-select"></select>
+                                </div>
+                                <!-- Input file -->
+                                <div class="form-group">
+                                  <label for="objectFile" class="form-label">File</label>
+                                  <input id="objectFile" type="file" class="form-control-file">
+                                </div>
+                                  <!-- Input Start Date -->
+                                  <div id="startDatetr" class="hidden">
+                                    <label for="startDate" class="col-form-label">Start Date:</label>
+                                    <input id="startDate" type="text" placeholder="YYYY-MM-DD">
+                                  </div>
+                                  <!-- Input End Date -->
+                                  <div id="endDatetr" class="hidden">
+                                    <label for="endDate" class="col-form-label">End Date:</label>
+                                    <input id="endDate" type="text" placeholder="YYYY-MM-DD">
+                                  </div>
+                                <!-- Name for imported object -->
+                                <div class="form-group">
+                                  <label for="objectName" class="col-form-label">Name</label>
+                                  <input id="objectName" type="text" class="form-control">
+                                </div>
+                                <!-- Object creator type -->
+                                <div id="objectCreatorRow" class="form-group hidden">
+                                  <label for="objectCreator" class="col-form-label">Creation Method</label>
+                                  <select id="objectCreator" class="form-control custom-select"></select>
+                                </div>
+                                <!-- Graph import options (i.e. making graphs undirected) -->
+                                <div class="form-check graphOptionsRow hidden">
+                                  <label for="doMakeUndirected" class="form-check-label">
+                                  <input type="checkbox" class="form-check-input" id="doMakeUndirected">
+                                    make undirected
+                                  </label>
+                                </div>
+                                <!-- Form submit -->
+                                <div class="submitWrapper form-group">
+                                  <button type="submit" name="submit" class="btn btn-primary">Submit</button>
+                                </div>
+
+                              </div>
+                              <!-- Graph selector for choosing a corresponding graph for cover import -->
+                              <div class="selectorWrapper hidden">
+                                <div class="selectorTitle">
+                                    Select a Graph
+                                </div>
                                         <div class="selectorContent">
                                             <!-- Graph table page control -->
                                             <div class = "pageControlWrapper">

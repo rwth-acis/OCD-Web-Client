@@ -9,6 +9,7 @@
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -37,7 +38,7 @@
                 /* Index of the first cover to be displayed */
                 var firstIndex = COVERS_PER_PAGE * pageNumber;
                 /* Identifiers for the cover information to display */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "C", "G", "R"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R"];
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -140,12 +141,6 @@
                                     <th width="100" title="Community Count" class="sortable">
                                         Communities
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
-                                    </th>
-                                    <th width="20" title="Show Cover">
-                                        C
-                                    </th>
-                                    <th width="20" title="Show Graph">
-                                        G
                                     </th>
                                     <th width="20" title="Remove Cover">
                                         R

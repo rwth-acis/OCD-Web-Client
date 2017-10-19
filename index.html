@@ -15,6 +15,7 @@
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script src="JS/ServiceAPI/b64.js"></script>
@@ -28,6 +29,7 @@
 	        /* Information of covers/centrality maps in creation */
 	        var algoCoverMetasXml;
 	        var algoCentralityMetasXml;
+          var algoCooperationMetasXml;
             /* Executed after page laoding */
             $(document).ready(function() {
                 /*
@@ -36,11 +38,13 @@
                 registerCollapsable("#runningAlgorithmsCollapsable", runningAlgorithmsCollapsableHandler);
                 registerCollapsable("#runningMetricsCollapsable", runningMetricsCollapsableHandler);
                 registerCollapsable('#runningCentralityAlgorithmsCollapsable', runningCentralityAlgorithmsCollapsableHandler);
+                registerCollapsable('#runningCooperationSimulationCollapsable', runningCooperationSimulationCollapsableHandler);
                 /*
                  * Open tables
                  */
                 $("#runningAlgorithmsCollapsable").find(".collapsableDisplayBtn").click();
                 $("#runningMetricsCollapsable").find(".collapsableDisplayBtn").click();
+                $('#runningCooperationSimulationCollapsable').find(".collapsableDisplayBtn").click();
                 $('#runningCentralityAlgorithmsCollapsable').find(".collapsableDisplayBtn").click();
             });
             /* Handles collapsable element for covers in creation */
@@ -174,6 +178,48 @@
                         showConnectionErrorMessage("Cover metas were not received.");
                 });
             }
+            /* Requests the cooperation simulation information of simulations with running metrics */
+            function getCooperationSimulationMetas(callback) {
+                sendRequest("get", "simulation/running", "",
+                    /* Response handler */
+                    function(response) {
+
+                        cooperationSimulationMetasXml = response;
+                        if(typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Cover metas request failed
+                         */
+                        showConnectionErrorMessage("Cover metas were not received.");
+                });
+            }
+            /* Handles collapsable element for cooperation simulations in creation */
+            function runningCooperationSimulationCollapsableHandler() {
+                if(typeof cooperationSimulationMetasXml === 'undefined') {
+                    /* Requests meta information of centrality maps in creation */
+                    getCooperationSimulationMetas(function() {
+                        /* Identifiers for the simulation information to be displayed */
+                        var cells = ["Cooperation Simulation", "R"];
+                        /* Adds the simulation to the table */
+                        $(cooperationSimulationMetasXml).find("Simulation").each(function() {
+                            appendCooperationRow($('#runningCooperationSimulationTable'), $(this), cells);
+                        });
+                        /*
+                         * Sort Table
+                         */
+                        try {
+                            $("#runningCooperationSimulationTable").tablesorter({sortList: [[1,0],[0,0]],
+                                headers: { 6: { sorter: false}, 7: {sorter: false}}});
+                        } catch(err) { /* table empty */ }
+                        /* Registers the table component */
+                        registerCooperationTable("#runningCooperationSimulationTable");
+                    });
+                }
+            }
             /* Handles collapsable element for centrality maps in creation */
             function runningCentralityAlgorithmsCollapsableHandler() {
                 if(typeof algoCentralityMetasXml === 'undefined') {
@@ -232,7 +278,7 @@
                     </div>
                     <!-- Collapsable for covers in creation -->
                     <div id="runningAlgorithmsCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
+                        <div class="collapsableHeader coverColor">
                             <div class="collapsableTitle">Running Benchmarks and Algorithms</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
@@ -272,7 +318,7 @@
                     </div>
                     <!-- Collapsable for covers with running metrics -->
                     <div id="runningMetricsCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
+                        <div class="collapsableHeader coverColor">
                             <div class="collapsableTitle">Running Metrics</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
@@ -309,9 +355,44 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Collapsable for cooperation simulations-->
+                    <div id="runningCooperationSimulationCollapsable" class="collapsable">
+                        <div class="collapsableHeader simulationColor">
+                            <div class="collapsableTitle">Running Cooperation Simulation</div>
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table of covers with running metrics -->
+                            <div class="tableWrapper">
+                                <table id="runningCooperationSimulationTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="hidden" title="CoverId"></th>
+                                            <th class="hidden" title="GraphId"></th>
+                                            <th width="300" title="Status" class="sortable">
+                                                Status
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="300" title="Simulation Name" class="sortable">
+                                                Name
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
+                                            <th width="20" title="Stop Execution and Remove">
+                                                R
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Collapsable for centrality maps in creation -->
                     <div id="runningCentralityAlgorithmsCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
+                        <div class="collapsableHeader centralityColor">
                             <div class="collapsableTitle">Running Centrality Calculations and Simulations</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">

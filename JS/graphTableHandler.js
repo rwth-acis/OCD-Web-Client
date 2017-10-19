@@ -16,7 +16,7 @@ function appendGraphRow(table, graphElt, cells) {
     row += createGraphIdCell(id);
     /* Graph name  */
     if($.inArray("Name", cells) > -1) {
-        row += createGraphTableCell($(graphElt).find('Name').text());
+        row += createGraphNameCell($(graphElt).find('Name').text(), id);
     }
     /* Node count */
     if($.inArray("NodeCount", cells) > -1) {
@@ -51,10 +51,6 @@ function appendGraphRow(table, graphElt, cells) {
     if($.inArray("L", cells) > -1) {
         row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("SELF_LOOPS", types) > -1));
     }
-    /* Show graph */
-    if($.inArray("G", cells) > -1) {
-        row += createShowGraphCell();
-    }
     /* Show corresponding covers */
     if($.inArray("Co", cells) > -1) {
         row += createShowGraphCoversCell();
@@ -62,6 +58,10 @@ function appendGraphRow(table, graphElt, cells) {
     /* Show corresponding centralities */
     if($.inArray("Cn", cells) > -1) {
         row += createShowGraphCentralitiesCell();
+    }
+    /* Show corresponding cooperation simulations */
+    if($.inArray("CS", cells) > -1) {
+        row += createShowCooperationSimulationsCell();
     }
     /* Delete graph */
     if($.inArray("R", cells) > -1) {
@@ -79,6 +79,10 @@ function appendGraphRow(table, graphElt, cells) {
  */
 function createGraphTableCell(value) {
     return "<td>" + value + "</td>";
+}
+
+function createGraphNameCell(name, id) {
+    return '<td><a href="graph.html?id='+ id + '">' + name + '</a></td>';
 }
 
 /* Creates graph id cell */
@@ -118,6 +122,13 @@ function createShowGraphCoversCell() {
 function createShowGraphCentralitiesCell() {
     return '<td>'
         + '<img class="icon iconBtn showGraphCentralities" src="IMG/open-iconic/svg/eye.svg" alt="cn">'
+        + '</td>';
+}
+
+/* Creates show cooperation cell */
+function createShowCooperationSimulationsCell() {
+    return '<td>'
+        + '<img class="icon iconBtn showCooperationSimulations" src="IMG/open-iconic/svg/eye.svg" alt="cn">'
         + '</td>';
 }
 
@@ -171,6 +182,13 @@ function showGraphCentralities(id) {
 }
 
 /*
+ * Shows cooperation simulations.
+ */
+function showCooperationSimulations(id) {
+    window.location.href = "cooperation_simulations.html?graphId=" + id.text();
+}
+
+/*
  * Shows graph simulations.
  */
 function showGraphSimulations(id) {
@@ -200,5 +218,10 @@ function registerGraphTable() {
     $('.showGraphCentralities').click(function(){
         var id = $(this).parent().siblings().filter('.graphId');
         showGraphCentralities(id);
+    });
+    /* Show cooperation simulations button handler */
+    $('.showCooperationSimulations').click(function(){
+        var id = $(this).parent().siblings().filter('.graphId');
+        showCooperationSimulations(id);
     });
 }

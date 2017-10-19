@@ -19,6 +19,7 @@
   <script src="js/jquery.session.js"></script>
   <script src="js/jquery.tablesorter.js"></script>
   <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
   <script src="JS/bootstrap.min.js"></script>
   <script src="js/simulation/bootstrap-select.js"></script>
   <script src="js/contentHandler.js"></script>
@@ -49,7 +50,7 @@
         <!-- Page control -->
         <div class = "container">
         <div>
-          <a href="groups.html">Simulation Groups</a>
+          <button type="button" class="btn btn-outline-primary" onclick="location.href='cooperation_simulations.html';">Simulation Series</button>
         </div>
         <div class="pageControlWrapper">
           <div class="pageControl">
@@ -63,23 +64,18 @@
             </div>
           </div>
         </div>
-      </div>
+        </div>
 
         <form id="targetForm">
-          <div id="seriesTable" class="table-responsive">
+          <div id="groupTable" class="table-responsive">
             <table class="table tablesorter table-striped">
               <thead>
                 <tr>
                   <th onMouseOver="style.cursor='pointer'"><span class="checkall"></span></th>
-                  <th onMouseOver="style.cursor='pointer'"></th>
-                  <th onMouseOver="style.cursor='pointer'">Cooperation</th>
+                  <th onMouseOver="style.cursor='pointer'">Name</th>
+                  <th onMouseOver="style.cursor='pointer'">Size</th>
+                  <th onMouseOver="style.cursor='pointer'">Cooperativity</th>
                   <th onMouseOver="style.cursor='pointer'">Deviation</th>
-                  <th onMouseOver="style.cursor='pointer'">Network</th>
-                  <th onMouseOver="style.cursor='pointer'">Game</th>
-                  <th onMouseOver="style.cursor='pointer'"></th>
-                  <th onMouseOver="style.cursor='pointer'">Dynamic</th>
-                  <th onMouseOver="style.cursor='pointer'">Iterations</th>
-
                 </tr>
               </thead>
               <tbody id="seriesTableBody">
@@ -125,51 +121,30 @@
       $('.pageLeft').click(function() {
         if (pageNumber > 0) {
           pageNumber--;
-          var newUrl = "simulations.html?si=" + pageNumber;
+          var newUrl = "groups.html?si=" + pageNumber;
           window.location.href = newUrl;
         }
       });
       $('.pageRight').click(function() {
         pageNumber++;
-        var newUrl = "simulations.html?si=" + pageNumber;
+        var newUrl = "groups.html?si=" + pageNumber;
         window.location.href = newUrl;
       });
 
 
-      sendRequest("get", "simulation/meta?firstIndex=" + firstIndex + "&length=" + SIMULATIONS_PER_PAGE, "",
+      sendRequest("get", "simulation/group/meta?firstIndex=" + firstIndex + "&length=" + SIMULATIONS_PER_PAGE, "",
         /* Response handler */
         function(response) {
           var meta = JSON.parse(response);
           var tableString = "";
           jQuery.each(meta, function(index, value) {
-            var seriesId = value.id;
-            var name = value.name;
-            var parameters = value.parameters;
-            var evaluation = value.evaluation;
-            var game = parameters.game;
-            var dynamic = parameters.dynamic;
-            var graphId = parameters.graphId;
-            var graphName = value.graphName;
-            var payoff = new Array(parameters.payoffCC.toFixed(2), parameters.payoffCD.toFixed(2), parameters.payoffDC.toFixed(2), parameters.payoffDD.toFixed(2));
-            var iterations = parameters.iterations;
+            var groupId = value.id;
+            var groupName = value.name;
+            var groupSize = value.size;
+            var cooperation = value.evaluation.average.toFixed(4);
+            var deviation = value.evaluation.deviation.toFixed(4);
 
-            var cooperation = evaluation.average.toFixed(4);
-            var deviation = evaluation.deviation.toFixed(4);
-
-            if (game === "PRISONERS_DILEMMA")
-              game = "PD";
-            if (game === "CHICKEN")
-              game = "SD";
-
-            if (dynamic === "UNCONDITIONAL_IMITATION")
-              dynamic = "UI";
-            if (dynamic === "REPLICATOR")
-              dynamic = "REP";
-            if (dynamic === "MORAN")
-              dynamic = "MOR";
-
-
-            tableString = tableString + getSimulationTableRow(seriesId, name, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations);
+            tableString = tableString + getSimulationTableRow(groupId, groupName, groupSize, cooperation, deviation);
           });
 
           var optionsString = getOptionsDiv();
@@ -183,11 +158,12 @@
         },
         /* Error handler */
         function(errorData) {
-          //window.location.href = 'index.html';
-          /*
-           * GraphIds request failed
-           */
-          showConnectionErrorMessage("Simulation request failed.");
+
+            if(errorData.slice(0,3) === "400") {
+              showInfo("No Simulation Group found.")
+            }  else {
+           showErrorMessage("Simulation request failed.");
+          }
         }, "");
 
 
@@ -203,9 +179,10 @@
 
         var jsonObject = $('form').serializeObject();
         var name = document.getElementById('nameInput').value;
+        console.log(name);
         var content = JSON.stringify(jsonObject.check);
-
-        sendRequest("put", "simulation/group?name="+ name, content,
+        console.log(content);
+        sendRequest("put", "simulation/group", content,
           /* Response handler */
           function(response) {
 
@@ -219,39 +196,33 @@
 
     });
 
-    function getSimulationTableRow(seriesId, seriesName, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations) {
+    function getSimulationTableRow(Id, name, size, cooperation, deviation) {
       return '<tr>\
-        <td><input type="checkbox" name="check" value="' + seriesId + '"/></td>\
-          <td><a href="result.html?seriesId=' + seriesId + '">' + seriesName + '</a></td>\
+        <td><input type="checkbox" name="check" value="' + Id + '"/></td>\
+          <td><a href="cooperation_group.html?groupId=' + Id + '">'+ name +'</a></td>\
+          <td>' + size + '</td>\
           <td>' + cooperation + '</td>\
           <td>' + deviation + '</td>\
-          <td><a href="graph.html?id=' + graphId + '">' + graphName + '</a></td></td>\
-          <td>' + game + '</td>\
-          <td>' + payoff + '</td>\
-          <td>' + dynamic + '</td>\
-          <td>' + iterations + '</td>\
         </tr>'
     }
 
     function getOptionsDiv() {
 
-      var string = '\
+    /*  var string = '\
       <div class="container">\
         <div class="row">\
-          <div class="col-xs-2 col-sm-2">\
-            <button type="submit" class="btn btn-secondary">Group</button>\
+          <div class="">\
+            <button type="submit" class="btn btn-secondary">Network Correlation</button>\
           </div>\
-          <div class = "col-sm-6 col-md-5">\
-            <label class="sr-only" for="nameInput">Username</label>\
-            <div class="input-group">\
-            <input type="text" class="form-control" id="nameInput" placeholder="group name">\
-        </div></div>\
-        <div class="col-sm-4">\
+          <div class="">\
+            <button type="submit" class="btn btn-secondary">Community Correlation</button>\
+          </div>\
+        <div class="">\
         </div>\
       </div>\
       ';
       return string;
-
+*/
     }
   </script>
 

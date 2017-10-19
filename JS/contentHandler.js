@@ -15,7 +15,7 @@
 var path = window.location.pathname.split('/');
 if(path[path.length - 1] !== "login.html") {
     if($.session.get('isLoggedIn') !== 'true') {
-            window.location.replace("login.html");
+            //window.location.replace("login.html");
     }
 }
 
@@ -30,7 +30,7 @@ $(document).ready(function(){
      */
     var menuString =
             '\
-            <nav class="navbar navbar-toggleable-sm navbar-light bg-faded" id="topNav">\
+            <nav class="navbar navbar-expand-lg navbar-light bg-faded" role="navigation" id="topNav">\
               <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">\
                 <span class="navbar-toggler-icon"></span>\
               </button>\
@@ -40,7 +40,7 @@ $(document).ready(function(){
                   <li class="nav-item"><a class="nav-link" href="graphs.html">Networks</a></li>\
                   <li class="nav-item"><a class="nav-link" href="covers.html">Community Detection</a></li>\
                   <li class="nav-item"><a class="nav-link" href="benchmarks.html">Benchmarks</a></li>\
-                  <li class="nav-item"><a class="nav-link" href="simulations.html">Simulations</a></li>\
+                  <li class="nav-item"><a class="nav-link" href="cooperation_simulations.html">Simulations</a></li>\
     			  <li class="nav-item"><a class="nav-link" href="centralities.html">Centrality</a></li>\
                 </ul>\
                 <ul class="navbar-nav navbar-right">\
@@ -51,9 +51,7 @@ $(document).ready(function(){
             </nav>\
         ';
 
-    var navbarStyleString = '<link rel="stylesheet" type="text/css" href="CSS/navbar.css">';
     $('body').prepend(menuString);
-    $('head').append(navbarStyleString);
 });
 
 /*
@@ -169,7 +167,7 @@ function getEnumName(parsedName) {
 /* Registers event listeners for a collapsable element */
 function registerCollapsable(collapsable, displayCallback) {
     /* Click listener */
-    $(collapsable).children('.collapsableHeader').find('.collapsableCollapser img').click(function(){
+    $(collapsable).children('.collapsableHeader').click(function(){
         /* Content */
         var content = $(collapsable).children('.collapsableContent');
         /* Control */
