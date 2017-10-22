@@ -11,6 +11,7 @@ Benchmarks
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -133,56 +134,44 @@ Benchmarks
                         <div id="errorMessage"></div>
                     </div>
 
-                    <div class="container">
-                    <!-- Benchmark Card -->
-                    <div class="card">
-                      <div class="card-header">
-                        Run Benchmark Algorithm
-                      </div>
-                      <div class="card-block">
+                    <!-- Page Header -->
+                    <div class="page-header graphColor">
+                      <h3>Benchmark</h3>
+                    </div>
 
+                    <div class="container-fluid">
 
-                            <!-- Benchmark Execution Form Container -->
-                             <div class="formWrapper">
+                      <!-- Benchmark Form -->
+                      <form id="runBenchmarkForm">
+                      <div class="">
 
-                              <!-- Benchmark Form -->
-                              <form id="runBenchmarkForm">
-                                <!-- Benchmark Types -->
-                                <div class="form-group row">
-                                <label for="benchmark" class="col-sm-2 col-form-label">Benchmark</label>
-                                  <div class="col-sm-10">
-                                    <select id="benchmark" class="form-control nonparameter">
-                                    </select>
-                                  </div>
-                                </div>
-                                <!-- Benchmark Parameters -->
-                                <div class="row" id="benchmarkParamsRow">
-                                </div>
-                                  <!-- Name for the graph to be created -->
-                                <div class="form-group row">
-                                  <label for="graphName" class="col-sm-2 col-form-label">Graph Name</label>
-                                  <div class="col-sm-10">
-                                    <input id="graphName" type="text" class="form-control" placeholder="graph name">
-                                  </div>
-                                </div>
-                                <!-- Name for the cover to be created -->
-                                <div class="form-group row">
-                                  <label for="coverName" class="col-sm-2 col-form-label">Cover Name</label>
-                                  <div class="col-sm-10">
-                                    <input id="coverName" type="text" class="form-control" placeholder="cover name">
-                                  </div>
-                                </div>
-                                <div class="form-group row">
-                                  <div class="offset-sm-2 col-sm-10">
-                                    <button name="submit" type="submit" class="btn btn-secondary">Run</button>
-                                  </div>
-                                </div>
-                              </form>
-
+                        <!-- Benchmark Types -->
+                        <div class="form-group">
+                          <label for="benchmark" class="col-form-label">Benchmark</label>
+                          <select id="benchmark" class="form-control nonparameter"></select>
+                        </div>
+                        <!-- Benchmark Parameters -->
+                        <div class="" id="benchmarkParamsRow">
+                        </div>
+                        <!-- Name for the graph to be created -->
+                        <div class="form-group">
+                          <label for="graphName" class="col-form-label">Graph Name</label>
+                          <input id="graphName" type="text" class="form-control" placeholder="graph name">
+                        </div>
+                        <!-- Name for the cover to be created -->
+                        <div class="form-group">
+                          <label for="coverName" class="col-form-label">Cover Name</label>
+                          <input id="coverName" type="text" class="form-control" placeholder="cover name">
+                        </div>
+                        <div class="form-group row">
+                          <div class="offset-sm-2 col-sm-10">
+                            <button name="submit" type="submit" class="btn btn-primary">Run Benchmark</button>
                           </div>
                         </div>
                       </div>
+                      </form>
 
+                      </div>
                     </div>
                 </div>
             </div>

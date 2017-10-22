@@ -19,6 +19,7 @@
   <script src="js/jquery.session.js"></script>
   <script src="js/jquery.tablesorter.js"></script>
   <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
   <script src="JS/bootstrap.min.js"></script>
   <script src="js/simulation/bootstrap-select.js"></script>
   <script src="js/contentHandler.js"></script>
@@ -40,7 +41,7 @@
   </div>
 
   <!-- Page Content -->
-  <div class="container">
+  <div class="container-fluid">
 
     <div class="row">
       <div class="col-lg-12" id="content">
@@ -66,12 +67,12 @@
               </div>
             </div>
             <div id="optionsContainer" class="collapsableContent">
-              <div class="container">
-                <div class="card-block row" style="width: 100%;">
-                  <div class="col-sm-6">
-                    <button id="create" class="btn btn-secondary">Export Table</button>
+              <div class="container-fluid">
+                <div class="card-block d-flex p-2 justify-content-start" style="width: 100%;">
+                  <div class="p-2">
+                    <button id="create" class="btn btn-info">Export Table</button>
                   </div>
-                  <div class="col-sm-6">
+                  <div class="p-2 ml-auto">
                     <button id="deleteButton" class="btn btn-secondary">Delete</button>
                  </div>
               </div>
@@ -165,7 +166,7 @@
             </div>
           </div>
 
-          
+
         </div>
 
 
@@ -182,6 +183,7 @@
 
   <script>
     var groupId = getParameterByName('groupId');
+    var groupName = groupId;
 
     $(document).ready(function() {
 
@@ -210,7 +212,7 @@
 
               function getLine(name, val) {
                 return '<tr>\
-                <td>'+ name +'</td><td>'+ val.covariance +'</td><td>'+ val.pearson +'</td>><td>'+ val.spearman +'</td>><td>'+ val.kendall +'</td>\
+                <td>'+ name +'</td><td>'+ val.Covariance +'</td><td>'+ val.Pearson +'</td>><td>'+ val.Spearman +'</td>><td>'+ val.Kendall +'</td>\
                 </tr>';
               }
 
@@ -235,13 +237,67 @@
 
       };
 
+      var seriesId = getParameterByName('groupId');
+      $("#errorMessage").empty();
+      $("#errorMessage").html(writeAlertInfo("Info ", "Receiving simulation data"));
+      $("#errorMessageWrapper").show();
+      sendRequest("get", "simulation/group/" + seriesId, "",
+        /* Response handler */
+        function(response) {
+
+          $("#errorMessage").empty();
+          var obj = JSON.parse(response);
+          var name = obj.name;
+          groupName = name;
+          var coopEval = obj.cooperationEvaluation;
+          var payoffEval = obj.payoffEvaluation;
+          var seriesData = obj.seriesMetaData;
+
+          $('#simulationHeader').html(getHeadLine(name, ""));
+
+          $('#simulationExport').html('<a download="' + name + '" id="downloadlink" style="" >Export Table</a>');
+          $('#simulationDelete').html('<a href="cooperation_simulations.html">Delete</a>');
+
+          var evalString = '\
+          <tr>\
+          <td>Average</td><td>'+ coopEval.average +'</td><td>'+ payoffEval.average +'</td>\
+          </tr>\
+          <tr>\
+          <td>Variance</td><td>'+ coopEval.variance +'</td><td>'+ payoffEval.variance +'</td>\
+          </tr>\
+          <tr>\
+          <td>Deviation</td><td>'+ coopEval.deviation +'</td><td>'+ payoffEval.deviation +'</td>\
+          </tr>\
+          <tr>\
+          <td>Maximum</td><td>'+ coopEval.max +'</td><td>'+ payoffEval.max +'</td>\
+          </tr>\
+          <tr>\
+          <td>Minimum</td><td>'+ coopEval.min +'</td><td>'+ payoffEval.min +'</td>\
+          </tr>\
+          ';
+
+          $('#evaluationTable').find("tbody").html(evalString);
+
+          fillSeries(seriesData);
+
+          textFileDownload(getParameterByName('groupId'));
+          deleteButtonHandler(getParameterByName('groupId'));
+
+        },
+        /* Error handler */
+        function(errorData) {
+          showConnectionErrorMessage("Request failed.");
+        }, "");
+
+      });
+
       function seriesCollapsableHandler() {
-        sendRequest("get", "simulation/meta", "",
-          /* Response handler */
-          function(response) {
-            var meta = JSON.parse(response);
+      }
+
+      function fillSeries(data) {
+
             var tableString = "";
-            jQuery.each(meta, function(index, value) {
+            jQuery.each(data, function(index, value) {
               var seriesId = value.id;
               var name = value.name;
               var parameters = value.parameters;
@@ -268,78 +324,12 @@
               if (dynamic === "MORAN")
                 dynamic = "MOR";
 
-
               tableString = tableString + getSimulationTableRow(seriesId, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations);
             });
 
-          //  var optionsString = getOptionsDiv();
-
             $("#seriesTableBody").html(tableString);
-          //  $("#options").html(getOptionsDiv());
             $('table').tablesorter();
-
-
-            //window.location.href = 'index.html';
-          },
-          /* Error handler */
-          function(errorData) {
-            //window.location.href = 'index.html';
-            /*
-             * GraphIds request failed
-             */
-            showConnectionErrorMessage("Simulation request failed.");
-          }, "");
-      };
-
-      var seriesId = getParameterByName('groupId');
-      $("#errorMessage").empty();
-      $("#errorMessage").html(writeAlertInfo("Info ", "Receiving simulation data"));
-      $("#errorMessageWrapper").show();
-      sendRequest("get", "simulation/group/" + seriesId, "",
-        /* Response handler */
-        function(response) {
-
-          $("#errorMessage").empty();
-          var obj = JSON.parse(response);
-          var name = obj.name;
-          var coopEval = obj.cooperationEvaluation;
-          var payoffEval = obj.payoffEvaluation;
-
-          $('#simulationHeader').html(getHeadLine(name, ""));
-
-          $('#simulationExport').html('<a download="' + name + '" id="downloadlink" style="" >Export Table</a>');
-          $('#simulationDelete').html('<a href="simulations.html">Delete</a>');
-
-          var evalString = '\
-          <tr>\
-          <td>Average</td><td>'+ coopEval.average +'</td><td>'+ payoffEval.average +'</td>\
-          </tr>\
-          <tr>\
-          <td>Variance</td><td>'+ coopEval.variance +'</td><td>'+ payoffEval.variance +'</td>\
-          </tr>\
-          <tr>\
-          <td>Deviation</td><td>'+ coopEval.deviation +'</td><td>'+ payoffEval.deviation +'</td>\
-          </tr>\
-          <tr>\
-          <td>Maximum</td><td>'+ coopEval.max +'</td><td>'+ payoffEval.max +'</td>\
-          </tr>\
-          <tr>\
-          <td>Minimum</td><td>'+ coopEval.min +'</td><td>'+ payoffEval.min +'</td>\
-          </tr>\
-          ';
-
-          $('#evaluationTable').find("tbody").html(evalString);
-
-          textFileDownload(getParameterByName('groupId'));
-          deleteButtonHandler(getParameterByName('groupId'));
-
-        },
-        /* Error handler */
-        function(errorData) {
-          showConnectionErrorMessage("Request failed.");
-        }, "");
-
-      });
+      }
 
     function writeNetworkMeta(id, name, nodes, edges) {
       var string =
@@ -428,7 +418,7 @@
 
         function getSimulationTableRow(seriesId, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations) {
           return '<tr>\
-              <td><a href="result.html?seriesId=' + seriesId + '">show</a></td>\
+              <td><a href="cooperation_simulation.html?seriesId=' + seriesId + '">'+seriesId+'</a></td>\
               <td>' + cooperation + '</td>\
               <td>' + deviation + '</td>\
               <td><a href="graph.html?id=' + graphId + '">' + graphName + '</a></td></td>\
@@ -469,6 +459,7 @@
             $("#errorMessageWrapper").show();
             var link = document.getElementById('downloadlink');
             link.href = makeTextFile(response);
+            link.download = groupName;
             link.style.display = 'block';
 
           },

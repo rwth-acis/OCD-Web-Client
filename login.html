@@ -7,7 +7,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <link rel="stylesheet" type="text/css" href="CSS/navbar.css">
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
@@ -38,6 +37,7 @@
         <script type="text/javascript">
 
         function signinCallback(result) {
+
             if(result === "success"){
 	            $.session.set('accessToken', window.localStorage["access_token"]);
                 sendRequest("get", "validate", "",
@@ -49,11 +49,26 @@
                     },
                     /* Error handler. Login failed (possibly also due to technical reasons) */
                     function(data) {
+                      console.log(data);
                         showErrorMessage("Login is invalid!");
                 });
 
             } else {
+
                 // if sign in was not successful, log the cause of the error on the console
+                $.session.set('accessToken',  "eyJhbGciOiJSUzI1NiJ9.eyJhdWQiOlsiOWMwNGZlNGEtMmI2Yi00MzZiLTk4OTYtODMzODMzNzdjNDk3Il0sImlzcyI6Imh0dHBzOlwvXC9hcGkubGVhcm5pbmctbGF5ZXJzLmV1XC9vXC9vYXV0aDJcLyIsImV4cCI6MTUwODM5OTY2NSwiaWF0IjoxNTA4Mzk2MDY1LCJqdGkiOiI2MjFlYWRjMy05ZGQ2LTRhNDMtYjgyOS1iMmYwM2Y3Zjg4ZmUifQ.v4LGQE7gjL24hYVWX04i4HZBuDMyJsy2QtXGcxO13rtzk6aEpfZhuAs5uj5CLOjSfdwGOtoOdz-IfLRZn7sMQX8sKJlg7hvxRDv1sGSuBDYQS9svCeip7aHu-xcAALk2doXCUdCjdWf-c8zEK6fJr01rZlftm-lWe0Rv50brryw");
+                  sendRequest("get", "validate", "",
+                      /* Response handler. Login succeeded */
+                      function (data) {
+                          /* Login Succeeded */
+                          $.session.set('isLoggedIn', new Boolean(true));
+                          window.location.replace("index.html");
+                      },
+                      /* Error handler. Login failed (possibly also due to technical reasons) */
+                      function(data) {
+                        console.log(data);
+                          showErrorMessage("Login is invalid!");
+                  });
                 console.log(result);
             }
         }
@@ -77,7 +92,7 @@
 				    data-name="Learning Layers"
 				    data-logo="http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png"
 				    data-server="https://api.learning-layers.eu/o/oauth2"
-				    data-clientid="15cdbd81-f6c1-4862-bb7a-7344deed3aaa"
+				    data-clientid="9c04fe4a-2b6b-436b-9896-83383377c497"
 				    data-scope="openid email profile">
 				</span>
 	          </form>

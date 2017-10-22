@@ -9,6 +9,7 @@
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -71,7 +72,7 @@
                             description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
                             $('#graphHeader').html(getHeadLine(name, description));
                             $('#graphCovers').html('<a href="covers.html?graphId=' + graphId +'">Covers</a>');
-                            $('#graphSimulations').html('<a href="simulations.html">Simulations</a>');
+                            $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId='+ graphId +'">Simulations</a>');
                             $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId +'">Centralities</a>');
                             $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
 
@@ -489,28 +490,31 @@
                         <div id="errorMessage"></div>
                     </div>
                     <!-- Graph meta information and related data -->
-                    <div>
+                    <div style="margin-bottom: 1em;">
                       <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
 
                       </div>
-                      <div class="side-nav">
-                      <ul class="nav justify-content-end">
-                        <li id="graphCovers" class="nav-item coverColor">
-
-                        </li>
-                        <li id="graphSimulations" class="nav-item simulationColor">
-
-                        <li id="graphCentralities" class="nav-item centralityColor">
-
-                        </li>
-                        <li id="graphDelete" class="nav-item deleteColor">
-
-                        </li>
-                      </ul>
+                      <div class="side-nav d-flex flex-row">
+                        <ul class="nav" style="width:100%;">
+                        <div class="p-2 coverColor col-md-3 col-sm-6">
+                          <li id="graphCovers" class="nav-item coverColor"></li>
+                        </div>
+                        <div class="p-2 simulationColor col-md-3 col-sm-6">
+                          <li id="graphSimulations" class="nav-item simulationColor"></li>
+                        </div>
+                        <div class="p-2 centralityColor col-md-3 col-sm-6">
+                          <li id="graphCentralities" class="nav-item centralityColor"></li>
+                        </div>
+                        <div class="p-2 deleteColor col-md-3 col-sm-6">
+                          <li id="graphDelete" class="nav-item deleteColor"></li>
+                        </div>
+                        </ul>
+                      </div>
                     </div>
-                    </div>
+                    <div class="container-fluid">
+                    <div class="row">
                     <!-- Collapsable for graph properties -->
-                    <div id="propertiesCollapsable" class="collapsable">
+                    <div id="propertiesCollapsable" class="collapsable col-lg-6">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Properties</div>
                             <div class="collapsableCollapser">
@@ -538,9 +542,10 @@
                         </div>
                     </div>
                     <!-- Collapsable for graph edge list -->
-                    <div id="edgeListCollapsable" class="collapsable">
+                    <div id="edgeListCollapsable" class="collapsable col-sm-12 col-lg-6">
                         <div class="collapsableHeader">
-                            <div class="collapsableTitle">Edges</div>
+                          <div class="collapsableTitle"><img class="icon" src="IMG/open-iconic/svg/link-intact.svg" alt=""> Edges</div>
+
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
                                 <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
@@ -559,7 +564,7 @@
                                             Target
                                         </th>
                                         <th title="Edge Weight">
-                                            Edges
+                                            Weight
                                         </th>
                                     </tr>
                                     </thead>
@@ -568,10 +573,12 @@
                             </div>
                         </div>
                     </div>
+                  </div>
+                  <div class="row">
                     <!-- Collapsable for algorithm execution -->
-                    <div id="runAlgorithmCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Run Algorithm</div>
+                    <div id="runAlgorithmCollapsable" class="collapsable col-sm-12">
+                        <div class="collapsableHeader coverColor">
+                            <div class="collapsableTitle">Run OCD Algorithm</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
                                 <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
@@ -617,10 +624,12 @@
                             </div>
                         </div>
                     </div>
+                  </div>
+                  <div class="row">
                     <!-- Collapsable for simulation execution -->
-                    <div id="runSimulationCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Run Simulation</div>
+                    <div id="runSimulationCollapsable" class="collapsable col-sm-12">
+                        <div class="collapsableHeader simulationColor">
+                            <div class="collapsableTitle">Run Cooperation Simulation</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
                                 <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
@@ -633,9 +642,11 @@
                                 </div>
                         </div>
                     </div>
+                  </div>
+                    <div class="row">
                     <!-- Collapsable for centrality calculation execution -->
-                    <div id="runCentralityCalculationCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
+                    <div id="runCentralityCalculationCollapsable" class="collapsable col-sm-12">
+                        <div class="collapsableHeader centralityColor">
                             <div class="collapsableTitle">Run Centrality Calculation</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
@@ -669,9 +680,11 @@
                             </div>
                         </div>
                     </div>
+                  </div>
+                  <div class="row">
                     <!-- Collapsable for centrality simulation execution -->
-                    <div id="runCentralitySimulationCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
+                    <div id="runCentralitySimulationCollapsable" class="collapsable col-sm-12">
+                        <div class="collapsableHeader centralityColor">
                             <div class="collapsableTitle">Run Centrality Simulation</div>
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
@@ -705,8 +718,10 @@
                             </div>
                         </div>
                     </div>
+                  </div>
                     <!-- Collapsable for graph visualization -->
-                    <div id="visualizationCollapsable" class="collapsable">
+                    <div class="row">
+                    <div id="visualizationCollapsable" class="collapsable col-sm-12">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Visualization</div>
                             <div class="collapsableCollapser">
@@ -727,7 +742,9 @@
                             </div>
                         </div>
                     </div>
+                  </div>
                 </div>
+              </div>
             </div>
         </div>
     </body>

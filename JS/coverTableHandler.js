@@ -1,6 +1,6 @@
 /*
  * Handles the content of cover tables.
- * 
+ *
  * requires jQuery
  * requires requestHandler.js
  * requires contentHandler.js
@@ -20,11 +20,11 @@ function appendCoverRow(table, coverElt, cells) {
     row += createCoverGraphIdCell(graphId);
     /* Cover name */
     if($.inArray("Name", cells) > -1) {
-        row += createCoverTableCell($(coverElt).children('Name').text());
+        row += createCoverNameCell($(coverElt).children('Name').text(), coverId, graphId);
     }
     /* Graph name */
     if($.inArray("Graph", cells) > -1) {
-        row += createCoverTableCell($(coverElt).find('Graph').find('Name').text());
+        row += createGraphNameCell($(coverElt).find('Graph').find('Name').text(), graphId);
     }
     /* Creation method */
     if($.inArray("CreationMethod", cells) > -1) {
@@ -59,6 +59,14 @@ function appendCoverRow(table, coverElt, cells) {
  */
 function createCoverTableCell(value) {
     return "<td>" + value + "</td>";
+}
+
+function createCoverNameCell(name, coverId, graphId) {
+    return '<td><a href="#" class="showCover"> '+ name + '</a> </td>';
+}
+
+function createGraphNameCell(name, graphId) {
+    return '<td><a href="graph.html?id='+ graphId + '">' + name + '</a> </td>';
 }
 
 /*

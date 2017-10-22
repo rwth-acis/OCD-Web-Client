@@ -5,13 +5,15 @@ $(document).ready(function(){
 
     switchGameParameters($("#gameSelect").val());
     switchDynamicParameters($("#dynamicSelect").val());
-    switchBreakCondition();
 
     $("#gameSelect").change(function(){
         switchGameParameters($("#gameSelect").val());
     });
     $("#dynamicSelect").change(function() {
         switchDynamicParameters($("#dynamicSelect").val());
+    });
+    $("#conditionSelect").change(function() {
+        switchConditionParameters($("#conditionSelect").val());
     });
 
     $( "#target" ).submit(function( event ) {
@@ -83,19 +85,28 @@ function switchGameParameters (input) {
 
 function switchDynamicParameters (input) {
 
-             $( "#dynamicParamRows" ).html("");
+        $( "#dynamicParamRows" ).html("");
 
          if(input === "Replicator") {
              $( "#dynamicParamRows" ).html(writeFormInput("inputDynamicValue", "dynamicValue", "Value"));
          }
    };
 
-   function switchBreakCondition (input) {
-        $( "#breakParamRows" ).html(''
-        + writeParameterRow("inputMinIterations", "min", "minIterations", 100)
-        + writeParameterRow("inputMaxIterations", "max", "maxIterations", 1000)
-        + writeParameterRow("inputWindow", "window", "timeWindow", 100)
-        + writeParameterRow("inputThreshold", "threshold", "threshold", 0.1));
+   function switchConditionParameters (input) {
+
+        $( "#conditionParamRows" ).html("");
+
+        if(input === "Stationary State" || input === "STATIONARY_STATE") {
+          $( "#breakParamRows" ).html(''
+          + writeParameterRow("inputMinIterations", "min", "minIterations", 100)
+          + writeParameterRow("inputMaxIterations", "max", "maxIterations", 1000)
+          + writeParameterRow("inputWindow", "window", "timeWindow", 100));
+        }
+
+        if(input === "Fixed Iterations" || input === "FIXED_ITERATIONS") {
+          $( "#breakParamRows" ).html(''
+          + writeParameterRow("inputMaxIterations", "max", "maxIterations", 40));
+        }
     };
 
 
@@ -116,7 +127,7 @@ function writeSimulationForm(submit) {
           <div class="form-group row">\
             <label for="inputGame" class="col-sm-2 col-form-label">Game</label>\
             <div class="col-sm-10">\
-              <select class="form-control" id="gameSelect">\
+              <select class="form-control custom-select" id="gameSelect">\
                 <option>SELECT</option>\
                 <option>Prisoner\'s Dilemma</option>\
                 <option>Snow Drift Game</option>\
@@ -128,7 +139,7 @@ function writeSimulationForm(submit) {
           <div class="form-group row">\
             <label for="dynamicSelect" class="col-sm-2 control-label">Dynamic</label>\
             <div class="col-sm-10">\
-              <select class="form-control" name="dynamic" id="dynamicSelect">\
+              <select class="form-control custom-select" name="dynamic" id="dynamicSelect">\
                  <option>SELECT</option>\
                  <option>Replicator</option>\
                  <option>Imitation</option>\
@@ -140,12 +151,19 @@ function writeSimulationForm(submit) {
           <div class="col-sm-10" id="dynamicParamRows">\
           </div>\
     <div class="form-group row">\
-        <label for="inputGame" class="control-label">BreakCondition</label>\
+        <label for="inputGame" class="col-sm-2 control-label">BreakCondition</label>\
+        <div class="col-sm-10">\
+        <select class="form-control custom-select" name="condition" id="conditionSelect">\
+           <option>SELECT</option>\
+           <option>Fixed Iterations</option>\
+           <option>Stationary State</option>\
+        </select>\
+        </div>\
     </div>\
     <div class="col-sm-10" id="breakParamRows">\
     </div>\
     <div class="form-group">\
-       <button type="submit" class="btn btn-secondary">'+ submit +'</button>\
+       <button type="submit" class="btn btn-primary">'+ submit +'</button>\
     </div>\
     </form>';
   }
