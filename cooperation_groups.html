@@ -103,6 +103,8 @@
 
     $(document).ready(function() {
 
+
+
       pageNumber = getUrlVar("si");
       if (!pageNumber) {
         pageNumber = 0;
@@ -153,6 +155,62 @@
           $("#options").html(getOptionsDiv());
           $('table').tablesorter();
 
+          var evalButton = document.getElementById("evaluationButton");
+          evalButton.addEventListener("click", function() {
+
+            var jsonObject = $('form').serializeObject();
+            var content = JSON.stringify(jsonObject.check);
+            console.log(content);
+            sendRequest("put", "simulation/group/mapping", content,
+              /* Response handler */
+              function(response) {
+
+                function genericCollapsableHandler() {
+
+                }
+
+                  $('#content').load("cooperation_evaluation.html", function() {
+                //  registerCollapsable("#optionsCollapsable", genericCollapsableHandler);
+                //  registerCollapsable("#SizeCollapsable", genericCollapsableHandler);
+                ///  registerCollapsable("#AverageDegreeCollapsable", genericCollapsableHandler);
+                //  registerCollapsable("#CorrelationCollapsable", genericCollapsableHandler);
+                //  registerCollapsable("#ClusteringCoefficientCollapsable", genericCollapsableHandler);
+                //  registerCollapsable("#DegreeDeviationCollapsable", genericCollapsableHandler);
+                //  registerCollapsable("#DensityCollapsable", genericCollapsableHandler);
+
+                  var obj = JSON.parse(response);
+                  var datasets = obj.cooperationValues;
+                  var density = obj.densityCorrelation;
+                  var degree = obj.averageDegreeCorrelation;
+                  var cc = obj.clusteringCoefficientCorrelation;
+                  var size = obj.sizeCorrelation;
+                  var degdev = obj.degreeDeviationCorrelation;
+
+                  function getLine(name, val) {
+                    return '<tr>\
+                    <td>'+ name +'</td><td>'+ val.Covariance +'</td><td>'+ val.Pearson +'</td>><td>'+ val.Spearman +'</td>><td>'+ val.Kendall +'</td>\
+                    </tr>';
+                  }
+
+                  var string = getLine("Size", size);
+                  string += getLine("Density", density);
+                  string += getLine("Avg Degree", degree);
+                  string += getLine("Std Degree", degdev);
+                  string += getLine("CC", cc);
+
+                  $('#CorrelationTable').find("tbody").html(string);
+
+
+                });
+
+
+
+              },
+              /* Error handler */
+              function(errorData) {
+                showErrorMessage(errorData);
+              }, "application/json");
+            });
 
           //window.location.href = 'index.html';
         },
@@ -166,7 +224,7 @@
           }
         }, "");
 
-
+});
       $(".checkall").click(function() {
         var cblist = $("input[name=check\\[\\]]");
         cblist.attr("checked", !cblist.attr("checked"));
@@ -178,22 +236,8 @@
         event.preventDefault();
 
         var jsonObject = $('form').serializeObject();
-        var name = document.getElementById('nameInput').value;
-        console.log(name);
         var content = JSON.stringify(jsonObject.check);
         console.log(content);
-        sendRequest("put", "simulation/group", content,
-          /* Response handler */
-          function(response) {
-
-            showSuccess(response);
-          },
-          /* Error handler */
-          function(errorData) {
-            showErrorMessage(errorData);
-          }, "application/json");
-      });
-
     });
 
     function getSimulationTableRow(Id, name, size, cooperation, deviation) {
@@ -207,7 +251,7 @@
     }
 
     function getOptionsDiv() {
-
+      return  ' <button type="submit" id="evaluationButton" class="btn btn-outline-primary">Evaluate</button>';
     /*  var string = '\
       <div class="container">\
         <div class="row">\
@@ -224,6 +268,54 @@
       return string;
 */
     }
+
+
+    function getChartData(daa, dab) {
+
+      var data = {
+        type: 'line',
+        data: {
+          labels: labelArray,
+          datasets: dataSetsObject(daa, dab)
+        }
+      };
+
+      return data;
+    }
+
+
+    function generateChart(daa, dab, chart) {
+
+      var data = getChartData(daa, dab);
+      var ctx = chart.getContext("2d");
+      var myChart = new Chart(ctx, data);
+    }
+
+    var randomColor = function() {
+      var r = Math.floor(Math.random() * 255);
+      var g = Math.floor(Math.random() * 255);
+      var b = Math.floor(Math.random() * 255);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    }
+
+    var dataObject = function(id, dataArray) {
+      return {
+        label: id,
+        data: dataArray,
+        backgroundColor: 'transparent',
+        borderColor: randomColor()
+      };
+    }
+
+    var dataSetsObject = function(daa, dab) {
+
+      var dataSets = new Array();
+      for (var i = 0; i < dataArray.length; i++) {
+        dataSets.push(dataObject(daa[i], dab[i]));
+      }
+      return dataSets;
+    };
+
   </script>
 
 

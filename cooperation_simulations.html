@@ -126,13 +126,13 @@
       $('.pageLeft').click(function() {
         if (pageNumber > 0) {
           pageNumber--;
-          var newUrl = "simulations.html?si=" + pageNumber;
+          var newUrl = "cooperation_simulations.html?si=" + pageNumber;
           window.location.href = newUrl;
         }
       });
       $('.pageRight').click(function() {
         pageNumber++;
-        var newUrl = "simulations.html?si=" + pageNumber;
+        var newUrl = "cooperation_simulations.html?si=" + pageNumber;
         window.location.href = newUrl;
       });
 
@@ -147,9 +147,15 @@
       sendRequest("get", "simulation/meta?firstIndex=" + firstIndex + "&length=" + SIMULATIONS_PER_PAGE + graphIdQueryExtension, "",
         /* Response handler */
         function(response) {
+
+
+
           var meta = JSON.parse(response);
           var tableString = "";
           jQuery.each(meta, function(index, value) {
+
+            try {
+
             var seriesId = value.id;
             var name = value.name;
             var parameters = value.parameters;
@@ -176,8 +182,12 @@
             if (dynamic === "MORAN")
               dynamic = "MOR";
 
-
             tableString = tableString + getSimulationTableRow(seriesId, name, graphId, graphName, game, payoff, dynamic, cooperation, deviation, iterations);
+
+          } catch(error) {
+            showErrorMessage(error);
+          }
+
           });
 
           var optionsString = getOptionsDiv();
@@ -185,7 +195,6 @@
           $("#seriesTableBody").html(tableString);
           $("#options").html(getOptionsDiv());
           $('table').tablesorter();
-
 
           //window.location.href = 'index.html';
         },
@@ -247,7 +256,7 @@
       <div class="container">\
         <div class="row">\
           <div class="col-xs-2 col-sm-2">\
-            <button type="submit" class="btn btn-secondary">Group</button>\
+            <button type="submit" class="btn btn-outline-primary">Group</button>\
           </div>\
           <div class = "col-sm-6 col-md-5">\
             <label class="sr-only" for="nameInput">Username</label>\

@@ -180,6 +180,8 @@
         /* Response handler */
         function(response) {
 
+          try {
+
           $("#errorMessage").empty();
           var obj = JSON.parse(response);
           var name = obj.name;
@@ -231,6 +233,10 @@
           ';
 
           $('#evaluationTable').find("tbody").html(evalString);
+
+        } catch(error) {
+          showWarning(error);
+        }
 
 
           var dataArrayCoop = new Array(datasets.length);

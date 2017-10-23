@@ -98,14 +98,14 @@ function switchDynamicParameters (input) {
 
         if(input === "Stationary State" || input === "STATIONARY_STATE") {
           $( "#breakParamRows" ).html(''
-          + writeParameterRow("inputMinIterations", "min", "minIterations", 100)
-          + writeParameterRow("inputMaxIterations", "max", "maxIterations", 1000)
-          + writeParameterRow("inputWindow", "window", "timeWindow", 100));
+          + writeParameterRow("inputMinIterations", "mitIterations", "minIterations", 100)
+          + writeParameterRow("inputMaxIterations", "maxIterations", "maxIterations", 1000)
+          + writeParameterRow("inputWindow", "timeWindow", "timeWindow", 100));
         }
 
         if(input === "Fixed Iterations" || input === "FIXED_ITERATIONS") {
           $( "#breakParamRows" ).html(''
-          + writeParameterRow("inputMaxIterations", "max", "maxIterations", 40));
+          + writeParameterRow("inputMaxIterations", "maxIterations", "maxIterations", 40));
         }
     };
 
