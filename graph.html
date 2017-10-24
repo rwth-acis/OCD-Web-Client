@@ -152,7 +152,7 @@
                     var sim = $('#centralitySimulation').val();
                     if(sim !== getSelectOptionVal()) {
                       var params = getParameterXml("#centralitySimulationParameterDiv");
-                      sendRequest("post", "simulation/graphs/" + graphId
+                      sendRequest("post", "centrality/simulation/graphs/" + graphId
                               + "?simulation="+ sim, params,
                           /* Response handler */
                           function(response) {
@@ -210,7 +210,7 @@
             /* Requests the names of all centrality simulations.
              * Then executes a callback function */
             function getCentralitySimulationNames(callback) {
-                sendRequest("get", "simulations", "",
+                sendRequest("get", "centralitysimulations", "",
                         /* Response handler */
                         function(response) {
                 			centralitySimulationNames = response;
@@ -265,7 +265,7 @@
             /* Requests all parameter names for a given centrality simulation.
              * Then executes a calllback function */
             function getCentralitySimulationParameters(centralitySimulationName, callback) {
-                sendRequest("get", "simulations/" + centralitySimulationName + "/parameters/default", "",
+                sendRequest("get", "centralitysimulations/" + centralitySimulationName + "/parameters/default", "",
                         /* Response handler */
                         function(response) {
                             if(typeof callback !== 'undefined') {
@@ -318,10 +318,10 @@
                     /* Adds all centrality measure names to the form */
                     getCentralityMeasureNames(function() {
                         $(centralityMeasureNames).find('Name').each(function() {
-                        	if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH' && $(this).text() !== 'SIMULATION' && $(this).text() !== 'AVERAGE') {
+                        	if($(this).text() !== 'Undefined') {
                                 $("#centralityMeasure").append(
                                     '<option value="' + $(this).text()
-                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                                    + '">' + $(this).text() + '</option>');
                             }
                         });
                     });
@@ -335,10 +335,10 @@
                     /* Adds all centrality simulation names to the form */
                     getCentralitySimulationNames(function() {
                         $(centralitySimulationNames).find('Name').each(function() {
-                            if($(this).text() !== 'UNDEFINED') {
+                            if($(this).text() !== 'Undefined') {
                                 $("#centralitySimulation").append(
                                     '<option value="' + $(this).text()
-                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                                    + '">' + $(this).text() + '</option>');
                             }
                         });
                     });

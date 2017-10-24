@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
-    <!-- Displays basic/meta information on all calculated centrality maps -->
+    <!-- Displays basic/meta information on all centralities. -->
     <head>
-        <title>Evaluate Calculated Centralities</title>
+        <title>Evaluate Centralities</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -19,12 +20,14 @@
         <script src="JS/jquery.tablesorter.js"></script>
         <script src="JS/centralityTableHandler.js"></script>
         <script type="text/javascript">
+        /* Variable for counting the number of callbacks when removing multiple centrality maps */
+        var removeCounter;
             /*
              * Executed after page loading.
              */
             $(document).ready(function() {
                 /* Identifiers for the centrality map information to display */
-                var cells = ["Centrality Measure", "Graph", "Execution Time", "C", "G", "R"];
+                var cells = ["Name", "Graph", "Creation Method", "Execution Time", "R"];
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -48,7 +51,7 @@
                          */
                         try {
                             $("#centralityTable").tablesorter({sortList: [[1,0],[0,0]],
-                                headers: { 5: {sorter: false}, 6: { sorter: false}, 7: {sorter: false}}});
+                                headers: {6: { sorter: false}}});
                         } catch(err) { /* table empty */ }
                         /*
                          * Register event handlers
@@ -163,6 +166,22 @@
                         $(this).removeClass('highlight');
                     });
                 });
+                $("#removeSelected").click(function() {
+                    removeCounter = 0;
+                    var mapIds = $('.highlight').children().filter('.mapId');
+                    var graphIds = $('.highlight').children().filter('.graphId');
+                    var removalNumber = mapIds.length;
+                    for(index = 0; index < mapIds.length; index++) {
+                        mapId = mapIds.eq(index);
+                        graphId = graphIds.eq(index);
+                        deleteCentralityMapWithCallback(mapId, graphId, function() {
+                            removeCounter++;
+                            if(removeCounter == removalNumber) {
+                                window.location.reload();
+                            }
+                        });
+                    }
+                });
             });
         </script>
     </head>
@@ -181,7 +200,8 @@
                     </div>
                     <div id="selectionControl">
                         <button id="selectAll" type="button" class="btn transparentButton">Select All</button>
-                        <button id="deselectAll" type="deselectAll" class="btn transparentButton">Deselect All</button>
+                        <button id="deselectAll" type="button" class="btn transparentButton">Deselect All</button>
+                        <button id="removeSelected" type="button" class="btn transparentButton">Remove Selected</button>
                     </div>
                     <!-- Centrality map meta information table -->
                     <div class="tableWrapper table-responsive">
@@ -190,22 +210,21 @@
                                 <tr>
                                     <th class="hidden" title="CentralityMapId"></th>
                                     <th class="hidden" title="GraphId"></th>
-                                    <th width="300" title="Centrality Measure Name" class="sortable">
-                                        Centrality Measure
+                                    <th width="300" title="Name" class="sortable">
+                                        Name
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                     <th width="300" title="Graph Name" class="sortable">
                                         Graph
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
-                                    <th width="200" title="Execution Time">
+                                    <th width="300" title="Creation Method" class="sortable">
+                                        Creation Method
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="200" title="Execution Time" class="sortable">
                                         Execution Time (ms)
-                                    </th>
-                                    <th width="20" title="Show Centrality">
-                                        C
-                                    </th>
-                                    <th width="20" title="Show Graph">
-                                        G
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                     <th width="20" title="Remove Centrality">
                                         R

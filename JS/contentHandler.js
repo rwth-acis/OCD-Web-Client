@@ -212,7 +212,7 @@ function registerParameterSelect(selectId, paramDivId, getOptions) {
                             var paramRow = '<div class="form-group row">'
                             + '<label class="col-sm-6 col-form-label">' + $(this).find("Name").first().text() + '</label>'
                             + '<div class="col-sm-6">'
-                            + '<input type="text" class="form-control parameter" name="' + $(this).find("Name").first().text() + '" placeholder="' + $(this).find("Value").first().text() + '">'
+                            + '<input type="text" class="form-control parameter" name="' + $(this).find("Name").first().text() + '" value="' + $(this).find("Value").first().text() + '">'
                             + '</div></div>'
                             parameterString += paramRow;
                         });
@@ -247,6 +247,18 @@ function getParameterXml(paramDivId) {
     });
     parametersXml += '</Parameters>';
     return parametersXml;
+}
+
+function addParameters(element, tableid) {
+    var parameterName = element.find('ParameterName');
+    parameterName = parameterName.text();
+    var value = parseFloat(element.find('ParameterValue').text());
+    value = value.toFixed(4);
+    var row = '<tr>'
+        + '<td>' + parameterName + '</td>'
+        + '<td>' + value + '</td>'
+        + '</tr>';
+    $(tableid + " tbody").append(row);
 }
 
 /* Get Information Divs */
