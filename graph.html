@@ -140,7 +140,13 @@
                              /*
                               * Run centrality calculation request failed
                               */
-                             showConnectionErrorMessage("Centrality calculation request failed.");
+                             if(errorData.includes("Show Error")) {
+                                  var errorSplit = errorData.split(":");
+                                  showErrorMessage(errorSplit[errorSplit.length-1]);
+                             }
+                             else {
+                                 showConnectionErrorMessage("Centrality calculation request failed.");
+                             }     
                      });
                    }
                    return false;
@@ -152,20 +158,27 @@
                     var sim = $('#centralitySimulation').val();
                     if(sim !== getSelectOptionVal()) {
                       var params = getParameterXml("#centralitySimulationParameterDiv");
-                      sendRequest("post", "centrality/simulation/graphs/" + graphId
-                              + "?simulation="+ sim, params,
-                          /* Response handler */
-                          function(response) {
-                              //window.location.href = 'index.html';
-                          },
-                          /* Error handler */
-                          function(errorData) {
-                              /*
-                               * Run centrality simulation request failed
-                               */
-                              showConnectionErrorMessage("Centrality simulation request failed.");
-                      });
-                    }
+                      var runs = 1;
+                      if($('#multipleRuns').prop("checked")) {
+                          runs = $('#runsInput').val();
+                      }
+                      var counter;
+                      for(counter = 0; counter < runs; counter++) {
+                          sendRequest("post", "centrality/simulation/graphs/" + graphId
+                                  + "?simulation="+ sim + "&runs=" + runs, params,
+                              /* Response handler */
+                              function(response) {
+                                  //window.location.href = 'index.html';
+                              },
+                              /* Error handler */
+                              function(errorData) {
+                                  /*
+                                   * Run centrality simulation request failed
+                                   */
+                                  showConnectionErrorMessage("Centrality simulation request failed.");
+                          });
+                        }
+                      }
                     return false;
                   });
             });
@@ -341,6 +354,9 @@
                                     + '">' + $(this).text() + '</option>');
                             }
                         });
+                    });
+                    $('#multipleRuns').change(function() {
+                        $('#runsInput').toggleClass("hidden");
                     });
                     /* Registers the parameter component for the contentHandler */
                     registerParameterSelect("#centralitySimulation", "#centralitySimulationParameterDiv", getCentralitySimulationParameters);
@@ -705,8 +721,11 @@
                                               </select>
                                             </div>
                                           </div>
-
                                           <div class="form-group row" id="centralitySimulationParameterDiv">
+                                          </div>
+                                          <div class="form-group row" id="centralitySimulationRunsDiv">
+                                              <label><input type="checkbox" id="multipleRuns"> Multiple Runs</label>
+                                              <input type="text" class="form-control hidden" value="2" id="runsInput">
                                           </div>
 
                                         </div>

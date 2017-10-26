@@ -96,17 +96,29 @@
                             }
                         }
                         if(!multipleGraphsSelected) {
-                            var mapIdString = "mapIds=" + mapIds.eq(0).text();
-                            for(index = 1; index < mapIds.length; index++) {
-                                mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
-                            }
-                            sendRequest("get", "evaluation/average/graph/" + firstGraphId + "/maps?" + mapIdString, "",
-                                /* Response handler */
-                                function(averageMapXml) {
-                                    window.location.href = "centralities_evaluation.html";
-                                },
-                                /* Error handler */
-                                function(errorData) {
+                            $('#averageNameForm').removeClass("hidden");
+                            $('#calculateAverage').click(function() {
+                                var averageMapName = $('#averageNameInput').val();
+                                if(averageMapName != "") {
+                                    var mapIdString = "mapIds=" + mapIds.eq(0).text();
+                                    for(index = 1; index < mapIds.length; index++) {
+                                        mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
+                                    }
+                                    sendRequest("get", "evaluation/average/graph/" + firstGraphId + "/maps?" + mapIdString + "&mapName=" + averageMapName, "",
+                                        /* Response handler */
+                                        function(averageMapXml) {
+                                            window.location.href = "centralities_evaluation.html";
+                                        },
+                                        /* Error handler */
+                                        function(errorData) {
+                                    });
+                                }
+                                else {
+                                    showErrorMessage('Please enter a name for the average centrality map');
+                                }
+                            });
+                            $('#abortAverage').click(function() {
+                                window.location.href = "centralities_evaluation.html";
                             });
                         }
                         else {
@@ -192,6 +204,11 @@
                     <!-- Displays error messages -->
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
+                    </div>
+                    <div id="averageNameForm" class="form-group form-inline hidden">
+                        <input id="averageNameInput" type="text" class="form-control" placeholder="Please choose a name for the average centrality map"></input>
+                        <button id="calculateAverage" type="button" class="btn btn-outline-secondary">Send</button>
+                        <button id="abortAverage" type="button" class="btn btn-outline-secondary">Abort</button>
                     </div>
                     <div class="buttonWrapper">
                         <button id="compare" type="button" class="btn btn-outline-primary">Compare</button>

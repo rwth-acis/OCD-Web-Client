@@ -73,6 +73,10 @@ body {
     margin-right: auto;
 }
 
+#averageNameInput {
+    width: 80%;
+}
+
 /* General table */
 
 .tableWrapper {
@@ -252,16 +256,14 @@ td:last-child {
     display: inline;
 }
 
-.selectorWrapper {
+.selectorWrapper .card {
     margin: 10px;
 }
 
 .selectorTitle {
-    background-color: #8ebae5;
     border-radius: 10px;
     padding: 5px 20px;
     text-align: center;
-    text-transform: uppercase;
     font-weight: bold;
 }
 

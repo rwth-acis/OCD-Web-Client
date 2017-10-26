@@ -98,7 +98,13 @@ function deleteCentralityMap(mapId, graphId) {
         /* Response handler */
         function(confirmXml) {
             var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
-            window.location.reload();
+            var url = window.location.href.split('/');
+            if(url[url.length-1].includes("centrality.html")) {
+                window.location.href = "centralities.html";
+            }
+            else {
+                window.location.reload();
+            }
         },
         /* Error handler */
         function(errorData) {
