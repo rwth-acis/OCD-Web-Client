@@ -146,7 +146,7 @@
                              }
                              else {
                                  showConnectionErrorMessage("Centrality calculation request failed.");
-                             }     
+                             }
                      });
                    }
                    return false;
@@ -175,7 +175,13 @@
                                   /*
                                    * Run centrality simulation request failed
                                    */
-                                  showConnectionErrorMessage("Centrality simulation request failed.");
+                                  if(errorData.includes("Show Error")) {
+                                      var errorSplit = errorData.split(":");
+                                      showErrorMessage(errorSplit[errorSplit.length-1]);
+                                  }
+                                  else {
+                                      showConnectionErrorMessage("Centrality simulation request failed.");
+                                  }
                           });
                         }
                       }
@@ -671,29 +677,22 @@
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for centrality calculation execution -->
-                            <div class="formWrapper">
-                                <div class="formDiv">
-                                    <form id="runCentralityCalculationForm" class="parameterized" action="javascript:void(0); return false;">
-                                        <div class="formContentWrapper">
+                            <form id="runCentralityCalculationForm" class="container">
+                                  <div class="form-group row">
+                                  <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
+                                    <div class="col-sm-8">
+                                      <select id="centralityMeasure" class="form-control">
+                                      </select>
+                                    </div>
+                                  </div>
 
-                                          <div class="form-group row">
-                                          <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
-                                            <div class="col-sm-8">
-                                              <select id="centralityMeasure" class="form-control">
-                                              </select>
-                                            </div>
-                                          </div>
+                                  <div class="form-group row col-sm-12" id="centralityMeasureParameterDiv">
+                                  </div>
 
-                                          <div class="form-group row" id="centralityMeasureParameterDiv">
-                                          </div>
-
-                                        </div>
-                                        <div class="form-group">
-                                            <button type="submit" id="runCentralityCalculationBtn" class="btn btn-secondary">Run</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                                  <div class="form-group row col-sm-12">
+                                      <button type="submit" id="runCentralityCalculationBtn" class="btn btn-primary">Run</button>
+                                  </div>
+                            </form>
                         </div>
                     </div>
                   </div>
@@ -709,32 +708,25 @@
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for centrality simulation execution -->
-                            <div class="formWrapper">
-                                <div class="formDiv">
-                                    <form id="runCentralitySimulationForm" class="parameterized" action="javascript:void(0); return false;">
-                                        <div class="formContentWrapper">
+                            <form id="runCentralitySimulationForm" class="container">
+                                  <div class="form-group row">
+                                  <label for="centralitySimulation" class="col-sm-4 col-form-label">Simulation</label>
+                                    <div class="col-sm-8">
+                                      <select id=centralitySimulation class="form-control">
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div class="form-group row col-sm-12" id="centralitySimulationParameterDiv">
+                                  </div>
+                                  <div class="form-group row col-sm-12" id="centralitySimulationRunsDiv">
+                                      <label><input type="checkbox" id="multipleRuns"> Multiple Runs</label>
+                                      <input type="text" class="form-control hidden" value="2" id="runsInput">
+                                  </div>
 
-                                          <div class="form-group row">
-                                          <label for="centralitySimulation" class="col-sm-2 col-form-label">Simulation</label>
-                                            <div class="col-sm-10">
-                                              <select id=centralitySimulation class="form-control nonparameter">
-                                              </select>
-                                            </div>
-                                          </div>
-                                          <div class="form-group row" id="centralitySimulationParameterDiv">
-                                          </div>
-                                          <div class="form-group row" id="centralitySimulationRunsDiv">
-                                              <label><input type="checkbox" id="multipleRuns"> Multiple Runs</label>
-                                              <input type="text" class="form-control hidden" value="2" id="runsInput">
-                                          </div>
-
-                                        </div>
-                                        <div class="form-group">
-                                            <button type="submit" id="runCentralitySimulationBtn" class="btn btn-secondary">Run</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                                  <div class="form-group">
+                                      <button type="submit" id="runCentralitySimulationBtn" class="btn btn-primary">Run</button>
+                                  </div>
+                            </form>
                         </div>
                     </div>
                   </div>

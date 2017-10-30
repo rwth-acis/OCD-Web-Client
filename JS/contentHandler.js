@@ -205,7 +205,7 @@ function registerParameterSelect(selectId, paramDivId, getOptions) {
 
                     /* Check if the option has parameters */
                     if($(response).find("Parameter").size() > 0) {
-                        var parameterString = '<label>Parameters</label>';
+                        var parameterString = '<label class="labelBlock">Parameters</label>';
 
                        /* Adds the parameters to the form */
                         $(response).find("Parameter").each(function() {

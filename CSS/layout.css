@@ -55,7 +55,7 @@ body {
     padding: 10px 0px;
 }
 
-#header h1, .sub-header, #selectionControl {
+#header h1, .sub-header, .center {
     text-align: center;
 }
 
@@ -281,6 +281,10 @@ td:last-child {
 
 .parameterized .nonparameter {
     width: 350px;
+}
+
+.labelBlock {
+    width: 100%;
 }
 
 /* Collapsable elements */

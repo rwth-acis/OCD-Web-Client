@@ -84,6 +84,9 @@
                     }
                 });
                 $('#average').click(function(){
+                    if(!$('#correlationSelectionForm').hasClass("hidden")) {
+                        $('#correlationSelectionForm').addClass("hidden");
+                    }
                     if($('.highlight').length > 1) {
                         var mapIds = $('.highlight').children().filter('.mapId');
                         var graphIds = $('.highlight').children().filter('.graphId');
@@ -118,7 +121,7 @@
                                 }
                             });
                             $('#abortAverage').click(function() {
-                                window.location.href = "centralities_evaluation.html";
+                                $('#averageNameForm').addClass("hidden");
                             });
                         }
                         else {
@@ -130,6 +133,9 @@
                     }
                 });
                 $('#correlation').click(function(){
+                    if(!$('#averageNameForm').hasClass("hidden")) {
+                        $('#averageNameForm').addClass("hidden");
+                    }
                     if($('.highlight').length > 1) {
                         var mapIds = $('.highlight').children().filter('.mapId');
                         var mapId1 = mapIds.eq(0).text();
@@ -144,20 +150,37 @@
                             }
                         }
                         if(!multipleGraphsSelected) {
+                            $('#correlationSelectionForm').removeClass("hidden");
                             var mapIdString = "mapIds=" + mapIds.eq(0).text();
                             for(index = 1; index < mapIds.length; index++) {
                                 mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
                             }
-                            sendRequest("get", "evaluation/correlation/spearman/graph/" + firstGraphId + "/maps?" + mapIdString, "",
-                                /* Response handler */
-                                function(resultXml) {
-                                    window.location.href = "centrality_correlation.html";
-                                    localStorage.setItem("correlationMatrixXml", resultXml);
-                                    localStorage.setItem("mapIds", "&" + mapIdString);
-                                    localStorage.setItem("graphId", firstGraphId);
-                                },
-                                /* Error handler */
-                                function(errorData) {
+                            $('#pearsonCorrelation').click(function() {
+                                sendRequest("get", "evaluation/correlation/PEARSON/graph/" + firstGraphId + "/maps?" + mapIdString, "",
+                                    /* Response handler */
+                                    correlationResponse(resultXml),
+                                    /* Error handler */
+                                    function(errorData) {
+                                });
+                            });
+                            $('#spearmanCorrelation').click(function() {
+                                sendRequest("get", "evaluation/correlation/SPEARMAN/graph/" + firstGraphId + "/maps?" + mapIdString, "",
+                                    /* Response handler */
+                                    correlationResponse(resultXml),
+                                    /* Error handler */
+                                    function(errorData) {
+                                });
+                            });
+                            $('#kendallCorrelation').click(function() {
+                                sendRequest("get", "evaluation/correlation/KENDALL/graph/" + firstGraphId + "/maps?" + mapIdString, "",
+                                    /* Response handler */
+                                    correlationResponse(resultXml),
+                                    /* Error handler */
+                                    function(errorData) {
+                                });
+                            });
+                            $('#abortCorrelation').click(function() {
+                                $('#correlationSelectionForm').addClass("hidden");
                             });
                         }
                         else {
@@ -195,6 +218,12 @@
                     }
                 });
             });
+            function correlationResponse(resultXml) {
+                window.location.href = "centrality_correlation.html";
+                localStorage.setItem("correlationMatrixXml", resultXml);
+                localStorage.setItem("mapIds", "&" + mapIdString);
+                localStorage.setItem("graphId", firstGraphId);
+            }
         </script>
     </head>
     <body>
@@ -205,17 +234,27 @@
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
                     </div>
-                    <div id="averageNameForm" class="form-group form-inline hidden">
-                        <input id="averageNameInput" type="text" class="form-control" placeholder="Please choose a name for the average centrality map"></input>
-                        <button id="calculateAverage" type="button" class="btn btn-outline-secondary">Send</button>
-                        <button id="abortAverage" type="button" class="btn btn-outline-secondary">Abort</button>
-                    </div>
                     <div class="buttonWrapper">
                         <button id="compare" type="button" class="btn btn-outline-primary">Compare</button>
                         <button id="average" type="button" class="btn btn-outline-primary">Average</button>
                         <button id="correlation" type="button" class="btn btn-outline-primary">Correlation</button>
                     </div>
-                    <div id="selectionControl">
+                    <div id="averageNameForm" class="form-group form-inline hidden">
+                        <center>Please choose a name for the average centrality map</center>
+                        <input id="averageNameInput" type="text" class="form-control"></input>
+                        <button id="calculateAverage" type="button" class="btn btn-outline-secondary">Send</button>
+                        <button id="abortAverage" type="button" class="btn btn-outline-secondary">Abort</button>
+                    </div>
+                    <div id="correlationSelectionForm" class="form-group hidden">
+                        <center>Please select a correlation coefficient</center>
+                        <div class="buttonWrapper">
+                            <button id="pearsonCorrelation" type="button" class="btn btn-outline-secondary">Pearson</button>
+                            <button id="spearmanCorrelation" type="button" class="btn btn-outline-secondary">Spearman</button>
+                            <button id="kendallCorrelation" type="button" class="btn btn-outline-secondary">Kendall</button>
+                            <button id="abortCorrelation" type="button" class="btn btn-outline-secondary">Abort</button>
+                        </div>
+                    </div>
+                    <div id="selectionControl" class="center">
                         <button id="selectAll" type="button" class="btn transparentButton">Select All</button>
                         <button id="deselectAll" type="button" class="btn transparentButton">Deselect All</button>
                         <button id="removeSelected" type="button" class="btn transparentButton">Remove Selected</button>
