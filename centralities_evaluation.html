@@ -158,7 +158,9 @@
                             $('#pearsonCorrelation').click(function() {
                                 sendRequest("get", "evaluation/correlation/PEARSON/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                     /* Response handler */
-                                    correlationResponse(resultXml),
+                                    function(resultXml) {
+                                        correlationResponse(resultXml, mapIdString, firstGraphId);
+                                    },
                                     /* Error handler */
                                     function(errorData) {
                                 });
@@ -166,7 +168,9 @@
                             $('#spearmanCorrelation').click(function() {
                                 sendRequest("get", "evaluation/correlation/SPEARMAN/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                     /* Response handler */
-                                    correlationResponse(resultXml),
+                                    function(resultXml) {
+                                        correlationResponse(resultXml, mapIdString, firstGraphId);
+                                    },
                                     /* Error handler */
                                     function(errorData) {
                                 });
@@ -174,7 +178,9 @@
                             $('#kendallCorrelation').click(function() {
                                 sendRequest("get", "evaluation/correlation/KENDALL/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                     /* Response handler */
-                                    correlationResponse(resultXml),
+                                    function(resultXml) {
+                                        correlationResponse(resultXml, mapIdString, firstGraphId);
+                                    },
                                     /* Error handler */
                                     function(errorData) {
                                 });
@@ -218,7 +224,7 @@
                     }
                 });
             });
-            function correlationResponse(resultXml) {
+            function correlationResponse(resultXml, mapIdString, firstGraphId) {
                 window.location.href = "centrality_correlation.html";
                 localStorage.setItem("correlationMatrixXml", resultXml);
                 localStorage.setItem("mapIds", "&" + mapIdString);
