@@ -15,7 +15,7 @@
 var path = window.location.pathname.split('/');
 if(path[path.length - 1] !== "login.html") {
     if($.session.get('isLoggedIn') !== 'true') {
-            //window.location.replace("login.html");
+           window.location.replace("login.html");
     }
 }
 
@@ -25,6 +25,7 @@ if(path[path.length - 1] !== "login.html") {
  * Menu
  */
 $(document).ready(function(){
+  
     /*
      * Menu definition.
      */

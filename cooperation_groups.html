@@ -3,34 +3,33 @@
 
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="">
-  <meta name="author" content="">
 
-  <title>Cooperation & Defection</title>
+  <title>Cooperation and Defection</title>
 
   <!-- CSS Stylesheets -->
-  <link href="css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/layout.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="CSS/layout.css">
 
   <!-- JavaScript -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="js/jquery.session.js"></script>
-  <script src="js/jquery.tablesorter.js"></script>
   <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
   <script src="JS/bootstrap.min.js"></script>
-  <script src="js/simulation/bootstrap-select.js"></script>
-  <script src="js/contentHandler.js"></script>
-  <script src="js/ServiceAPI/b64.js"></script>
-  <script src="js/ServiceAPI/moduleHelper.js"></script>
-  <script src="js/simulation/serviceAPI.js"></script>
-  <script src="js/jws-2.0.min.js"></script>
-  <script src="js/simulation/requestHandler.js"></script>
-  <script src="js/simulation/simulationForm.js"></script>
-  <script src="js/simulation/Chart.min.js"></script>
 
+  <script src="JS/jquery.session.js"></script>
+  <script src="JS/jquery.tablesorter.js"></script>
+  <script src="JS/bootstrap-select.js"></script>
+
+  <script src="JS/ServiceAPI/b64.js"></script>
+  <script src="JS/ServiceAPI/moduleHelper.js"></script>
+  <script src="JS/simulation/serviceAPI.js"></script>
+
+  <script src="JS/contentHandler.js"></script>
+  <script src="JS/Chart.min.js"></script>
+
+  <script src="JS/simulation/requestHandler.js"></script>
+  <script src="JS/simulation/simulationForm.js"></script>
 
 </head>
 
@@ -170,16 +169,16 @@
                 }
 
                   $('#content').load("cooperation_evaluation.html", function() {
-                //  registerCollapsable("#optionsCollapsable", genericCollapsableHandler);
-                //  registerCollapsable("#SizeCollapsable", genericCollapsableHandler);
-                ///  registerCollapsable("#AverageDegreeCollapsable", genericCollapsableHandler);
-                //  registerCollapsable("#CorrelationCollapsable", genericCollapsableHandler);
-                //  registerCollapsable("#ClusteringCoefficientCollapsable", genericCollapsableHandler);
-                //  registerCollapsable("#DegreeDeviationCollapsable", genericCollapsableHandler);
-                //  registerCollapsable("#DensityCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#optionsCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#sizeCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#averageDegreeCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#CorrelationCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#clusteringCoefficientCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#degreeDeviationCollapsable", genericCollapsableHandler);
+                    registerCollapsable("#densityCollapsable", genericCollapsableHandler);
 
                   var obj = JSON.parse(response);
-                  var datasets = obj.cooperationValues;
+                  var cooperationData = obj.cooperationValues;
                   var density = obj.densityCorrelation;
                   var degree = obj.averageDegreeCorrelation;
                   var cc = obj.clusteringCoefficientCorrelation;
@@ -199,6 +198,12 @@
                   string += getLine("CC", cc);
 
                   $('#CorrelationTable').find("tbody").html(string);
+
+                  generateChart(obj.networkNames, cooperationData, obj.size, "Size");
+                  generateChart(obj.networkNames, cooperationData, obj.densityValues, "Density");
+                  generateChart(obj.networkNames, cooperationData, obj.averageDegree, "AverageDegree");
+                  generateChart(obj.networkNames, cooperationData, obj.sizeDegreeDeviation, "DegreeDeviation");
+                  generateChart(obj.networkNames, cooperationData, obj.clusteringCoefficient, "ClusteringCoefficient");
 
 
                 });
@@ -269,26 +274,67 @@
 */
     }
 
-
-    function getChartData(daa, dab) {
-
-      var data = {
-        type: 'line',
-        data: {
-          labels: labelArray,
-          datasets: dataSetsObject(daa, dab)
-        }
-      };
-
-      return data;
+    function getDataObj(x, y) {
+      var dataArray = new Array();
+      var dataObj = new Object();
+      dataObj.x = x;
+      dataObj.y = y;
+      dataObj.r = 10;
+      dataArray.push(dataObj);
+      return dataArray;
     }
 
+    function getDataSet(label, data2) {
+      var color = randomColor();
+      var dataObj = new Object();
+      dataObj.label = label;
+      dataObj.data = data2;
+      dataObj.backgroundColor = color;
+      dataObj.borderColor = color;
+      return dataObj;
+    }
 
-    function generateChart(daa, dab, chart) {
+    function getDatasets(names, coop, property) {
 
-      var data = getChartData(daa, dab);
-      var ctx = chart.getContext("2d");
-      var myChart = new Chart(ctx, data);
+      var dataArraySet = new Array();
+      var size=coop.length;
+      for(var i=0; i<size; i++) {
+        dataArraySet.push( getDataSet(names[i],  getDataObj(coop[i], property[i]) ) );
+      }
+      return dataArraySet;
+    }
+
+    function generateChart(names, daa, dab, property) {
+
+      var datasetArray = getDatasets(names, daa, dab);
+
+      new Chart(document.getElementById("chart" + property), {
+    type: 'bubble',
+    responsive: true,
+    data: {
+      labels: "Cooperativity",
+      datasets: datasetArray
+    },
+    options: {
+      title: {
+        display: true,
+      }, scales: {
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: property
+          }
+        }],
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: "Cooperativity"
+          }
+        }]
+      }
+    }
+});
+
     }
 
     var randomColor = function() {
@@ -297,24 +343,6 @@
       var b = Math.floor(Math.random() * 255);
       return "rgb(" + r + "," + g + "," + b + ")";
     }
-
-    var dataObject = function(id, dataArray) {
-      return {
-        label: id,
-        data: dataArray,
-        backgroundColor: 'transparent',
-        borderColor: randomColor()
-      };
-    }
-
-    var dataSetsObject = function(daa, dab) {
-
-      var dataSets = new Array();
-      for (var i = 0; i < dataArray.length; i++) {
-        dataSets.push(dataObject(daa[i], dab[i]));
-      }
-      return dataSets;
-    };
 
   </script>
 
