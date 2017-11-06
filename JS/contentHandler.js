@@ -15,7 +15,7 @@
 var path = window.location.pathname.split('/');
 if(path[path.length - 1] !== "login.html") {
     if($.session.get('isLoggedIn') !== 'true') {
-            //window.location.replace("login.html");
+          window.location.replace("login.html");
     }
 }
 
@@ -25,7 +25,8 @@ if(path[path.length - 1] !== "login.html") {
  * Menu
  */
 $(document).ready(function(){
-    /*
+
+     /*
      * Menu definition.
      */
     var menuString =
@@ -205,15 +206,16 @@ function registerParameterSelect(selectId, paramDivId, getOptions) {
 
                     /* Check if the option has parameters */
                     if($(response).find("Parameter").size() > 0) {
-                        var parameterString = '<label>Parameters</label>';
+                        var parameterString = '';
 
                        /* Adds the parameters to the form */
                         $(response).find("Parameter").each(function() {
-                            var paramRow = '<div class="form-group row">'
-                            + '<label class="col-sm-6 col-form-label">' + $(this).find("Name").first().text() + '</label>'
+                         var paramRow = '<div class="form-group row">'
+                            + '<label class="col-sm-6 col-form-label">' + $(this).find("Name").first().text()  +'</label>'
                             + '<div class="col-sm-6">'
-                            + '<input type="text" class="form-control parameter" name="' + $(this).find("Name").first().text() + '" placeholder="' + $(this).find("Value").first().text() + '">'
+                            + '<input type="text" class="form-control" name="' + $(this).find("Name").first().text() +'" placeholder="' + $(this).find("Value").first().text() + '">'
                             + '</div></div>'
+
                             parameterString += paramRow;
                         });
 

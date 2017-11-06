@@ -544,7 +544,7 @@
                     <!-- Collapsable for graph edge list -->
                     <div id="edgeListCollapsable" class="collapsable col-sm-12 col-lg-6">
                         <div class="collapsableHeader">
-                          <div class="collapsableTitle"><img class="icon" src="IMG/open-iconic/svg/link-intact.svg" alt=""> Edges</div>
+                          <div class="collapsableTitle">Edges</div>
 
                             <div class="collapsableCollapser">
                                 <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
@@ -585,43 +585,42 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <!-- Form for algorithm execution -->
-                            <div class="formWrapper">
-                                <div class="formDiv">
-                                    <form id="runAlgorithmForm" class="parameterized" action="javascript:void(0); return false;">
-                                        <div class="formContentWrapper">
-
-                                          <div class="form-group row">
-                                          <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
-                                            <div class="col-sm-10">
-                                              <select id="algorithm" class="form-control nonparameter">
-                                              </select>
-                                            </div>
-                                          </div>
-
-                                          <div class="form-group row" id="algorithmParameterDiv">
-                                          </div>
-                                          <!-- Cover Name -->
-                                          <div class="form-group row">
-                                            <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
-                                            <div class="col-sm-10">
-                                              <input id="coverName" type="text" class="form-control" placeholder="">
-                                            </div>
-                                          </div>
-
-                                          <label class="custom-control custom-checkbox">
-                                                <input id="contentWeighting" type="checkbox" class="custom-control-input">
-                                                <span class="custom-control-indicator"></span>
-                                                <span class="custom-control-description">Content Weighting</span>
-                                          </label>
-
-                                        </div>
-                                        <div class="submitWrapper">
-                                            <input name="submit" id="runAlgorithmBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
-                                        </div>
-                                    </form>
+                          <div id="ocdContainer" class="container">
+                            <form id="runAlgorithmForm" action="javascript:void(0); return false;">
+                              <!-- Cover Name -->
+                              <div class="form-group row">
+                                <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
+                                <div class="col-sm-10">
+                                   <input id="coverName" type="text" class="form-control" name="name" placeholder="name">
                                 </div>
-                            </div>
+                              </div>
+                              <!-- Algorithm -->
+                              <div class="form-group row">
+                                <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                                <div class="col-sm-10">
+                                  <select id="algorithm" class="form-control custom-select">
+                                  </select>
+                                </div>
+                              </div>
+                              <!-- Algorithm Parameters -->
+                                <div class="col-sm-10" id="algorithmParameterDiv">
+                                </div>
+
+                              <div class="form-group row">
+                                <div class="container">
+                                <label class="custom-control custom-checkbox">
+                                  <input id="contentWeighting" type="checkbox" class="custom-control-input">
+                                  <span class="custom-control-indicator"></span>
+                                  <span class="custom-control-description">Content Weighting</span>
+                                </label>
+                              </div>
+                              </div>
+                              <div class="form-group">
+                                 <button type="submit" name="submit" id="runAlgorithmBtn" class="btn btn-primary">Run</button>
+                              </div>
+                              </form>
+                          </div>
+
                         </div>
                     </div>
                   </div>
