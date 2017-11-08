@@ -210,8 +210,8 @@ function registerParameterSelect(selectId, paramDivId, getOptions) {
                        /* Adds the parameters to the form */
                         $(response).find("Parameter").each(function() {
                             var paramRow = '<div class="form-group row">'
-                            + '<label class="col-sm-6 col-form-label">' + $(this).find("Name").first().text() + '</label>'
-                            + '<div class="col-sm-6">'
+                            + '<label class="col-sm-4 col-form-label">' + $(this).find("Name").first().text() + '</label>'
+                            + '<div class="col-sm-8">'
                             + '<input type="text" class="form-control parameter" name="' + $(this).find("Name").first().text() + '" value="' + $(this).find("Value").first().text() + '">'
                             + '</div></div>'
                             parameterString += paramRow;

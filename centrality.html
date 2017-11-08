@@ -83,30 +83,39 @@
                     */
                     if(!xmlSet) {
                         getDefaultXml(function() {
-                            $(mapDefaultXml).find("Node").each(function() {
-                                addValues($(this), "#valuesTable");
-                            });
-                            $("#valuesTable").tablesorter({sortList: [[1,1], [0,0]]});
+                            initTable(mapDefaultXml, "#valuesTable", false);
                         });
                     }
                     else {
-                        $(mapDefaultXml).find("Node").each(function() {
-                            addValues($(this), "#valuesTable");
-                        });
-                        /*
-                        * Sort values table
-                        */
-                        $("#valuesTable").tablesorter({sortList: [[1,1], [0,0]]});
+                        initTable(mapDefaultXml, "#valuesTable", false);
                     }
                     valuesAdded = true;
+                    $('#precisionCheckbox').change(function() {
+                        $("#tableWrapper1").html("");
+                        $("#tableWrapper1").append('<table id="valuesTable" class="table"><thead><tr><th title="Node">Node</th><th title="Value">Value</th></tr></thead><tbody></tbody></table>');
+                        if (this.checked) {
+                            initTable(mapDefaultXml, "#valuesTable", true);
+                        } else {
+                            initTable(mapDefaultXml, "#valuesTable", false);
+                        }
+                    });
                 }
             }
 
-            function addValues(element, tableid) {
+            function initTable(element, tableid, precise) {
+                $(element).find("Node").each(function() {
+                    addValues($(this), tableid, precise);
+                });
+                $(tableid).tablesorter({sortList: [[1,1], [0,0]]});
+            }
+
+            function addValues(element, tableid, precise) {
                 var nodeName = element.find('Name');
                 nodeName = nodeName.text();
                 var value = parseFloat(element.find('Value').text());
-                value = value.toFixed(4);
+                if(!precise) {
+                    value = value.toFixed(4);
+                }
                 var row = '<tr>'
                     + '<td>' + nodeName + '</td>'
                     + '<td>' + value + '</td>'
@@ -276,7 +285,8 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <div class="tableWrapper table-responsive">
+                            <label><input id="precisionCheckbox" type="checkbox" value="">High Precision</label>
+                            <div id="tableWrapper1" class="tableWrapper table-responsive">
                                 <table id="valuesTable" class="table">
                                     <thead>
                                     <tr>

@@ -70,13 +70,9 @@
         sendRequest("get", "centrality/" + mapId1 + "/graphs/" + graphId1 + "?outputFormat=META_XML", "",
         /* Response handler */
         function(response) {
-            /*
-            * Init meta table
-            */
             mapMetaXml1 = response;
-            appendCentralityMapRow($('#mapMetaTable'), mapMetaXml1, cells);
             responseCounter++;
-            afterResponse();
+            afterResponse(cells);
         },
         /* Error handler */
         function(errorData) {
@@ -89,13 +85,9 @@
         sendRequest("get", "centrality/" + mapId2 + "/graphs/" + graphId2 + "?outputFormat=META_XML", "",
         /* Response handler */
         function(response) {
-            /*
-            * Init meta table
-            */
             mapMetaXml2 = response;
-            appendCentralityMapRow($('#mapMetaTable'), mapMetaXml2, cells);
             responseCounter++;
-            afterResponse();
+            afterResponse(cells);
         },
         /* Error handler */
         function(errorData) {
@@ -106,15 +98,10 @@
         }, "text");
     });
 
-    function afterResponse() {
+    function afterResponse(cells) {
         if(responseCounter == 2) {
-            /*
-             * Sort Table
-             */
-            try {
-                $("#mapMetaTable").tablesorter({sortList: [[1,0],[0,0]],
-                    headers: {}});
-            } catch(err) { /* table empty */ }
+            appendCentralityMapRow($('#mapMetaTable'), mapMetaXml1, cells);
+            appendCentralityMapRow($('#mapMetaTable'), mapMetaXml2, cells);
             /*
              * Register event handlers
              */
@@ -130,52 +117,52 @@
             $("#values1Caption").append($('#mapMetaTable tr').eq(1).find("td:eq(2)").text());
             $("#values2Caption").append($('#mapMetaTable tr').eq(2).find("td:eq(2)").text());
             if(xml1Set && xml2Set) {
-                /*
-                * Init values table 1
-                */
-                $(mapDefaultXml1).find("Node").each(function() {
-                    addValues($(this), "#valuesTable1");
-                });
-                $("#valuesTable1").tablesorter({sortList: [[1,1], [0,0]]});
-                /*
-                * Init values table 2
-                */
-                $(mapDefaultXml2).find("Node").each(function() {
-                    addValues($(this), "#valuesTable2");
-                });
-                $("#valuesTable2").tablesorter({sortList: [[1,1], [0,0]]});
+                initTable(mapDefaultXml1, "#valuesTable1", false);
+                initTable(mapDefaultXml2, "#valuesTable2", false);
             }
             else {
                 getDefaultXmls(function(mapNumber) {
-                    /*
-                    * Init values table 1
-                    */
                     if(mapNumber == "1") {
-                        $(mapDefaultXml1).find("Node").each(function() {
-                            addValues($(this), "#valuesTable1");
-                        });
-                        $("#valuesTable1").tablesorter({sortList: [[1,1], [0,0]]});
+                        initTable(mapDefaultXml1, "#valuesTable1", false);
                     }
-                    /*
-                    * Init values table 2
-                    */
                     else if(mapNumber == "2") {
-                        $(mapDefaultXml2).find("Node").each(function() {
-                            addValues($(this), "#valuesTable2");
-                        });
-                        $("#valuesTable2").tablesorter({sortList: [[1,1], [0,0]]});
+                        initTable(mapDefaultXml2, "#valuesTable2", false);
                     }
                 });
             }
             valuesAdded = true;
+            $('#precisionCheckbox').change(function() {
+                $("#tableWrapper1").html("");
+                $("#tableWrapper2").html("");
+                $("#tableWrapper1").append('<h5 id="values1Caption" class="sub-header"></h5><div class="table-responsive"><table id="valuesTable1" class="table"><thead><tr><th>Node</th><th>Value</th></tr></thead><tbody></tbody></table></div>');
+                $("#tableWrapper2").append('<h5 id="values2Caption" class="sub-header"></h5><div class="table-responsive"><table id="valuesTable2" class="table"><thead><tr><th>Node</th><th>Value</th></tr></thead><tbody></tbody></table></div>');
+                $("#values1Caption").append($('#mapMetaTable tr').eq(1).find("td:eq(2)").text());
+                $("#values2Caption").append($('#mapMetaTable tr').eq(2).find("td:eq(2)").text());
+                if (this.checked) {
+                    initTable(mapDefaultXml1, "#valuesTable1", true);
+                    initTable(mapDefaultXml2, "#valuesTable2", true);
+                } else {
+                    initTable(mapDefaultXml1, "#valuesTable1", false);
+                    initTable(mapDefaultXml2, "#valuesTable2", false);
+                }
+            });
         }
     }
 
-    function addValues(element, tableid) {
+    function initTable(element, tableid, precise) {
+        $(element).find("Node").each(function() {
+            addValues($(this), tableid, precise);
+        });
+        $(tableid).tablesorter({sortList: [[1,1], [0,0]]});
+    }
+
+    function addValues(element, tableid, precise) {
         var nodeName = element.find('Name');
         nodeName = nodeName.text();
         var value = parseFloat(element.find('Value').text());
-        value = value.toFixed(4);
+        if(!precise) {
+            value = value.toFixed(4);
+        }
         var row = '<tr>'
             + '<td>' + nodeName + '</td>'
             + '<td>' + value + '</td>'
@@ -423,8 +410,9 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
+                            <label><input id="precisionCheckbox" type="checkbox" value="">High Precision</label>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div id="tableWrapper1" class="col-md-6">
                                   <h5 id="values1Caption" class="sub-header"></h5>
                                   <div class="table-responsive">
                                     <table id="valuesTable1" class="table">
@@ -439,7 +427,7 @@
                                     </table>
                                   </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div id="tableWrapper2" class="col-md-6">
                                   <h5 id="values2Caption" class="sub-header"></h5>
                                   <div class="table-responsive">
                                     <table id="valuesTable2" class="table">
