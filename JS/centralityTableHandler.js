@@ -12,8 +12,10 @@
  */
 function appendCentralityMapRow(table, mapElt, cells) {
     var row = "<tr>";
-    /* centrality map Id */
+    /* Centrality map Id */
     var mapId = $(mapElt).find('CentralityMapId').text();
+    var graphId = $(mapElt).find('GraphId').text();
+    var graphName = $(mapElt).find('GraphName').text();
     if($.inArray("CentralityMapId", cells) > -1) {
         row += createVisibleMapIdCell(mapId);
     }
@@ -21,27 +23,20 @@ function appendCentralityMapRow(table, mapElt, cells) {
         row += createMapIdCell(mapId);
     }
     /* Graph Id */
-    var graphId = $(mapElt).find('GraphId').text();
     row += createMapGraphIdCell(graphId);
-    /* Creation method */
-    if($.inArray("Centrality Measure", cells) > -1) {
-        var type = $(mapElt).find('CreationMethod').find('Type').text();
-        row += createCentralityTableCell(parseEnumName(type));
+    /* Name */
+    if($.inArray("Name", cells) > -1) {
+        row += createMapNameCell($(mapElt).find('Name').text(), mapId, graphId);
     }
     /* Graph name */
     if($.inArray("Graph", cells) > -1) {
-        row += createCentralityTableCell($(mapElt).find('Graph').find('Name').text());
+        row += createGraphNameCell(graphName, graphId);
+    }
+    if($.inArray("Creation Method", cells) > -1) {
+        row += createCentralityTableCell(parseEnumName($(mapElt).find('CreationMethod').find('Type').text()));
     }
     if($.inArray("Execution Time", cells) > -1) {
         row += createCentralityTableCell($(mapElt).find('ExecutionTime').text());
-    }
-    /* Show centrality map */
-    if($.inArray("C", cells) > -1) {
-        row += createShowCentralityMapCell();
-    }
-    /* Show graph */
-    if($.inArray("G", cells) > -1) {
-        row += createShowCentralityMapGraphCell();
     }
     /* Delete centrality map */
     if($.inArray("R", cells) > -1) {
@@ -77,24 +72,20 @@ function createMapGraphIdCell(value) {
     return '<td class="hidden graphId">' + value + '</td>';
 }
 
+/* Creates centrality map name cell */
+function createMapNameCell(name, mapId, graphId) {
+    return '<td><a href="centrality.html?mapId='+ mapId + '&graphId=' + graphId + '">' + name + '</a></td>';
+}
+
+/* Creates graph name cell */
+function createGraphNameCell(name, id) {
+    return '<td><a href="graph.html?id='+ id + '">' + name + '</a></td>';
+}
+
 /* Creates delete centrality map cell */
 function createDeleteCentralityMapCell() {
     return '<td>'
         + '<img class="icon iconBtn delCentralityMap" src="IMG/open-iconic/svg/trash.svg" alt="r">'
-        + '</td>';
-}
-
-/* Creates show centrality map cell */
-function createShowCentralityMapCell() {
-    return '<td>'
-        + '<img class="icon iconBtn showCentralityMap" src="IMG/open-iconic/svg/eye.svg" alt="g">'
-        + '</td>';
-}
-
-/* Creates show graph cell */
-function createShowCentralityMapGraphCell() {
-    return '<td>'
-        + '<img class="icon iconBtn showCentralityMapGraph" src="IMG/open-iconic/svg/eye.svg" alt="g">'
         + '</td>';
 }
 
@@ -107,8 +98,13 @@ function deleteCentralityMap(mapId, graphId) {
         /* Response handler */
         function(confirmXml) {
             var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
-            var newUrl = "centralities.html?page=" + page;
-            window.location.href = newUrl;
+            var url = window.location.href.split('/');
+            if(url[url.length-1].includes("centrality.html")) {
+                window.location.href = "centralities.html";
+            }
+            else {
+                window.location.reload();
+            }
         },
         /* Error handler */
         function(errorData) {
@@ -117,17 +113,20 @@ function deleteCentralityMap(mapId, graphId) {
 }
 
 /*
- * Shows a centrality map.
+ * Deletes a centrality map without reloading the page afterwards.
  */
-function showCentralityMap(mapId, graphId) {
-    window.location.href = "centrality.html?mapId=" + mapId.text() + "&graphId=" + graphId.text();
-}
-
-/*
- * Shows a graph.
- */
-function showCentralityMapGraph(graphId) {
-    window.location.href = "graph.html?id=" + graphId.text();
+function deleteCentralityMapWithCallback(mapId, graphId, callback) {
+    /* Delete request */
+    sendRequest("delete", "centrality/" + mapId.text() + "/graphs/" + graphId.text(), "",
+        /* Response handler */
+        function(confirmXml) {
+            var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
+            callback();
+        },
+        /* Error handler */
+        function(errorData) {
+            showConnectionErrorMessage("Centrality map could not be deleted.");
+    });
 }
 
 /*
@@ -142,16 +141,5 @@ function registerCentralityTable(tableid) {
         var mapId = $(this).parent().siblings().filter('.mapId');
         var graphId = $(this).parent().siblings().filter('.graphId');
         deleteCentralityMap(mapId, graphId);
-    });
-    /* Show centrality map button handler */
-    $(tableid).find('.showCentralityMap').click(function(){
-        var mapId = $(this).parent().siblings().filter('.mapId');
-        var graphId = $(this).parent().siblings().filter('.graphId');
-        showCentralityMap(mapId, graphId);
-    });
-    /* Show graph button handler */
-    $(tableid).find('.showCentralityMapGraph').click(function(){
-        var graphId = $(this).parent().siblings().filter('.graphId');
-        showCentralityMapGraph(graphId);
     });
 }

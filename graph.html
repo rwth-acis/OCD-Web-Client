@@ -140,7 +140,13 @@
                              /*
                               * Run centrality calculation request failed
                               */
-                             showConnectionErrorMessage("Centrality calculation request failed.");
+                             if(errorData.includes("Show Error")) {
+                                  var errorSplit = errorData.split(":");
+                                  showErrorMessage(errorSplit[errorSplit.length-1]);
+                             }
+                             else {
+                                 showConnectionErrorMessage("Centrality calculation request failed.");
+                             }
                      });
                    }
                    return false;
@@ -152,20 +158,33 @@
                     var sim = $('#centralitySimulation').val();
                     if(sim !== getSelectOptionVal()) {
                       var params = getParameterXml("#centralitySimulationParameterDiv");
-                      sendRequest("post", "simulation/graphs/" + graphId
-                              + "?simulation="+ sim, params,
-                          /* Response handler */
-                          function(response) {
-                              //window.location.href = 'index.html';
-                          },
-                          /* Error handler */
-                          function(errorData) {
-                              /*
-                               * Run centrality simulation request failed
-                               */
-                              showConnectionErrorMessage("Centrality simulation request failed.");
-                      });
-                    }
+                      var runs = 1;
+                      if($('#multipleRuns').prop("checked")) {
+                          runs = $('#runsInput').val();
+                      }
+                      var counter;
+                      for(counter = 0; counter < runs; counter++) {
+                          sendRequest("post", "centrality/simulation/graphs/" + graphId
+                                  + "?simulation="+ sim + "&runs=" + runs, params,
+                              /* Response handler */
+                              function(response) {
+                                  //window.location.href = 'index.html';
+                              },
+                              /* Error handler */
+                              function(errorData) {
+                                  /*
+                                   * Run centrality simulation request failed
+                                   */
+                                  if(errorData.includes("Show Error")) {
+                                      var errorSplit = errorData.split(":");
+                                      showErrorMessage(errorSplit[errorSplit.length-1]);
+                                  }
+                                  else {
+                                      showConnectionErrorMessage("Centrality simulation request failed.");
+                                  }
+                          });
+                        }
+                      }
                     return false;
                   });
             });
@@ -210,7 +229,7 @@
             /* Requests the names of all centrality simulations.
              * Then executes a callback function */
             function getCentralitySimulationNames(callback) {
-                sendRequest("get", "simulations", "",
+                sendRequest("get", "centralitysimulations", "",
                         /* Response handler */
                         function(response) {
                 			centralitySimulationNames = response;
@@ -265,7 +284,7 @@
             /* Requests all parameter names for a given centrality simulation.
              * Then executes a calllback function */
             function getCentralitySimulationParameters(centralitySimulationName, callback) {
-                sendRequest("get", "simulations/" + centralitySimulationName + "/parameters/default", "",
+                sendRequest("get", "centralitysimulations/" + centralitySimulationName + "/parameters/default", "",
                         /* Response handler */
                         function(response) {
                             if(typeof callback !== 'undefined') {
@@ -318,10 +337,10 @@
                     /* Adds all centrality measure names to the form */
                     getCentralityMeasureNames(function() {
                         $(centralityMeasureNames).find('Name').each(function() {
-                        	if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH' && $(this).text() !== 'SIMULATION' && $(this).text() !== 'AVERAGE') {
+                        	if($(this).text() !== 'Undefined') {
                                 $("#centralityMeasure").append(
                                     '<option value="' + $(this).text()
-                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                                    + '">' + $(this).text() + '</option>');
                             }
                         });
                     });
@@ -335,12 +354,15 @@
                     /* Adds all centrality simulation names to the form */
                     getCentralitySimulationNames(function() {
                         $(centralitySimulationNames).find('Name').each(function() {
-                            if($(this).text() !== 'UNDEFINED') {
+                            if($(this).text() !== 'Undefined') {
                                 $("#centralitySimulation").append(
                                     '<option value="' + $(this).text()
-                                    + '">' + parseEnumName($(this).text()) + '</option>');
+                                    + '">' + $(this).text() + '</option>');
                             }
                         });
+                    });
+                    $('#multipleRuns').change(function() {
+                        $('#runsInput').toggleClass("hidden");
                     });
                     /* Registers the parameter component for the contentHandler */
                     registerParameterSelect("#centralitySimulation", "#centralitySimulationParameterDiv", getCentralitySimulationParameters);
@@ -654,29 +676,22 @@
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for centrality calculation execution -->
-                            <div class="formWrapper">
-                                <div class="formDiv">
-                                    <form id="runCentralityCalculationForm" class="parameterized" action="javascript:void(0); return false;">
-                                        <div class="formContentWrapper">
+                            <form id="runCentralityCalculationForm" class="container">
+                                  <div class="form-group row">
+                                  <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
+                                    <div class="col-sm-8">
+                                      <select id="centralityMeasure" class="form-control">
+                                      </select>
+                                    </div>
+                                  </div>
 
-                                          <div class="form-group row">
-                                          <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
-                                            <div class="col-sm-8">
-                                              <select id="centralityMeasure" class="form-control">
-                                              </select>
-                                            </div>
-                                          </div>
+                                  <div class="form-group col-sm-12" id="centralityMeasureParameterDiv">
+                                  </div>
 
-                                          <div class="form-group row" id="centralityMeasureParameterDiv">
-                                          </div>
-
-                                        </div>
-                                        <div class="form-group">
-                                            <button type="submit" id="runCentralityCalculationBtn" class="btn btn-secondary">Run</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                                  <div class="form-group row col-sm-12">
+                                      <button type="submit" id="runCentralityCalculationBtn" class="btn btn-primary">Run</button>
+                                  </div>
+                            </form>
                         </div>
                     </div>
                   </div>
@@ -692,29 +707,25 @@
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for centrality simulation execution -->
-                            <div class="formWrapper">
-                                <div class="formDiv">
-                                    <form id="runCentralitySimulationForm" class="parameterized" action="javascript:void(0); return false;">
-                                        <div class="formContentWrapper">
+                            <form id="runCentralitySimulationForm" class="container">
+                                  <div class="form-group row">
+                                  <label for="centralitySimulation" class="col-sm-4 col-form-label">Simulation</label>
+                                    <div class="col-sm-8">
+                                      <select id=centralitySimulation class="form-control">
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div class="form-group col-sm-12" id="centralitySimulationParameterDiv">
+                                  </div>
+                                  <div class="form-group row col-sm-12" id="centralitySimulationRunsDiv">
+                                      <label><input type="checkbox" id="multipleRuns"> Multiple Runs</label>
+                                      <input type="text" class="form-control hidden" value="2" id="runsInput">
+                                  </div>
 
-                                          <div class="form-group row">
-                                          <label for="centralitySimulation" class="col-sm-2 col-form-label">Simulation</label>
-                                            <div class="col-sm-10">
-                                              <select id=centralitySimulation class="form-control nonparameter">
-                                              </select>
-                                            </div>
-                                          </div>
-
-                                          <div class="form-group row" id="centralitySimulationParameterDiv">
-                                          </div>
-
-                                        </div>
-                                        <div class="form-group">
-                                            <button type="submit" id="runCentralitySimulationBtn" class="btn btn-secondary">Run</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                                  <div class="form-group">
+                                      <button type="submit" id="runCentralitySimulationBtn" class="btn btn-primary">Run</button>
+                                  </div>
+                            </form>
                         </div>
                     </div>
                   </div>

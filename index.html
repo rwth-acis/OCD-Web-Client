@@ -225,7 +225,7 @@
                     /* Requests meta information of centrality maps in creation */
                     getCentralityAlgoMetas(function() {
                         /* Identifiers for the centrality map information to be displayed */
-                        var cells = ["Centrality Measure", "Graph", "R"];
+                        var cells = ["Name", "Graph", "Creation Method", "R"];
                         /* Adds the centrality map to the table */
                         $(algoCentralityMetasXml).find("CentralityMap").each(function() {
                             appendCentralityMapRow($('#runningCentralityAlgorithmsTable'), $(this), cells);
@@ -235,7 +235,7 @@
                          */
                         try {
                             $("#runningCentralityAlgorithmsTable").tablesorter({sortList: [[1,0],[0,0]],
-                                headers: { 6: { sorter: false}, 7: {sorter: false}}});
+                                headers: { 5: { sorter: false}}});
                         } catch(err) { /* table empty */ }
                         /* Registers the table component */
                         registerCentralityTable("#runningCentralityAlgorithmsTable");
@@ -406,6 +406,10 @@
                                         <tr>
                                             <th class="hidden" title="MapId"></th>
                                             <th class="hidden" title="GraphId"></th>
+                                            <th width="300" title="Name" class="sortable">
+                                                Name
+                                                <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                            </th>
                                             <th width="300" title="Graph Name" class="sortable">
                                                 Graph
                                                 <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
@@ -417,7 +421,6 @@
                                             <th width="20" title="Stop Execution and Remove Centrality">
                                                 R
                                             </th>
-                                            <th class="hidden" title="MetricId"></th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>

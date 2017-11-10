@@ -251,6 +251,18 @@ function getParameterXml(paramDivId) {
     return parametersXml;
 }
 
+function addParameters(element, tableid) {
+    var parameterName = element.find('ParameterName');
+    parameterName = parameterName.text();
+    var value = parseFloat(element.find('ParameterValue').text());
+    value = value.toFixed(4);
+    var row = '<tr>'
+        + '<td>' + parameterName + '</td>'
+        + '<td>' + value + '</td>'
+        + '</tr>';
+    $(tableid + " tbody").append(row);
+}
+
 /* Get Information Divs */
 function writeAlertInfo(strong, string) {
     return '<div class="alert alert-info"><strong>'+ strong +'</strong> ' + string + '</div>';

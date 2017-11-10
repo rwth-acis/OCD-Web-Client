@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014 Dominik Renzel, Advanced Community Information Systems (ACIS) Group, 
+Copyright (c) 2014 Dominik Renzel, Advanced Community Information Systems (ACIS) Group,
 Chair of Computer Science 5 (Databases & Information Systems), RWTH Aachen University, Germany
 All rights reserved.
 
@@ -31,27 +31,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
 * OpenID Connect Button
-* 
-* This library realizes An OpenID Connect Button allowing arbitrary browser-based 
-* Web applications to authenticate and get access to user information using an 
-* external OpenID Connect Provider. The application itself must be registered as 
+*
+* This library realizes An OpenID Connect Button allowing arbitrary browser-based
+* Web applications to authenticate and get access to user information using an
+* external OpenID Connect Provider. The application itself must be registered as
 * client at the OpenID Connect provider. In ./index.html we demonstrate the use
-* of the OpenID Connect Button. Developers are advised to follow the included 
+* of the OpenID Connect Button. Developers are advised to follow the included
 * documentation until a full tutorial becomes available.
 */
 
-// Small modifications by Jukka Purma, to make button better fit limited space 
+// Small modifications by Jukka Purma, to make button better fit limited space
 // in navbar of LayersToolTemplate
 
 // Definition of variables relevant to OpenID Connect
-// These variables are available to developers for an easy and convenient 
+// These variables are available to developers for an easy and convenient
 // access to OpenID Connect related information.
- 
+
 var oidc_server; // OpenID Connect Provider URL
 var oidc_name; // OpenID Connect Provider Name
 var oidc_logo; // OpenID Connect Provider Logo URL
 var oidc_clientid; // OpenID Connect Client ID
 var oidc_scope; // OpenID Connect Scope
+var oidc_redirect_uri; // OpenID Connect Redirect URI
 var oidc_callback; // OpenID Connect Redirect Callback
 var oidc_provider_config; // OpenID Connect Provider Configuration
 var oidc_userinfo; // OpenID Connect User Info
@@ -59,14 +60,14 @@ var oidc_idtoken; // OpenID Connect ID Token (human-readable)
 
 var nofill; // if true, don't use 'success' style for logged-in button.
 
-// OpenID Connect Button initialization. 
+// OpenID Connect Button initialization.
 // Exceptions and debug messages are logged to the console.
 try{
-	
+
 	(function() {
-		
+
 		if($(".oidc-signin")){
-			
+
 			// parse data attributes from signin button.
 			oidc_server = $(".oidc-signin").attr("data-server");
 			if(oidc_server === undefined || oidc_server === ""){
@@ -89,6 +90,10 @@ try{
 			if(oidc_scope === undefined || oidc_scope === ""){
 				throw("Warning: OpenID Connect signin button does not define scope!");
 			}
+			oidc_redirect_uri = $(".oidc-signin").attr("data-redirecturi");
+			if(oidc_redirect_uri === undefined || oidc_redirect_uri === ""){
+				throw("Warning: OpenID Connect signin button does not define redirect uri!");
+			}
 			var cbname = $(".oidc-signin").attr("data-callback");
 			if(window[cbname] === undefined || !(typeof window[cbname] === "function")){
 				throw("Warning: OpenID Connect signin button does not define a valid callback function!");
@@ -100,12 +105,12 @@ try{
 				console.log("Size undefined. Using default.");
 				oidc_size = "default";
 			}
-			
+
 			nofill = $(".oidc-signin").attr("data-nofill");
 			if(nofill === undefined || nofill === ""){
 				nofill = false;
 			} else {
-				nofill = true;				
+				nofill = true;
 			}
 
 
@@ -113,14 +118,14 @@ try{
 			//console.log("OpenID Connect Client ID: " + oidc_clientid);
 			//console.log("OpenID Connect Scope: " + oidc_scope);
 			//console.log("OpenID Connect Callback: " + oidc_callback);
-			
+
 			// with all necessary fields defined, retrieve OpenID Connect Server configuration
 			getProviderConfig(oidc_server,function(c){
 				if(c === "error"){
-					throw("Warning: could not retrieve OpenID Connect server configuration!"); 
+					throw("Warning: could not retrieve OpenID Connect server configuration!");
 				} else {
 					oidc_provider_config = c;
-					
+
 					// after successful retrieval of server configuration, check auth status
 					if(checkAuth()){
 						// first parse id token
@@ -130,7 +135,7 @@ try{
 							console.log("WARNING: " + e);
 						}
 						// TODO: parse
-						
+
 						// then use access token and retrieve user info
 						getUserInfo(function(u){
 							if(u["sub"]){
@@ -142,7 +147,7 @@ try{
 								oidc_callback("Error: could not retrieve user info! Cause: " + u.error_description);
 							}
 						});
-						
+
 					} else {
 						// render signin button
 						renderButton(true);
@@ -150,9 +155,9 @@ try{
 					}
 				}
 			});
-			
-			
-			
+
+
+
 		} else {
 			console.log("Warning: no OpenID Connect signin button found!");
 		}
@@ -164,9 +169,9 @@ try{
 /**
 * renders OpenID Connect Button, including correct click behaviour.
 * The button can exist in two different states: "Sign in" and "Sign out"
-* In the "Sign in" state, a click brings the user to the 
+* In the "Sign in" state, a click brings the user to the
 *
-* @param signin boolean true for "Sign in" state, false else 
+* @param signin boolean true for "Sign in" state, false else
 **/
 function renderButton(signin){
 	$(".oidc-signin").unbind( "click" );
@@ -175,14 +180,14 @@ function renderButton(signin){
 	if(oidc_size === "xs" || oidc_size === "sm"){
 		size = 16;
 	}
-	
+
 	if(signin){
 		if (!nofill) {
 			$(".oidc-signin").removeClass("btn-success").addClass("btn-default")
 		};
 		$(".oidc-signin").html("<img style='margin-right:5px' src='" + oidc_logo + "' height='" + size + "px'/> Sign in with <i>" + oidc_name + "</i>");
 		$(".oidc-signin").click(function (e){
-			var url = oidc_provider_config.authorization_endpoint + "?response_type=id_token%20token&client_id=" + oidc_clientid + "&scope=" + oidc_scope;
+			var url = oidc_provider_config.authorization_endpoint + "?response_type=id_token%20token&client_id=" + oidc_clientid + "&scope=" + oidc_scope +"&redirect_uri="+oidc_redirect_uri;
 			window.location.href = url;
 		});
 	} else {
@@ -225,7 +230,7 @@ function getProviderConfig(provider,cb){
 * OpenID Connect access token in the browser's local storage ("access_token").
 *
 * @param cb function(obj) callback function retrieving user info or an error message in case retrieval failed
-**/	
+**/
 function getUserInfo(cb){
 	$.ajax(
 		oidc_provider_config.userinfo_endpoint,
@@ -246,11 +251,11 @@ function getUserInfo(cb){
 }
 /**
 * parses OpenID Connect ID token into human-readable JWS according to the OpenID Connect specification
-* (cf. http://openid.net/specs/openid-connect-core-1_0.html#IDToken). Requires the availability of a hashed 
+* (cf. http://openid.net/specs/openid-connect-core-1_0.html#IDToken). Requires the availability of a hashed
 * OpenID Connect ID token in the browser's local storage ("id_token"). Token validity is not checked.
 **/
 function getIdToken() {
-	
+
 	if(!KJUR.jws) {
 		throw("Cannot parse OpenID Connect ID token! KJUR.jws not available!");
 	} else {
@@ -267,19 +272,19 @@ function getIdToken() {
 }
 
 /**
-* checks for the availability of OpenID Connect tokens (access token and ID token). 
+* checks for the availability of OpenID Connect tokens (access token and ID token).
 * Returns true, if both tokens are available from the browser's local storage ("access_token" and "id_token").
 * Token validity is not checked.
-**/		
+**/
 function checkAuth(){
 	// proceeed as defined in http://openid.net/specs/openid-connect-core-1_0.html#ImplicitCallback
 	var fragment = parseFragment();
-	
+
 	if(fragment != {} && fragment.access_token && fragment.id_token){
 		window.localStorage["access_token"] = fragment["access_token"];
 		window.localStorage["id_token"] = fragment["id_token"];
 	}
-	
+
 	if(window.localStorage["access_token"] != null && window.localStorage["id_token"] != null){
 		return true;
 	} else {
@@ -290,7 +295,7 @@ function checkAuth(){
 /**
 * parses the current browser window's fragment identifier and its key-value pairs into an object.
 * This parsing is especially used for extracting tokens sent by the OpenID Connect provider as a
-* redirect to the client after successful authentication and expression of consent in the 
+* redirect to the client after successful authentication and expression of consent in the
 * OpenID Connect implicit flow.
 * (cf. http://openid.net/specs/openid-connect-core-1_0.html#ImplicitCallback)
 **/

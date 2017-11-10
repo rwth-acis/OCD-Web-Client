@@ -40,6 +40,7 @@ Facilitates import / upload of new graphs and covers.
                         selectOptionStr
                         + '<option value="graph">Graph</option>'
                         + '<option value="cover">Cover</option>'
+                        + '<option value="centralitie">Centrality</option>'
                 );
                 /*
                 * Import form listener.
@@ -89,6 +90,17 @@ Facilitates import / upload of new graphs and covers.
                     	}
 
                     }
+                    else if($("#objectType").val() === "centralitie") {
+                        if($("#objectCreator").val() === selectOptionVal) {
+                            showErrorMessage('Please select a Creation Method');
+                            return;
+                        }
+                        var graphId = $("input[name='graphSelect']:checked").val();
+                        if(typeof graphId === 'undefined') {
+                            showErrorMessage('Please select a graph.');
+                            return;
+                        }
+                    }
                     else {
                         /* Should not happen */
                         showErrorMessage('Client Error.');
@@ -111,6 +123,10 @@ Facilitates import / upload of new graphs and covers.
                                 else if($("#objectType").val() === "cover") {
                                     /* Requests cover import */
                                     postCover(content);
+                                }
+                                else if($("#objectType").val() === "centralitie") {
+                                    /* Requests centrality import */
+                                    postCentrality(content);
                                 }
                                 else {
                                     showErrorMessage("Client Error");
@@ -149,7 +165,7 @@ Facilitates import / upload of new graphs and covers.
                                 });
                             });
                             /* Loads and displays graph table to select a corresponding graph */
-                            if($(this).val() === "cover") {
+                            if($(this).val() === "cover" || $(this).val() === "centralitie") {
                                 loadGraphTable();
                                 $(".selectorWrapper").css("display", "block");
                             }
@@ -224,6 +240,23 @@ Facilitates import / upload of new graphs and covers.
                                  * Request failed
                                  */
                                 showConnectionErrorMessage("Cover could not be sent.");
+                        });
+            }
+            /* Requests a centrality import */
+            function postCentrality(filecontent) {
+                var graphId = $("input[name='graphSelect']:checked").val();
+                sendRequest("post", "centrality/graphs/" + graphId + "?name=" + $("#objectName").val() + "&creationType=" +
+                                $("#objectCreator").val() + "&inputFormat=" + $("#objectFormat").val(), filecontent,
+                            /* Response handler */
+                            function(response) {
+                                window.location.href = 'centralities.html';
+                            },
+                            /* Error handler */
+                            function(errorData) {
+                                /*
+                                 * Request failed
+                                 */
+                                showConnectionErrorMessage("Centrality could not be sent.");
                         });
             }
             /* Requests input format names.
@@ -406,7 +439,7 @@ Facilitates import / upload of new graphs and covers.
                                 </div>
                                         <div class="selectorContent">
                                             <!-- Graph table page control -->
-                                            <div class = "pageControlWrapper">
+                                            <div class = "card">
                                                 <div class="pageControl">
                                                     <div class="pageLeftWrapper">
                                                         <img class="icon iconBtn pageLeft" src="IMG/open-iconic/svg/chevron-left.svg" alt="r">

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <!-- Displays basic/meta information on all calculated centrality measures -->
+    <!-- Displays basic/meta information on the selected centralities. -->
     <head>
         <title>Centrality Correlation</title>
         <meta charset="UTF-8">
@@ -9,6 +9,7 @@
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -33,7 +34,7 @@
                 numberOfMaps = mapIds.length-1;
                 var graphId = localStorage.getItem("graphId");
                 /* Identifiers for meta information to be displayed */
-                var cells = ["CentralityMapId", "Centrality Measure", "Graph", "Execution Time", "C", "G", "R"];
+                var cells = ["CentralityMapId", "Name", "Graph", "Creation Method", "Execution Time"];
                 var index;
                 for(index = 1; index < numberOfMaps+1; index++) {
                     var mapId = mapIds[index];
@@ -69,7 +70,7 @@
                 if(responseCounter == numberOfMaps) {
                     try {
                         $("#mapMetaTable").tablesorter({sortList: [[1,0],[0,0]],
-                            headers: { 5: {sorter: false}, 6: { sorter: false}, 7: {sorter: false}}});
+                            headers: {}});
                     } catch(err) { /* table empty */ }
                     /*
                      * Register event handlers
@@ -121,34 +122,31 @@
                     <div id="errorMessageWrapper">
                         <div id="errorMessage"></div>
                     </div>
-                    <!-- Centrality measure meta information table -->
+                    <!-- Centrality meta information table -->
                     <div class="tableWrapper table-responsive">
                         <table id="mapMetaTable" class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th title="CentralityMapId">
+                                    <th title="CentralityMapId" class="sortable">
                                         Id
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                     <th class="hidden" title="GraphId"></th>
-                                    <th width="300" title="Centrality Measure Name" class="sortable">
-                                        Centrality Measure
+                                    <th width="300" title="Name" class="sortable">
+                                        Name
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                     <th width="300" title="Graph Name" class="sortable">
                                         Graph
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
-                                    <th width="200" title="Execution Time">
+                                    <th width="300" title="Creation Method" class="sortable">
+                                        Creation Method
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="200" title="Execution Time" class="sortable">
                                         Execution Time (ms)
-                                    </th>
-                                    <th width="20" title="Show Centrality">
-                                        C
-                                    </th>
-                                    <th width="20" title="Show Graph">
-                                        G
-                                    </th>
-                                    <th width="20" title="Remove Centrality">
-                                        R
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                 </tr>
                             </thead>
