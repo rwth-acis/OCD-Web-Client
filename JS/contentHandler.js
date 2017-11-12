@@ -213,7 +213,7 @@ function registerParameterSelect(selectId, paramDivId, getOptions) {
                          var paramRow = '<div class="form-group row">'
                             + '<label class="col-sm-6 col-form-label">' + $(this).find("Name").first().text()  +'</label>'
                             + '<div class="col-sm-6">'
-                            + '<input type="text" class="form-control" name="' + $(this).find("Name").first().text() +'" placeholder="' + $(this).find("Value").first().text() + '">'
+                            + '<input type="text" class="form-control parameter" name="' + $(this).find("Name").first().text() +'" placeholder="' + $(this).find("Value").first().text() + '">'
                             + '</div></div>'
 
                             parameterString += paramRow;
@@ -239,7 +239,10 @@ function getParameterXml(paramDivId) {
     var parametersXml = "<Parameters>";
     $(paramDivId).find(".parameter").each(function() {
         var name = $.trim($(this).attr("name"));
-        var val = $.trim($(this).val());
+        var val = $.trim($(this).attr("placeholder"));
+        if($(this).val()) {
+            val = $.trim($(this).val());
+        }
         if(val !== "") {
             parametersXml += '<Parameter>'
                 + '<Name>' + name + '</Name>'
@@ -255,7 +258,6 @@ function addParameters(element, tableid) {
     var parameterName = element.find('ParameterName');
     parameterName = parameterName.text();
     var value = parseFloat(element.find('ParameterValue').text());
-    value = value.toFixed(4);
     var row = '<tr>'
         + '<td>' + parameterName + '</td>'
         + '<td>' + value + '</td>'
