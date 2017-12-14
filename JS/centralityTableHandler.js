@@ -143,3 +143,25 @@ function registerCentralityTable(tableid) {
         deleteCentralityMap(mapId, graphId);
     });
 }
+
+/*
+ * Initialized centrality values table with the given id by adding all the
+ * values from the given XML element, either using the precise values
+ * or rounding to 4 decimal places.
+ */
+function initValuesTable(element, tableid, precise) {
+    $(element).find("Node").each(function() {
+        var nodeName = $(this).find('Name');
+        nodeName = nodeName.text();
+        var value = parseFloat($(this).find('Value').text());
+        if(!precise) {
+            value = value.toFixed(4);
+        }
+        var row = '<tr>'
+            + '<td>' + nodeName + '</td>'
+            + '<td>' + value + '</td>'
+            + '</tr>';
+        $(tableid + " tbody").append(row);
+    });
+    $(tableid).tablesorter({sortList: [[1,1], [0,0]]});
+}

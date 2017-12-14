@@ -25,6 +25,7 @@
              */
             var ENTRIES_PER_PAGE = 20;
             var pageNumber = 0;
+            var graphId;
             /*
              * Executed after page loading.
              */
@@ -39,14 +40,13 @@
                 var firstIndex = ENTRIES_PER_PAGE * pageNumber;
                 /* Identifiers for the centrality map information to display */
                 var cells = ["Name", "Graph", "Creation Method", "Execution Time", "R"];
-                var graphIdQueryExtension = getUrlVar("graphId");
-                if(!graphIdQueryExtension) {
-                    graphIdQueryExtension = "";
+                // If specified only centralities on one specific graph are shown
+                graphId = getUrlVar("graphId");
+                var graphIdQueryExtension = "";
+                if(graphId) {
+                    graphIdQueryExtension = "&graphId=" + graphId;
                 }
-                else {
-                    graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
-                }
-                /* Requests the CentralityMaps information */
+                /* Requests the centrality maps information */
                 sendRequest("get", "maps?executionStatuses=COMPLETED&includeMeta=TRUE&"
                         + "firstIndex=" + firstIndex + "&length=" + ENTRIES_PER_PAGE + graphIdQueryExtension, "",
                     /* Response handler */
@@ -56,7 +56,11 @@
                          */
                         if($(mapMetasXml).find("Id").length === 0 && pageNumber > 0) {
                             pageNumber--;
-                            var newUrl = "centralities.html?page=" + pageNumber;
+                            var newUrl = "centralities.html?";
+                            if(graphId) {
+                                newUrl = newUrl + "graphId=" + graphId + "&";
+                            }
+                            newUrl = newUrl + "page=" + pageNumber;
                             window.location.href = newUrl;
                         }
                         $(mapMetasXml).find("CentralityMap").each(function() {
@@ -85,17 +89,31 @@
                 $('.pageLeft').click(function(){
                     if(pageNumber > 0) {
                         pageNumber--;
-                        var newUrl = "centralities.html?page=" + pageNumber;
+                        var newUrl = "centralities.html?";
+                        if(graphId) {
+                            newUrl = newUrl + "graphId=" + graphId + "&";
+                        }
+                        newUrl = newUrl + "page=" + pageNumber;
                         window.location.href = newUrl;
                     }
                 });
                 $('.pageRight').click(function(){
                     pageNumber++;
-                    var newUrl = "centralities.html?page=" + pageNumber;
+                    var newUrl = "centralities.html?";
+                    if(graphId) {
+                        newUrl = newUrl + "graphId=" + graphId + "&";
+                    }
+                    newUrl = newUrl + "page=" + pageNumber;
                     window.location.href = newUrl;
                 });
                 $('#evaluate').click(function(){
-                    window.location.href = "centralities_evaluation.html";
+                    var specificGraphId = getUrlVar("graphId");
+                    if(!specificGraphId) {
+                        window.location.href = "centralities_evaluation.html";
+                    }
+                    else {
+                        window.location.href = "centralities_evaluation.html?graphId=" + specificGraphId;
+                    }
                 });
             });
         </script>

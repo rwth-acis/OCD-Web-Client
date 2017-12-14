@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <!-- Displays basic/meta information on all centralities. -->
+    <!-- Displays basic/meta information on all centralities and allows for their evaluation. -->
     <head>
         <title>Evaluate Centralities</title>
         <meta charset="UTF-8">
@@ -20,14 +20,21 @@
         <script src="JS/jquery.tablesorter.js"></script>
         <script src="JS/centralityTableHandler.js"></script>
         <script type="text/javascript">
-        /* Variable for counting the number of callbacks when removing multiple centrality maps */
-        var removeCounter;
+            /* Variable for counting the number of callbacks when removing multiple centrality maps */
+            var removeCounter;
+            /* Indicates whether the selected rows correspond to more than one graph */
+            var multipleGraphsSelected;
+            /* Used to store the graph id of the first selected row */
+            var firstGraphId;
+            /* Used to store a string containing the centrality map ids of the selected rows */
+            var mapIdString;
             /*
              * Executed after page loading.
              */
             $(document).ready(function() {
                 /* Identifiers for the centrality map information to display */
                 var cells = ["Name", "Graph", "Creation Method", "Execution Time", "R"];
+                // If specified only centralities on one specific graph are shown
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -57,7 +64,9 @@
                          * Register event handlers
                          */
                         registerCentralityTable();
-
+                        /*
+                         * Enable selection of rows
+                         */
                         $('table tbody tr').click(function(){
                             $(this).toggleClass('highlight');
                         });
@@ -70,6 +79,7 @@
                         showConnectionErrorMessage("Centrality map metas were not received.");
                 });
                 $('#compare').click(function(){
+                    $("#errorMessage").empty();
                     if($('.highlight').length == 2) {
                         var mapIds = $('.highlight').children().filter('.mapId');
                         var graphIds = $('.highlight').children().filter('.graphId');
@@ -84,29 +94,17 @@
                     }
                 });
                 $('#average').click(function(){
-                    if(!$('#correlationSelectionForm').hasClass("hidden")) {
-                        $('#correlationSelectionForm').addClass("hidden");
-                    }
+                    $("#errorMessage").empty();
+                    hideForms();
                     if($('.highlight').length > 1) {
-                        var mapIds = $('.highlight').children().filter('.mapId');
-                        var graphIds = $('.highlight').children().filter('.graphId');
-                        var firstGraphId = graphIds.eq(0).text();
-                        var multipleGraphsSelected = false;
-                        var index;
-                        for(index = 0; index < graphIds.length; index++) {
-                            if(graphIds.eq(index).text() != firstGraphId) {
-                                multipleGraphsSelected = true;
-                            }
-                        }
-                        if(!multipleGraphsSelected) {
-                            $('#averageNameForm').removeClass("hidden");
-                            $('#calculateAverage').click(function() {
-                                var averageMapName = $('#averageNameInput').val();
-                                if(averageMapName != "") {
-                                    var mapIdString = "mapIds=" + mapIds.eq(0).text();
-                                    for(index = 1; index < mapIds.length; index++) {
-                                        mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
-                                    }
+                        $('#averageNameForm').show();
+                        $('#calculateAverage').click(function() {
+                            var averageMapName = $('#averageNameInput').val();
+                            if(averageMapName != "") {
+                                // Ensure that the selected maps all relate to the same graph
+                                checkSelectionForMultipleGraphs();
+                                if(!multipleGraphsSelected) {
+                                    buildMapIdString();
                                     sendRequest("get", "evaluation/average/graph/" + firstGraphId + "/maps?" + mapIdString + "&mapName=" + averageMapName, "",
                                         /* Response handler */
                                         function(averageMapXml) {
@@ -117,45 +115,31 @@
                                     });
                                 }
                                 else {
-                                    showErrorMessage('Please enter a name for the average centrality map');
+                                    showErrorMessage('Please select row entries on the same graph');
                                 }
-                            });
-                            $('#abortAverage').click(function() {
-                                $('#averageNameForm').addClass("hidden");
-                            });
-                        }
-                        else {
-                            showErrorMessage('Please select row entries on the same graph');
-                        }
+                            }
+                            else {
+                                showErrorMessage('Please enter a name for the average centrality map');
+                            }
+                        });
+                        $('#abortAverage').click(function() {
+                            $('#averageNameForm').hide();
+                        });
                     }
                     else {
                         showErrorMessage('Please select at least two row entries for averaging');
                     }
                 });
                 $('#correlation').click(function(){
-                    if(!$('#averageNameForm').hasClass("hidden")) {
-                        $('#averageNameForm').addClass("hidden");
-                    }
+                    $("#errorMessage").empty();
+                    hideForms();
                     if($('.highlight').length > 1) {
-                        var mapIds = $('.highlight').children().filter('.mapId');
-                        var mapId1 = mapIds.eq(0).text();
-                        var mapId2 = mapIds.eq(1).text();
-                        var graphIds = $('.highlight').children().filter('.graphId');
-                        var firstGraphId = graphIds.eq(0).text();
-                        var multipleGraphsSelected = false;
-                        var index;
-                        for(index = 0; index < graphIds.length; index++) {
-                            if(graphIds.eq(index).text() != firstGraphId) {
-                                multipleGraphsSelected = true;
-                            }
-                        }
-                        if(!multipleGraphsSelected) {
-                            $('#correlationSelectionForm').removeClass("hidden");
-                            var mapIdString = "mapIds=" + mapIds.eq(0).text();
-                            for(index = 1; index < mapIds.length; index++) {
-                                mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
-                            }
-                            $('#pearsonCorrelation').click(function() {
+                        $('#correlationSelectionForm').show();
+                        $('#pearsonCorrelation').click(function() {
+                            // Ensure that the selected maps all relate to the same graph
+                            checkSelectionForMultipleGraphs();
+                            if(!multipleGraphsSelected) {
+                                buildMapIdString();
                                 sendRequest("get", "evaluation/correlation/PEARSON/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                     /* Response handler */
                                     function(resultXml) {
@@ -164,8 +148,16 @@
                                     /* Error handler */
                                     function(errorData) {
                                 });
-                            });
-                            $('#spearmanCorrelation').click(function() {
+                            }
+                            else {
+                                showErrorMessage('Please select row entries on the same graph');
+                            }
+                        });
+                        $('#spearmanCorrelation').click(function() {
+                            // Ensure that the selected maps all relate to the same graph
+                            checkSelectionForMultipleGraphs();
+                            if(!multipleGraphsSelected) {
+                                buildMapIdString();
                                 sendRequest("get", "evaluation/correlation/SPEARMAN/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                     /* Response handler */
                                     function(resultXml) {
@@ -174,8 +166,16 @@
                                     /* Error handler */
                                     function(errorData) {
                                 });
-                            });
-                            $('#kendallCorrelation').click(function() {
+                            }
+                            else {
+                                showErrorMessage('Please select row entries on the same graph');
+                            }
+                        });
+                        $('#kendallCorrelation').click(function() {
+                            // Ensure that the selected maps all relate to the same graph
+                            checkSelectionForMultipleGraphs();
+                            if(!multipleGraphsSelected) {
+                                buildMapIdString();
                                 sendRequest("get", "evaluation/correlation/KENDALL/graph/" + firstGraphId + "/maps?" + mapIdString, "",
                                     /* Response handler */
                                     function(resultXml) {
@@ -184,9 +184,56 @@
                                     /* Error handler */
                                     function(errorData) {
                                 });
+                            }
+                            else {
+                                showErrorMessage('Please select row entries on the same graph');
+                            }
+                        });
+                        $('#abortCorrelation').click(function() {
+                            $('#correlationSelectionForm').hide();
+                        });
+                    }
+                    else {
+                        showErrorMessage('Please select at least two row entries for the correlation computation');
+                    }
+                });
+                $('#precision').click(function() {
+                    $("#errorMessage").empty();
+                    hideForms();
+                    if($('.highlight').length > 0) {
+                        // Ensure that the selected maps all relate to the same graph
+                        checkSelectionForMultipleGraphs();
+                        if(!multipleGraphsSelected) {
+                            $('#precisionForm').show();
+                            buildMapIdString();
+                            deselectAll();
+                            $('#calculatePrecision').click(function() {
+                                if($('.highlight').length !== 1) {
+                                    showErrorMessage('Please select a single row entry for the ground truth.');
+                                }
+                                else if($('#precisionInput').val() == "") {
+                                    showErrorMessage('Please enter the number of top nodes that should be considered.');
+                                }
+                                else {
+                                    var groundTruthMapId = $('.highlight').children().filter('.mapId').eq(0).text();
+                                    mapIdString = "mapIds=" + groundTruthMapId + "&" + mapIdString;
+                                    var k = $('#precisionInput').val();
+                                    sendRequest("get", "evaluation/precision/" + k + "/graph/" + firstGraphId + "/maps?" + mapIdString, "",
+                                        /* Response handler */
+                                        function(resultXml) {
+                                            window.location.href = "centrality_precision.html";
+                                            localStorage.setItem("mapIds", "&" + mapIdString);
+                                            localStorage.setItem("graphId", firstGraphId);
+                                            localStorage.setItem("k", k);
+                                            localStorage.setItem("precisionResult", resultXml);
+                                        },
+                                        /* Error handler */
+                                        function(errorData) {
+                                    });
+                                }
                             });
-                            $('#abortCorrelation').click(function() {
-                                $('#correlationSelectionForm').addClass("hidden");
+                            $('#abortPrecision').click(function() {
+                                $('#precisionForm').hide();
                             });
                         }
                         else {
@@ -194,7 +241,7 @@
                         }
                     }
                     else {
-                        showErrorMessage('Please select at least two row entries for the correlation computation');
+                        showErrorMessage('Please select at least one row entry for the precision computation');
                     }
                 });
                 $("#selectAll").click(function() {
@@ -203,9 +250,7 @@
                     });
                 });
                 $("#deselectAll").click(function() {
-                    $('table tbody tr').each(function(){
-                        $(this).removeClass('highlight');
-                    });
+                    deselectAll();
                 });
                 $("#removeSelected").click(function() {
                     removeCounter = 0;
@@ -224,6 +269,56 @@
                     }
                 });
             });
+
+            /*
+             * Remove the selection on all rows
+             */
+            function deselectAll() {
+                $('table tbody tr').each(function(){
+                    $(this).removeClass('highlight');
+                });
+            }
+
+            /*
+             * Checks whether the selected rows correspond to more than one graph
+             */
+            function checkSelectionForMultipleGraphs() {
+                var graphIds = $('.highlight').children().filter('.graphId');
+                firstGraphId = graphIds.eq(0).text();
+                multipleGraphsSelected = false;
+                var index;
+                for(index = 0; index < graphIds.length; index++) {
+                    if(graphIds.eq(index).text() != firstGraphId) {
+                        multipleGraphsSelected = true;
+                    }
+                }
+            }
+
+            /*
+             * Creates a string containing the centrality map ids of the selected rows
+             * This string is used to pass the ids to the backend as query parameters
+             */
+            function buildMapIdString() {
+                var mapIds = $('.highlight').children().filter('.mapId');
+                mapIdString = "mapIds=" + mapIds.eq(0).text();
+                for(index = 1; index < mapIds.length; index++) {
+                    mapIdString = mapIdString + "&mapIds=" + mapIds.eq(index).text();
+                }
+            }
+
+            /*
+             * Hide all the forms that are shown in response to pressing a button
+             */
+            function hideForms() {
+                $('#averageNameForm').hide();
+                $('#correlationSelectionForm').hide();
+                $('#precisionForm').hide();
+            }
+
+            /*
+             * Deal with a correlation request response by putting the result
+             * into the local storage and referring to the correlation page.
+             */
             function correlationResponse(resultXml, mapIdString, firstGraphId) {
                 window.location.href = "centrality_correlation.html";
                 localStorage.setItem("correlationMatrixXml", resultXml);
@@ -241,9 +336,10 @@
                         <div id="errorMessage"></div>
                     </div>
                     <div class="buttonWrapper">
-                        <button id="compare" type="button" class="btn btn-outline-primary">Compare</button>
                         <button id="average" type="button" class="btn btn-outline-primary">Average</button>
+                        <button id="compare" type="button" class="btn btn-outline-primary">Compare</button>
                         <button id="correlation" type="button" class="btn btn-outline-primary">Correlation</button>
+                        <button id="precision" type="button" class="btn btn-outline-primary">Precision</button>
                     </div>
                     <div id="averageNameForm" class="form-group form-inline hidden">
                         <center>Please choose a name for the average centrality map</center>
@@ -258,6 +354,19 @@
                             <button id="spearmanCorrelation" type="button" class="btn btn-outline-secondary">Spearman</button>
                             <button id="kendallCorrelation" type="button" class="btn btn-outline-secondary">Kendall</button>
                             <button id="abortCorrelation" type="button" class="btn btn-outline-secondary">Abort</button>
+                        </div>
+                    </div>
+                    <div id="precisionForm" class="form-group form-inline hidden">
+                        <div class="col-sm-12">
+                            <center>Please select the ground-truth from the table.</center>
+                        </div>
+                        <div class="col-sm-12">
+                            <center>How many of the top nodes should be considered?</center>
+                        </div>
+                        <div class="col-sm-12 center">
+                            <input id="precisionInput" type="text" class="form-control"></input>
+                            <button id="calculatePrecision" type="button" class="btn btn-outline-secondary">Calculate</button>
+                            <button id="abortPrecision" type="button" class="btn btn-outline-secondary">Abort</button>
                         </div>
                     </div>
                     <div id="selectionControl" class="center">

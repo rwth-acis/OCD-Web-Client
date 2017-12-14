@@ -81,6 +81,7 @@ function createGraphTableCell(value) {
     return "<td>" + value + "</td>";
 }
 
+/* Creates graph name cell */
 function createGraphNameCell(name, id) {
     return '<td><a href="graph.html?id='+ id + '">' + name + '</a></td>';
 }
@@ -174,7 +175,7 @@ function showGraphCovers(id) {
 }
 
 /*
- * Shows graph covers.
+ * Shows graph centralities.
  */
 function showGraphCentralities(id) {
     window.location.href = "centralities.html?graphId=" + id.text();

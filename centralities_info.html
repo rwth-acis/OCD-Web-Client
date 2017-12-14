@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays information about all the centrality measures. -->
+    <head>
+        <title>Centralities Information</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+        });
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script src="JS/bootstrap.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/centralityTableHandler.js"></script>
+        <script type="text/javascript">
+            /* The name of the centrality measure to show information about */
+            var measureName = getUrlVar("measureName");
+            /*
+             * Executed after page loading.
+             */
+            $(document).ready(function() {
+                if(measureName != undefined) {
+                    measureName = measureName.replace(/_/g," ");
+                }
+                if(measureName == "Degree Centrality" || measureName == "In-degree" || measureName == "Out-degree") {
+                    $('#degree').show();
+                }
+                else if(measureName == "LocalRank") {
+                    $('#localrank').show();
+                }
+                else if(measureName == "ClusterRank") {
+                    $('#clusterrank').show();
+                }
+                else if(measureName == "Coreness") {
+                    $('#coreness').show();
+                }
+                else if(measureName == "Neighborhood Coreness") {
+                    $('#neighborhoodCoreness').show();
+                }
+                else if(measureName == "H-index") {
+                    $('#hIndex').show();
+                }
+                else if(measureName == "Laplacian Centrality") {
+                    $('#laplacian').show();
+                }
+                else if(measureName == "Eccentricity") {
+                    $('#eccentricity').show();
+                }
+                else if(measureName == "Closeness Centrality") {
+                    $('#closeness').show();
+                }
+                else if(measureName == "Harmonic Centrality" || measureName == "Harmonic In-Closeness") {
+                    $('#harmonic').show();
+                }
+                else if(measureName == "Current-Flow Closeness") {
+                    $('#currentFlowCloseness').show();
+                }
+                else if(measureName == "Integration" || measureName == "Radiality") {
+                    $('#integrationRadiality').show();
+                }
+                else if(measureName == "Residual Closeness") {
+                    $('#residualCloseness').show();
+                }
+                else if(measureName == "Centroid Value") {
+                    $('#centroidValue').show();
+                }
+                else if(measureName == "Stress Centrality") {
+                    $('#stress').show();
+                }
+                else if(measureName == "Betweenness Centrality") {
+                    $('#betweenness').show();
+                }
+                else if(measureName == "Current-Flow Betweenness") {
+                    $('#currentFlowBetweenness').show();
+                }
+                else if(measureName == "Flow Betweenness") {
+                    $('#flowBetweenness').show();
+                }
+                else if(measureName == "Bridging Centrality") {
+                    $('#bridgingCentrality').show();
+                }
+                else if(measureName == "Katz Centrality") {
+                    $('#katz').show();
+                }
+                else if(measureName == "Subgraph Centrality") {
+                    $('#subgraph').show();
+                }
+                else if(measureName == "Eigenvector Centrality") {
+                    $('#eigenvector').show();
+                }
+                else if(measureName == "Alpha Centrality") {
+                    $('#alpha').show();
+                }
+                else if(measureName == "Bargaining Centrality") {
+                    $('#bargaining').show();
+                }
+                else if(measureName == "PageRank") {
+                    $('#pagerank').show();
+                }
+                else if(measureName == "LeaderRank") {
+                    $('#leaderrank').show();
+                }
+                else if(measureName == "HITS" || measureName == "HITS (Hub Score)" || measureName == "HITS (Authority Score)") {
+                    $('#hits').show();
+                }
+                else if(measureName == "SALSA" || measureName == "SALSA (Hub Score)" || measureName == "SALSA (Authority Score)") {
+                    $('#salsa').show();
+                }
+                else {
+                    $('#measureSelection').show();
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <div id="measureSelection" class="info-section">
+                        <p>Please select a centrality measure you would like to know more about:</p>
+                        <a href="centralities_info.html?measureName=Degree_Centrality">Degree Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=LocalRank">LocalRank</a><br/>
+                        <a href="centralities_info.html?measureName=ClusterRank">ClusterRank</a><br/>
+                        <a href="centralities_info.html?measureName=Coreness">Coreness</a><br/>
+                        <a href="centralities_info.html?measureName=Neighborhood_Coreness">Neighborhood Coreness</a><br/>
+                        <a href="centralities_info.html?measureName=H-index">H-index</a><br/>
+                        <a href="centralities_info.html?measureName=Laplacian_Centrality">Laplacian Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Eccentricity">Eccentricity</a><br/>
+                        <a href="centralities_info.html?measureName=Closeness_Centrality">Closeness Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Harmonic_Centrality">Harmonic Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Current-Flow_Closeness">Current-Flow Closeness</a><br/>
+                        <a href="centralities_info.html?measureName=Integration">Integration/Radiality</a><br/>
+                        <a href="centralities_info.html?measureName=Residual_Closeness">Residual Closeness</a><br/>
+                        <a href="centralities_info.html?measureName=Centroid_Value">Centroid Value</a><br/>
+                        <a href="centralities_info.html?measureName=Stress_Centrality">Stress Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Betweenness_Centrality">Betweenness Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Current-Flow_Betweenness">Current-Flow Betweenness</a><br/>
+                        <a href="centralities_info.html?measureName=Flow_Betweenness">Flow Betweenness</a><br/>
+                        <a href="centralities_info.html?measureName=Bridging_Centrality">Bridging Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Katz_Centrality">Katz Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Subgraph_Centrality">Subgraph Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Eigenvector_Centrality">Eigenvector Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Alpha_Centrality">Alpha Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=Bargaining_Centrality">Bargaining Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=PageRank">PageRank</a><br/>
+                        <a href="centralities_info.html?measureName=LeaderRank">LeaderRank</a><br/>
+                        <a href="centralities_info.html?measureName=HITS">HITS</a><br/>
+                        <a href="centralities_info.html?measureName=SALSA">SALSA</a><br/>
+                    </div>
+                    <div id="degree" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Degree Centrality</h4>
+                        <p>Degree centrality is the simplest centrality measure. It defines the importance of a node simply as its degree which is the number of edges that are connected to the node. In directed networks in-degree and out-degree can be used to differentiate between the number of incoming and outgoing edges. Degree centrality, in-degree and out-degree can be applied to weighted networks where they calculate sums of edge weights instead numbers of edges.</p>
+                    </div>
+                    <div id="localrank" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>LocalRank</h4>
+                        <p>LocalRank was proposed by Chen et al. <cite>[CLS*12]</cite>. The idea is that the degree is too limited as an indicator of centrality because a node with a few influential neighbors might be in a more prominent position than a node with a larger number of less influential neighbors. Therefore LocalRank takes into account the number of nodes in the local neighborhood of a node. The LocalRank of a node $i$ is defined as $$LR(i)=\sum_{v \in \Gamma_i} Q(v),$$ where $\Gamma_i$ is the set of nearest neighbors of node $i$ and $Q(v)$ is given by the equation $$Q(v)=\sum_{w \in \Gamma_v} N(w),$$ in which $N(w)$ is the number of the nearest and next nearest neighbors of node $w$ <cite>[CLS*12]</cite>.</p>
+                        <h5>References</h5>
+                        [CLS*12] Chen, Duanbing and Lü, Linyuan and Shang, Ming-Sheng and Zhang, Yi-Cheng and Zhou, Tao. 2012. Identifying influential nodes in complex networks.
+                    </div>
+                    <div id="clusterrank" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>ClusterRank</h4>
+                        <p>The ClusterRank, proposed by Chen et al. <cite>[CGLZ13]</cite>, considers the degree of a node as well as the degree of its neighbors and the local clustering. It was defined specifically for directed networks but can be used on undirected networks as well. The ClusterRank of a node $i$ is defined as $$CR(i)=f(c_i) \sum_{j \in \Gamma_i} (k_j^{out}+1),$$ where $\Gamma_i$ is the set of nearest neighbors of $i$, $k_j^{out}$ is the out-degree of node $j$ and $f(c_i)$ is a function of the clustering coefficient of $i$ <cite>[CGLZ13]</cite>. The clustering coefficient $c_i$ determines how interconnected $i$'s neighbors are: $$c_i=\frac{|\left\{ e_{jk}|j,k \in \Gamma_i \right\}|}{k_i^{out} (k_i^{out}-1)}$$ When $k_i^{out} \leq 1$ it is defined as $0$. In undirected networks $e_{jk}$ and $e_{kj}$ count as two separate edges.</p>
+                        <p>The ClusterRank is meant to rate nodes based on their ability to propagate information. Local clustering negatively affects information spreading because information is more likely to be circulated between the neighbors of a node rather than spreading to other nodes in the network. A high clustering coefficient should therefore result in a smaller ClusterRank. In <cite>[CGLZ13]</cite> this is achieved by defining $f$ as a decreasing exponential function: $f(c_i)=10^{-c_i}$.</p>
+                        <h5>References</h5>
+                        [CGLZ13] Chen, Duan-Bing and Gao, Hui and Lü, Linyuan and Zhou, Tao. 2013. Identifying influential nodes in large-scale directed networks: the role of clustering.
+                    </div>
+                    <div id="coreness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Coreness</h4>
+                        <p>As the name suggests, the coreness measure (also known as k-core) aims to find the nodes that form the core of the network. The coreness values of the nodes are determined by performing the k-shell decomposition which works in the following way:</p>
+                        <p>In the first step all nodes with degree one are removed from the network. Since removing a node reduces the degree of its neighbors, there may still be nodes with degree one, so the removal of nodes is continued until every node that is left has a degree of at least two. All the nodes that have been removed at that point belong to the same k-shell and have a coreness of one. In the next step all the nodes with degree two are removed. These nodes form the second shell. This process continues with the next shell until there are no nodes left. The network can then be divided into the different shells and every node is given the coreness corresponding to its shell <cite>[KGH*10]</cite>. It is possible to adapt coreness to weighted networks. Instead of removing the nodes with the minimum degree, in each step the nodes with the minimum node strength are removed <cite>[LCR*16]</cite>.</p>
+                        <h5>References</h5>
+                        [KGH*10] Kitsak, Maksim and Gallos, Lazaros K. and Havlin, Shlomo and Liljeros, Fredrik and Muchnik, Lev and Stanley, H. Eugene and Makse, Hernán A. 2010. Identification of influential spreaders in complex networks.
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="neighborhoodCoreness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Neighborhood Coreness</h4>
+                        <p>One big drawback of the coreness is that it is very coarse. Many nodes belong to the same k-shell and can therefore not be differentiated using this measure. This problem can be addressed by combining the k-core value with the node's degree which results in a measure called neighborhood coreness. It is defined as the sum of k-core values of a node's neighbors, i.e. $$NC(v)= \sum_{w \in \Gamma_v} ks(w),$$ where $\Gamma_v$ is the set of nearest neighbors of node $v$ and $ks(w)$ is the coreness of node $w$ <cite>[BaKi14]</cite>.</p>
+                        <h5>References</h5>
+                        [BaKi14] Bae, Joonhyun and Kim, Sangwook. 2014. Identifying and ranking influential spreaders in complex networks by neighborhood coreness.
+                    </div>
+                    <div id="hIndex" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>H-index</h4>
+                        <p>The H-index (also known as Hirsch-index) was defined by the physicist Jorge E. Hirsch to quantify the impact of a researcher's scientific output. "A scientist has index $h$ if $h$ of his/her $N_p$ papers have at least $h$ citations each, and the other $N_p$ - $h$ papers have no more than $h$ citations each." <cite>[Hirs05]</cite> This idea can be generalized to all networks. Let $H$ be an operator on a set of real numbers $\{x_1,x_2,...,x_m\}$ that returns the maximum integer $h$ so that there are at least h elements in the set that are not smaller than $h$. The H-index of node $i$ is given by $$h_i=H(k_{j_1},k_{j_2},...,k_{j_{k_i}}),$$ where $k_{j_1},k_{j_2},...,k_{j_{k_i}}$ is the sequence of degrees of $i$'s neighbors <cite>[LCR*16]</cite>. In other words, the H-index of a node is the maximum number h such that the node has at least h neighbors which each have a degree of no less than h. In weighted networks the degree can be replaced with the weighted degree.</p>
+                        <p>The $H$ operator reveals a connection between degree, H-index and coreness. Let the zero-order H-index of $i$ be $h^{(0)}_i=k_i$, then the n-order H-index can be iteratively defined as $$h^{(n)}_i=H(k^{(n-1)}_{j_1},k^{(n-1)}_{j_2},...,k^{(n-1)}_{j_{k_i}}).$$ After a finite number of steps the sequence $h^{(0)}_i,h^{(1)}_i,h^{(2)}_i,...$ converges to the coreness of $i$; thus degree, H-index and coreness represent the initial state, intermediate state and steady state of this iterative process <cite>[LCR*16]</cite>.</p>
+                        <h5>References</h5>
+                        [Hirs05] Hirsch, J. E. 2005. An index to quantify an individual's scientific research output. <br/>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="laplacian" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Laplacian Centrality</h4>
+                        <p>The Laplacian centrality is a centrality measure that can be used on weighted networks. It measures the drop in Laplacian energy of the network that results from removing a node. The Laplacian energy of a network $G$ is defined as follows: $$E_L(G)=\sum_i \lambda_i^2$$ where $\lambda_i$ are the eigenvalues of the Laplacian matrix of the network <cite>[QFW*12]</cite>. It was shown that the Laplacian centrality can be calculated by counting walks of length 2 that a node participates in. Given a weighted network $G$ and the network $H$ that is obtained by removing node $v$ the drop in Laplacian energy is given by the following equation: $$LC(v)=E_L(G)-E_L(H)=4*NW_2^C(v)+2*NW_2^E(v)+2*NW_2^M(v)$$ where $NW_2^C(v)$ is the number of closed 2-walks containing node $v$, $NW_2^E(v)$ is the number of non-closed 2-walks starting at $v$ and $NW_2^M(v)$ is the number of non-closed 2-walks with $v$ in the middle <cite>[QFW*12]</cite>.</p>
+                        <h5>References</h5>
+                        [QFW*12] Qi, Xingqin and Fuller, Eddie and Wu, Qin and Wu, Yezhou and Zhang, Cun-Quan. 2012. Laplacian centrality: A new centrality measure for weighted networks.
+                    </div>
+                    <div id="eccentricity" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Eccentricity</h4>
+                        <p>The eccentricity of a node $i$ is the maximum of all distances from this node to the other ones. $$ECC(i)=\max_{j \neq i}d_{ij},$$ where $j$ is any node other than $i$ <cite>[LCR*16]</cite>. It is only defined in connected networks since in an unconnected network the eccentricity of each node would be infinite. Smaller values correspond to more central nodes according to this measure. In the implementation the maximum is inverted to assign the highest values to the most central nodes.</p>
+                        <h5>References</h5>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="closeness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Closeness Centrality</h4>
+                        <p>Closeness centrality assesses a node based on its average distance to all the other nodes. Since a low average distance should lead to a high centrality value and vice versa, the average distance is inverted which results in the equation $$CC(i)=\frac{n-1}{\sum_{j \neq i} d_{ij}}.$$</p>
+                        <p>On weighted networks we can use the weighted closeness centrality. It takes into account the edge weights by redefining the distance between two nodes. Whereas in most contexts the distance is defined as a sum of weights, here it is defined as a sum of inverse weights. More specifically the weighted distance $d_{ij}^w$ between the nodes $i$ and $j$ is the minimum sum of inverse edge weights of a path between $i$ and $j$ <cite>[LCR*16]</cite>. In other words the weighted closeness centrality uses a different definition of shortest paths which instead of counting the number of edges calculates the sum of inverse weights.</p>
+                        <h5>References</h5>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="harmonic" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Harmonic Centrality</h4>
+                        <p>In an unconnected graph, the standard closeness centrality cannot be used because the sum of distances is always infinite and thus the centrality values are zero. An alternative measure is harmonic centrality. Instead of taking the inverse of the sum of distances it considers the sum of inverses of distances <cite>[LCR*16]</cite>: $$HC(i)= \frac{1}{n-1} \sum_{j \neq i} \frac{1}{d_{ij}}$$ When $i$ and $j$ are not connected, $\frac{1}{d_{ij}}$ is $0$. When the measure is applied to weighted networks we use the same definition of distance as with closeness centrality. Harmonic centrality is also suitable to be used on directed networks because the network does not have to be strongly connected for the measure to give meaningful results. When using the definition given above on directed networks we measure the length of outgoing paths. Analogously we can define a measure for the length of incoming paths by replacing $d_{ij}$ with $d_{ji}$. Here we will call this measure harmonic in-closeness.</p>
+                        <h5>References</h5>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="currentFlowCloseness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Current-Flow Closeness</h4>
+                        <p>Some closeness measures have been proposed that use an alternative definition of the distance between nodes. One example is current-flow closeness by Brandes and Fleischer <cite>[BrFl05]</cite> which interprets the network as an electric network in which current can flow between the nodes through the edges. The edge weights give the conductance of an edge which is the reciprocal of its resistance. Current-flow closeness defines the distance between node $s$ and $t$ as the potential difference  between the two nodes in case of a unit current that enters the network at node $s$ and exits it at node $t$. The measure is defined analogously to the regular closeness centrality measure: $$CFC(s)= \frac{n-1}{\sum_{s \neq t} p_{st}(s)-p_{st}(t)}$$ More information on how to calculate it can be found on the information page about current-flow betweenness centrality as well as in the original paper by Brandes and Fleischer <cite>[BrFl05]</cite>. Current-flow closeness centrality is actually equivalent to another centrality measure called information centrality. The proof that the two measures are equal is given in <cite>[BrFl05]</cite>.</p>
+                        <h5>References</h5>
+                        [BrFl05] Brandes, Ulrik and Fleischer, Daniel. 2005. Centrality Measures Based on Current Flow.
+                    </div>
+                    <div id="integrationRadiality" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Integration & Radiality</h4>
+                        <p>Integration and radiality are two measures that are similar to closeness centrality. They also consider the geodesic distances of a node to all the other nodes. However, instead of dividing by the sum of distances, each of the distances is reversed: $\text{reverse distance}=\text{diameter}+1-\text{distance}$. The $+1$ is added so that 0 can represent the reverse distance of unreachable nodes. Integration and radiality are meant to be used on directed network. In undirected networks the two measures are the same.</p>
+                        <p>The integration score is the average of reverse distances of inward ties: $$INT(i)=\frac{\sum_{j \neq i} RD_{ji}}{n-1},$$ where $RD_{ji}$ is the reverse distance between nodes $j$ and $i$ <cite>[VaFo98]</cite>.</p>
+                        <p>Radiality, on the other hand, measures outward ties. The reverse distance values can be written as a matrix with entry $(i,j)$ being the reverse distance from $i$ to $j$. Radiality is computed just like integration but on the transpose of this matrix <cite>[VaFo98]</cite>.</p>
+                        <h5>References</h5>
+                        [VaFo98] Valente, Thomas W. and Foreman, Robert K. 1998. Integration and radiality: measuring the extent of an individual's connectedness and reachability in a network.
+                    </div>
+                    <div id="residualCloseness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Residual Closeness</h4>
+                        <p>A different method for determining centrality is to measure the effect that removing a node has on the network. This idea was used in <cite>[Dang06]</cite> to define the residual closeness - a measure of network vulnerability. Dangalchev defined it in the following way: First, the closeness of a node $i$ is defined as $$C(i)= \sum_{i \neq j} \frac{1}{2^{d_{ij}}}$$ The closeness of the network is given by the sum of closeness values of all nodes: $$C= \sum_i C(i)$$ We consider the closeness of the network after removing node k: $$C_k= \sum_i \sum_{j \neq i} \frac{1}{2^{d_k(i,j)}},$$ where $d_k(i,j)$ is the distance between nodes $i$ and $j$ in the network in which $k$ was removed.</p>
+                        <p>The residual closeness of the graph is then defined as $$R= \min_k {C_k}$$ and can be normalized so it is relative to the original closeness: $$R'=\frac{R}{C}$$ As stated before the residual closeness is a measure of network vulnerability, not node importance. However, $C_k$ can be used as a centrality measure. A small value $C_k$ indicates that removing the node $k$ would make the distances between nodes in the network much longer. Thus it highlights the importance of $k$.</p>
+                        <p>We define the residual closeness centrality of node $v$ by normalizing $C_v$ using the network closeness and taking the inverse to get a value proportional to the node's importance for the network connectivity. $$RC(v)=\frac{C}{C_v}$$</p>
+                        <h5>References</h5>
+                        [Dang06] Dangalchev, Chavdar. 2006. Residual closeness in networks.
+                    </div>
+                    <div id="centroidValue" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Centroid Value</h4>
+                        <p>The calculation of the centroid value can be imagined as a competition of a node with each other node in the network regarding the number of nodes that are closer to one than the other. The centroid value of node $v$ is computed by letting it compete with each other node in the network and then rating it based on its "worst" performance. $$CV(v)=min\{f(v,w):w \in V \setminus \{v\}\},$$ where $f(v,w)= \gamma_v(w)- \gamma_w(v)$ and $\gamma_v(w)$ is the number of nodes that are closer to $v$ than to $w$ <cite>[SLT*09]</cite>.</p>
+                        <h5>References</h5>
+                        [SLT*09] Scardoni, Giovanni and Laudanna, Carlo and Tosadori, Gabriele and Fabbri, Franco and Faizaan, Mohammed. 2009. CentiScaPe: Network centralities for Cytoscape.
+                    </div>
+                    <div id="stress" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Stress Centrality</h4>
+                        <p>Stress centrality is a measure based on the number of shortest paths that run through a node. $$ST(v)= \sum_{s \neq t \neq v} \sigma_{st}(v)$$ where $\sigma_{st}(v)$ is the number of shortest paths between nodes $s$ and $t$ that contain node $v$. The idea is that the number of shortest paths that contain $v$ is a good approximation of the amount of "stress" or "work" that $v$ has to endure <cite>[Bran05]</cite>. However a high stress centrality value of $v$ does not necessarily mean that the node is needed to facilitate good connectivity between the other nodes since there can be other paths of the same length that run through nodes other than $v$. Therefore it may be preferable to also consider the number of these other shortest paths which leads to the definition of shortest-path betweenness centrality.</p>
+                        <h5>References</h5>
+                        [Bran05] Brandes, Ulrik. 2005. Network analysis: methodological foundations.
+                    </div>
+                    <div id="betweenness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Betweenness Centrality</h4>
+                        <p>The most common definition of betweenness centrality (also known as shortest-path betweenness centrality) measures the rate by which a node falls on the shortest path between other nodes. $$BC(v)= \sum_{s \neq t \neq v} \frac{\sigma_{st}(v)}{\sigma_{st}},$$ where $\sigma_{st}(v)$ is the number of shortest paths between nodes $s$ and $t$ that contain node $v$ and $\sigma_{st}$ is the total number of shortest paths between $s$ and $t$ <cite>[LCR*16]</cite>. The weighted betweenness centrality can be obtained in the same way as the weighted closeness centrality by defining a shortest path to one with a minimum sum of inverse edge weights.</p>
+                        <h5>References</h5>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="currentFlowBetweenness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Current-Flow Betweenness</h4>
+                        <p>The limitation of shortest-path betweenness centrality is that it does not consider non-geodesic paths. Often times it is not safe to assume that information or whatever else flows through a network only travels on shortest paths. Therefore it might be more accurate to adopt the model of current flowing through an electric network. Applied to the idea of betweenness this results in a centrality measure called current-flow betweenness. The approach which was proposed by Brandes and Fleischer <cite>[BrFl05]</cite> is summarized in the following.</p>
+                        <p>The current flow betweenness can be applied to undirected, connected networks with positive edge weights which determine the conductance, i.e. the reciprocal of the resistance of an edge. Current can enter and exit the network at certain nodes. This is defined by the supply $b:V \rightarrow \mathbb{R}$. A value $b(v) > 0$ indicates that current enters the network and $b(v) < 0$ indicates that current leaves the network at node $v$. We only consider the special case in which a unit current enters the network at a single node $s$ and exits it at a different node $t$. Accordingly we define $$b_{st}(v)=\begin{cases}1 & v = s\\-1 & v = t\\0 & otherwise\end{cases}$$ Whereas shortest-path betweenness considers the fraction of shortest paths passing through a node, current-flow betweenness considers the fraction of unit currents passing through the node. The fraction of a unit $st$-current that passes through node $v$ is called the throughput of $v$ and is denoted by $\tau_{st}(v)$. The current-flow betweenness of node $v$ is given by the equation $$CFB(v) = \frac{1}{n_B} \sum_{s, t \in V} \tau_{st}(v).$$ Each edge is assigned an arbitrary but fixed orientation to incorporate the directionality of the current flow. The set of these directed edges is denoted by $\overrightarrow{E}$. Given a network $N$ consisting of an undirected, connected graph $G$ and positive edge weights $c:E \rightarrow \mathbb{R}_{>0}$ and a supply $b$ we can determine a unique current $x:\overrightarrow{E} \rightarrow \mathbb{R}$ that satisfies Kirchhoff's circuit laws. The value $x(\overrightarrow{e})$ is positive if the current flows in the direction of the edge $\overrightarrow{e}$ and negative otherwise. The current flowing through an edge can be derived from the potential difference between the nodes it connects and the conductance/resistance of the edge. In order to calculate the current flows we first calculate the absolute potentials $p:V \rightarrow \mathbb{R}$ of all nodes. This can be done using the Laplacian matrix $$L_{vw}=\begin{cases}s_v & v = w\\-c(e) & e=(v,w) \in E\\0 & otherwise\end{cases}$$ where $s_v$ is the weighted degree (node strength) of node $v$. The absolute potentials are the solutions of the equation $Lp=b$. To get a unique solution we have to restrict this system of equations by choosing an index $i \in \{1, ..., n\}$ and removing row $i$ and column $i$ from $L$. The corresponding node $v_i$ is our point of reference with $p(v_i)=0$. Perhaps we choose $v_1$ and obtain the matrix $\widetilde{L}$ by removing the first row and column of $L$. The absolute potentials can then be calculated in the following way: $$p=\begin{pmatrix}0 & \mathbf{0}^T \\\mathbf{0} & \widetilde{L}^{-1}\end{pmatrix} \cdot b$$ In the following the matrix in the above equation will be referred to as $C$. It can now be used to calculate the currents that flow through the edges. As per Ohm's law a current between two points is equal to the potential difference (also called voltage) divided by the resistance or equivalently the potential difference times the conductance. Therefore the current flowing through an edge $e=(v,w)$ can be calculated using the absolute potentials: $x(e)=(p(v)-p(w)) \cdot c(e)$. Using the matrix $$B_{ev}= \begin{cases} c(e) & \overrightarrow{e}=(v,w) \text{ for some } w\\ -c(e) & \overrightarrow{e}=(u,v) \text{ for some } u\\ 0 & otherwise \end{cases}$$ we can calculate the vector of currents flowing through the edges in case of an st-current: $$x_{st}=Bp_{st}=BCb_{st}$$ The absolute current through edge $e$ in case of supply $b_{st}$ can be expressed as $|F_{es}-F_{et}|$ where $F=BC$. The final step is to use the currents flowing through the edges to calculate the currents flowing through the nodes. The current flowing through a node is equal to the current that enters/exits the node through its incident edges (the two values are equal according to Kirchhoff's current law). For each node except for the source and the sink node the sum of the absolute currents through all incident edges gives us the sum of in-flow and out-flow which, divided by two, gives us the total flow through the node. Since the current through the source and sink node should not be included, we subtract $|b_{st}(v)|$ from the sum of in-flow and out-flow. This results in a throughput of 0 for the source and sink node. Now everything can be put together to calculate the current-flow betweenness score. $$\begin{split} CFB(v) & = \frac{1}{n_B} \sum_{s, t \in V} \tau_{st}(v) \\ & = \frac{1}{n_B} \sum_{s, t \in V} \frac{1}{2}(-|b_{st}(v)|+ \sum_{e=(u,w) \in E : u = v \lor w = v} |x_{st}(\overrightarrow{e})|) \\ & = \frac{1}{2-n}+\frac{1}{n_B} \sum_{s,t \in V} \sum_{e=(u,w) \in E : u = v \lor w = v} \frac{1}{2}|F_{es}-F_{et}| \\ & = \frac{1}{2-n}+\frac{1}{n_B} \sum_{s < t \in V} \sum_{e=(u,w) \in E : u = v \lor w = v} |F_{es}-F_{et}| \end{split}$$ The term $\frac{1}{2-n}$ derives from $\frac{1}{n_B} \sum_{s, t \in V} \frac{1}{2}(-|b_{st}(v)|)=\frac{1}{(n-1)(n-2)} \cdot (-\frac{1}{2}) \cdot (n-1+n-1)$. In the implementation it is omitted to get a minimum centrality value of 0.</p>
+                        <h5>References</h5>
+                        [BrFl05] Brandes, Ulrik and Fleischer, Daniel. 2005. Centrality Measures Based on Current Flow.
+                    </div>
+                    <div id="flowBetweenness" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Flow Betweenness</h4>
+                        <p>Flow betweenness is another modification of the original betweenness centrality. It was defined by Freeman et al. <cite>[LiSD91]</cite> and is based on Ford and Fulkerson's model of network flow <cite>[FoFu56]</cite>. In weighted networks the edge weights determine the capacities which define the maximum flow along each edge. In unweighted networks the edges are assigned a uniform capacity of 1 <cite>[LiSD91]</cite>. Let $m_{st}$ be the maximum flow from node $s$ to node $t$ and $m_{st}(v)$ the maximum flow from $s$ to $t$ that passes through node $v$. Flow betweenness can be defined analogously to shortest path betweenness: $$FBC(v)=\sum_{s \neq t \neq v} \frac{m_{st}(v)}{m_{st}}$$</p>
+                        <h5>References</h5>
+                        [LiSD91] Freeman, Linton C and Borgatti, Stephen P and White, Douglas R. 1991. Centrality in valued graphs: A measure of betweenness based on network flow. <br/>
+                        [FoFu56] Ford, Lester R and Fulkerson, Delbert R. 1956. Maximal flow through a network.
+                    </div>
+                    <div id="bridgingCentrality" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Bridging Centrality</h4>
+                        <p>Bridging centrality was proposed by Hwang et al. <cite>[HKRZ08]</cite>. It combines betweenness centrality with the bridging coefficient. The bridging coefficient of node $v$ is defined as the probability of leaving the direct neighbor subgraph of $v$ <cite>[HKRZ08]</cite>: $$\Psi(v)= \frac{1}{deg(v)} \sum_{i \in N(v)} \frac{\delta_v(i)}{deg(i)-1},$$ where $\delta_v(i)$ is the number of edges incident to node $i$ that leave the direct neighbor subgraph of node $v$. The bridging centrality uses the rankings produced by betweenness centrality and the bridging coefficient. It is defined as their rank product: $$BrC(v)=R_{\Phi(v)} \cdot R_{\Psi(v)}$$ where $R_{\Phi(v)}$ is the rank of node $v$ regarding betweenness centrality and $R_{\Psi(v)}$ is the rank of node $v$ regarding the bridging coefficient. Thus smaller bridging centrality values should indicate more "bridge-like" nodes.</p>
+                        <p>In <cite>[HKRZ08]</cite> the measure is only applied to unweighted networks, however the implementation here also works on weighted networks where edge transition probabilities are set according to the edge weights.</p>
+                        <h5>References</h5>
+                        [HKRZ08] Hwang, Woochang and Kim, Taehyong and Ramanathan, Murali and Zhang, Aidong. 2008. Bridging centrality: graph mining from element level to group level.
+                    </div>
+                    <div id="katz" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Katz Centrality</h4>
+                        <p>Katz centrality <cite>[Katz53]</cite> takes into account every walk that leads to a certain node. The number of walks of length $k$ from a node $j$ to node $i$ is given by $(A^k)_{ji}$. An attenuation factor $a$ is chosen so that shorter walks have more weight. Katz centrality is given by the infinite sum $$KC(i)=\sum_{k=1}^\infty \sum_{j=1}^n a^k (A^k)_{ji}$$ that converges if $a<\frac{1}{\kappa_1}$ where $\kappa_1$ is the largest eigenvalue of $A$ <cite>[Bran05]</cite>. In case of convergence Katz centrality can be expressed in the closed form $$KC(i)=((I-a A^T)^{-1})1_n$$ where $I$ is the identity matrix and $1_n$ is the vector of size n containing just ones <cite>[Bran05]</cite>.</p>
+                        <h5>References</h5>
+                        [Katz53] Katz, Leo. 1953. A new status index derived from sociometric analysis. <br/>
+                        [Bran05] Brandes, Ulrik. 2005. Network analysis: methodological foundations.
+                    </div>
+                    <div id="subgraph" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Subgraph Centrality</h4>
+                        <p>The subgraph centrality, introduced by Estrada <cite>[EsRo05]</cite>, defines the centrality of a node $i$ using the weighted sum of cycles, i.e. walks that both start and end at $i$. Longer cycles are given a smaller weight. The number of cycles of length $k$ starting from node $i$ is given by $(A^{k})_{ii}$ and the subgraph centrality is given by the following equation <cite>[EsRo05]</cite>: $$SC(i)= \sum_{k=1}^{\infty} \frac{(A^{k})_{ii}}{k!},$$</p>
+                        <h5>References</h5>
+                        [EsRo05] Estrada, Ernesto and Rodriguez-Velazquez, Juan A. 2005. Subgraph centrality in complex networks.
+                    </div>
+                    <div id="eigenvector" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Eigenvector Centrality</h4>
+                        <p>Eigenvector centrality was proposed by Bonacich <cite>[Bona72]</cite>. As the name suggests, the centrality values of the nodes are given by the entries of an eigenvector. More specifically the principal eigenvector (the eigenvector corresponding to the greatest eigenvalue ) of the adjacency matrix $A$. This eigenvector can be calculated using power iteration which works like this: First the entries of the vector $x$ are initialized with 1. In each iteration $x$ is multiplied with $A$ and then normalized. The iteration stops when the values of $x$ have reached a steady state. The resulting centrality value $x_i$ of node $i$ is proportional to the sum of centrality values of $i$'s neighbors: $$x_i=c \sum_{j=1}^{n} A_{ij}x_j,$$ where $c$ is a proportionality constant <cite>[LCR*16]</cite>.</p>
+                        <h5>References</h5>
+                        [Bona72] Bonacich, Phillip. 1972. Factoring and weighting approaches to status scores and clique identification. <br/>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="alpha" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Alpha Centrality</h4>
+                        <p>Alpha centrality is a modification of eigenvector centrality that was also proposed by Bonacich <cite>[BoLl01]</cite>. The difference is that it gives each node some external status that does not depend on its connections. This allows the measure to also be used on directed networks. The external status is given by a vector $e$. Alpha centrality is defined by the equation $$x=\alpha A^Tx + e,$$ where $\alpha$ determines the importance of the external status <cite>[BoLl01]</cite>. It can also be expressed as $$x=(I-\alpha A^T)^{-1}e.$$ In <cite>[BoLl01]</cite> $e$ was  chosen to be the vector only consisting of ones. The resulting measure is identical to Katz centrality. Thus, using this measure mainly makes sense if there is some external status that is known in advance and distinguishes the nodes.</p>
+                        <h5>References</h5>
+                        [BoLl01] Bonacich, Phillip and Lloyd, Paulette. 2001. Eigenvector-like measures of centrality for asymmetric relations.
+                    </div>
+                    <div id="bargaining" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Bargaining Centrality</h4>
+                        <p>Bargaining centrality is another measure that was proposed by Bonacich <cite>[Bona87]</cite>. Many other centrality measures presume that the centrality value of a node is higher if its neighbors are highly connected. However, in bargaining situation it is advantageous for a node to be connected to other nodes which are not as highly connected and therefore have fewer options. Bargaining centrality can measure both positive and negative influences depending on the parameter $\beta$ <cite>[Bona87]</cite>: $$c_i(\alpha, \beta)= \sum_j (\alpha + \beta c_j)A_{ij}$$ When $\beta$ is positive the centrality values of neighbor nodes have a positive influence, when it is negative the influence is negative. For $\beta=0$ the measure is proportional to the degree.</p>
+                        <h5>References</h5>
+                        [Bona87] Bonacich, Phillip. 1987. Power and centrality: A family of measures.
+                    </div>
+                    <div id="pagerank" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>PageRank</h4>
+                        <p>The PageRank algorithm was proposed by Brin and Page <cite>[PBMW99]</cite> as a method for ranking websites. It was the basis of the Google search engine. The idea is very similar to eigenvector centrality. The importance of a website is determined by the importance of the websites linking to it <cite>[LCR*16]</cite>: $$PR_i=d \sum_{j=1}^n A_{ji} \frac{PR_j}{k_j^{out}}+(1-d) \frac{1}{n}$$ The value of $d$ is typically set around 0.85. In its original context the PageRank can be described in terms of a surfer who is moving between websites by randomly following links and occasionally (with probability $1-d$) jumping to a random website. The probability of the surfer being on a specific website at any given moment is given by its PageRank.</p>
+                        <p>The measure can also be extended to weighted networks in the following way: $$WPR_i=d \sum_{j=1}^n w_{ji} \frac{WPR_j}{s_j^{out}}+(1-d) \frac{1}{n},$$ where $s_j^{out}$ is the weighted out-degree of node $j$ <cite>[LCR*16]</cite>.</p>
+                        <h5>References</h5>
+                        [PBMW99] Page, Lawrence and Brin, Sergey and Motwani, Rajeev and Winograd, Terry. 1999. The PageRank citation ranking: Bringing order to the web. <br/>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="leaderrank" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>LeaderRank</h4>
+                        <p>LeaderRank is a modification of PageRank that was proposed by Lü et al. to identify leaders in online social networks <cite>[LZYZ11]</cite>. Before calculating the centrality values, a "ground node" is added to the network. It is connected to every other node via bidirectional links. As a result, the network becomes strongly connected. Each node except the ground node is assigned an initial score of 1. The ground node is assigned a score of 0. The final scores of each node are then calculated iteratively using the formula $$LR_i(t+1)= \sum_{j=1}^{n+1} A_{ji} \frac{LR_j(t)}{k_j^{out}}.$$ Just like PageRank, LeaderRank can also be extended to weighted networks <cite>[LCR*16]</cite>: $$WLR_i(t+1)= \sum_{j=1}^{n+1} w_{ji} \frac{WLR_j(t)}{s_j^{out}}$$ When the scores have reached a steady state, the value of the ground node is evenly distributed to all the other nodes.</p>
+                        <h5>References</h5>
+                        [LZYZ11] Lü, Linyuan and Zhang, Yi-Cheng and Yeung, Chi Ho and Zhou, Tao. 2011. Leaders in social networks, the delicious case. <br/>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="hits" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>HITS</h4>
+                        <p>Hyperlink-induced topic search (HITS) was proposed by Kleinberg <cite>[Klei99]</cite>. Like PageRank, the algorithm was originally intended to rank websites. However, each website $i$ receives two scores - a hub weight $h_i$ and an authority weight $a_i$. The idea is that a hub is a website that links to many authoritative websites and an authority is a website that is linked to by many hubs. The weights are determined using an iterative algorithm. At the beginning the weights are all set to 1. In each step the weights are updated and then normalized. The weights at time t are referred to as $h_i(t)$ and $a_i(t)$ and are updated in the following way <cite>[LCR*16]</cite>: $$a'_i(t)=\sum_{j=1}^n A_{ji}h_j(t-1) \quad\mathrm{}\quad h'_i(t)=\sum_{j=1}^n A_{ij}a'_j(t)$$ The normalization uses the euclidean norm where $||x||=\sqrt{\sum_i (x_i)^2}$. $$a_i(t)=\frac{a'_i(t)}{||a'(t)||} \quad\mathrm{}\quad h_i(t)=\frac{h'_i(t)}{||h'(t)||}$$ The iteration stops when the normalized values reach the steady state.</p>
+                        <h5>References</h5>
+                        [Klei99] Kleinberg, Jon M. 1999. Authoritative Sources in a Hyperlinked Environment. <br/>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="salsa" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>SALSA</h4>
+                        <p>The Stochastic Approach for Link-Structure Analysis (SALSA) proposed by Lempel and Moran <cite>[LeMo01]</cite> is a variation of HITS that also determines hub and authority weights. First the directed link network is transformed into a bipartite undirected graph. The bipartite graph consists of a set of hub nodes $V_h$ and a set of authority nodes $V_a$. For every node in the original network with out-degree greater than zero there is a hub node and for every node with in-degree greater zero there is an authority node. For every edge from node $r$ to node $s$ in the original network there is an undirected edge from $r_h$ to $s_a$.</p>
+                        <p>On the bipartite graph two random walks are performed. One that only visits hub nodes and one that only visits authority nodes. This is done by traversing two edges right after another. The probabilities of going from one node to the next in these two random walks are given by the following matrices: The hub matrix $\tilde{H}$ is defined as $$\tilde{h}_{ij}=\sum_{\{k|(i_h,k_a),(j_h,k_a) \in \tilde{G}\}} \frac{1}{deg(i_h)} \cdot \frac{1}{deg(k_a)},$$ and the authority matrix $\tilde{A}$ is defined as: $$\tilde{a}_{ij}=\sum_{\{k|(k_h,i_a),(k_h,j_a) \in \tilde{G}\}} \frac{1}{deg(i_a)} \cdot \frac{1}{deg(k_h)},$$ where $\tilde{G}$ is the bipartite graph <cite>[LeMo01]</cite>. The hub weights $h$ and the authority weights $a$ are given by the principal eigenvectors of the matrices $\tilde{H}$ and $\tilde{A}$ respectively. Therefore they can be calculated using power iteration.</p>
+                        <h5>References</h5>
+                        [LeMo01] Lempel, R. and Moran, S. 2001. SALSA: The Stochastic Approach for Link-structure Analysis.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

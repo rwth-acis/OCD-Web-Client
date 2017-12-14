@@ -40,6 +40,8 @@
             var centralityMeasureNames;
             /* Names of all centrality simulations */
             var centralitySimulationNames;
+            /* Principal eigenvalue of the grapph's adjacency matrix */
+            var eigenvalue;
             /* Executed after page loading */
             $(document).ready(function() {
                 /* Identifiers for the graph information to be displayed */
@@ -103,6 +105,7 @@
                         var contentWeighting = $("#contentWeighting").is(':checked');
                         if(coverName === "") {
                             showErrorMessage('Please define a cover name.');
+                            window.scrollTo(0, 0);
                             return;
                         }
                         /* Requests an algorithm execution  */
@@ -143,11 +146,16 @@
                              if(errorData.includes("Show Error")) {
                                   var errorSplit = errorData.split(":");
                                   showErrorMessage(errorSplit[errorSplit.length-1]);
+                                  window.scrollTo(0, 0);
                              }
                              else {
                                  showConnectionErrorMessage("Centrality calculation request failed.");
                              }
                      });
+                   }
+                   else {
+                       showErrorMessage("Please select a centrality measure.");
+                       window.scrollTo(0, 0);
                    }
                    return false;
                  });
@@ -178,6 +186,7 @@
                                   if(errorData.includes("Show Error")) {
                                       var errorSplit = errorData.split(":");
                                       showErrorMessage(errorSplit[errorSplit.length-1]);
+                                      window.scrollTo(0, 0);
                                   }
                                   else {
                                       showConnectionErrorMessage("Centrality simulation request failed.");
@@ -185,7 +194,32 @@
                           });
                         }
                       }
-                    return false;
+                      else {
+                          showErrorMessage("Please select a centrality simulation.");
+                          window.scrollTo(0, 0);
+                      }
+                      return false;
+                  });
+                  $('#centralityMeasure').change(function () {
+                      $('#annotationDiv').hide();
+                  });
+                  $('#centralityInfo').click(function() {
+                      var measureName = $('#centralityMeasure').val();
+                      if(measureName == getSelectOptionVal()) {
+                          window.location.href = "centralities_info.html";
+                      }
+                      else {
+                          window.location.href = "centralities_info.html?measureName=" + measureName.replace(/ /g,"_");
+                      }
+                  });
+                  $('#centralitySimulationInfo').click(function() {
+                      var simulationName = $('#centralitySimulation').val();
+                      if(simulationName == getSelectOptionVal()) {
+                          window.location.href = "centrality_simulations_info.html";
+                      }
+                      else {
+                          window.location.href = "centrality_simulations_info.html?simulationName=" + simulationName.replace(/ /g,"_");
+                      }
                   });
             });
             /* Requests the names of all OCD algorithms.
@@ -269,6 +303,15 @@
                 sendRequest("get", "centralities/" + centralityMeasureName + "/parameters/default", "",
                         /* Response handler */
                         function(response) {
+                            $('#annotationText').html("");
+                            if(centralityMeasureName == "Katz Centrality") {
+                                displayEigenvalue();
+                            }
+                            var graphSize = $(graphMetaXml).find('NodeCount').text();
+                            if(graphSize > 200 && (centralityMeasureName == "Katz Centrality" || centralityMeasureName == "Current-Flow Closeness" || centralityMeasureName == "Current-Flow Betweenness")) {
+                                $('#annotationText').append("<p>Warning: The computation of this measure may take a long time on this graph.</p>");
+                                $('#annotationDiv').show();
+                            }
                             if(typeof callback !== 'undefined') {
                                 callback(response);
                             }
@@ -501,6 +544,24 @@
                       showConnectionErrorMessage(errorData);
               });
             }
+
+            /* Request and display the principal eigenvalue of the graph's adjacency matrix */
+            function displayEigenvalue() {
+                sendRequest("get", "centrality/graphs/" + graphId
+                        + "/eigenvalue", "",
+                    /* Response handler */
+                    function(response) {
+                        if(response !== 'undefined') {
+                            eigenvalue = $(response).filter('Value').text();
+                            $('#annotationText').append("<p>Alpha should be smaller than " + 1/eigenvalue + ".</p>");
+                            $('#annotationDiv').show();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        showErrorMessage("The eigenvalue of the adjacency matrix could not be calculated.");
+                });
+            }
         </script>
     </head>
     <body>
@@ -679,13 +740,22 @@
                             <form id="runCentralityCalculationForm" class="container">
                                   <div class="form-group row">
                                   <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
-                                    <div class="col-sm-8">
-                                      <select id="centralityMeasure" class="form-control">
-                                      </select>
+                                    <div class="col-sm-7">
+                                      <select id="centralityMeasure" class="form-control in-line"></select>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <button id="centralityInfo" class="btn btn-default in-line" type="button">
+                                            <img src="IMG/open-iconic/svg/info.svg" width="20" />
+                                        </button>
                                     </div>
                                   </div>
 
                                   <div class="form-group col-sm-12" id="centralityMeasureParameterDiv">
+                                  </div>
+
+                                  <div id="annotationDiv" class="row justify-content-end hidden">
+                                    <div id="annotationText" class="col-12">
+                                    </div>
                                   </div>
 
                                   <div class="form-group row col-sm-12">
@@ -710,9 +780,13 @@
                             <form id="runCentralitySimulationForm" class="container">
                                   <div class="form-group row">
                                   <label for="centralitySimulation" class="col-sm-4 col-form-label">Simulation</label>
-                                    <div class="col-sm-8">
-                                      <select id=centralitySimulation class="form-control">
-                                      </select>
+                                    <div class="col-sm-7">
+                                      <select id="centralitySimulation" class="form-control in-line"></select>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <button id="centralitySimulationInfo" class="btn btn-default in-line" type="button">
+                                            <img src="IMG/open-iconic/svg/info.svg" width="20" />
+                                        </button>
                                     </div>
                                   </div>
                                   <div class="form-group col-sm-12" id="centralitySimulationParameterDiv">

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays information about all the centrality simulations. -->
+    <head>
+        <title>Centrality Simulations Information</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+        });
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script src="JS/bootstrap.min.js"></script>
+        <script src="JS/jquery.session.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="JS/ServiceAPI/b64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/jquery.tablesorter.js"></script>
+        <script src="JS/centralityTableHandler.js"></script>
+        <script type="text/javascript">
+            var simulationName = getUrlVar("simulationName");
+            /*
+             * Executed after page loading.
+             */
+            $(document).ready(function() {
+                if(simulationName != undefined) {
+                    simulationName = simulationName.replace(/_/g," ");
+                }
+
+                if(simulationName == "SIR Simulation") {
+                    $('#sir').show();
+                }
+                else if(simulationName == "Random Package Transmission Simulation (Unweighted)" || simulationName == "Random Package Transmission Simulation (Weighted)" || simulationName == "Random Package Transmission Simulation") {
+                    $('#package').show();
+                }
+                else {
+                    $('#simulationSelection').show();
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <div id="simulationSelection" class="info-section">
+                        <p>Please select a centrality simulation you would like to know more about:</p>
+                        <a href="centrality_simulations_info.html?simulationName=SIR_Simulation">SIR Simulation</a><br/>
+                        <a href="centrality_simulations_info.html?simulationName=Random_Package_Transmission_Simulation">Random Package Transmission Simulation</a><br/>
+                    </div>
+                    <div id="sir" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>SIR Simulation</h4>
+                        <p>The idea of centrality measures is often related to spreading processes in a network, for example the flow of information or the spreading of a disease in a network of individuals. Centrality measures can be used as an estimate of a node's ability to spread information or diseases. This simulation is meant to give a benchmark for the spreading capabilities of each node. It follows the SIR model.</p>
+                        <p>In the SIR model an individual can be in one of three states - susceptible (S), infected (I) or recovered (R). In each time step there is a certain probability that a susceptible individual that is connected to one or more infected individuals will become infected. Also there is a probability that an infected individual will recover thereby becoming immune. Initially each individual is either susceptible or infected. <cite>[LCR*16]</cite></p>
+                        <p>In our case there is exactly one infected node (the "seed node") at the start, the infection probability and the recovery probability can be set as parameters. The infection spreads until there are no more infected nodes. At that point the number of nodes that were infected and therefore are now recovered, is counted. This is the centrality value that the simulation assigns to the nodes. To a large extend this number is random. The seed node could just recover without infecting any other node or the infection could spread through the whole network infecting every node. However a highly connected node will have a higher probability of infecting many other nodes. After repeating the process many times starting from the same seed node, the average number of infected nodes approaches a fixed number. The number of times the simulation is repeated for each node can also be set as a parameter. In most cases it will be neccessary to repeat the simulation thousands of times until the values converge.</p>
+                        <h5>References</h5>
+                        [LCR*16] Lü, Linyuan and Chen, Duanbing and Ren, Xiao-Long and Zhang, Qian-Ming and Zhang, Yi-Cheng and Zhou, Tao. 2016. Vital nodes identification in complex networks.
+                    </div>
+                    <div id="package" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Random Package Transmission Simulation</h4>
+                        <p>The random package transmission simulation works in the following way: For each pair $(s,t)$ of nodes a package is sent from $s$ to $t$. At each node the package randomly chooses one of the incident edges and follows it. In case of the weighted simulation, edge weights are taken into account and the package selects each edge with a probability that is proportional to its weight. In case of the unweighted simulation (or an unweighted network) the edges are chosen uniformly at random. The package continues to travel through the network until it reaches the target node. For each node we count the number of times that a package has visited it. Highly connected nodes are visited more often and therefore receive a higher score than less connected nodes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

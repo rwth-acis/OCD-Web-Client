@@ -180,22 +180,23 @@
             }
             /* Requests the cooperation simulation information of simulations with running metrics */
             function getCooperationSimulationMetas(callback) {
-                sendRequest("get", "simulation/running", "",
-                    /* Response handler */
-                    function(response) {
-
-                        cooperationSimulationMetasXml = response;
-                        if(typeof callback !== 'undefined') {
-                            callback();
-                        }
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        /*
-                         * Cover metas request failed
-                         */
-                        showConnectionErrorMessage("Cover metas were not received.");
-                });
+                // The path "simulation/running" is not defined, needs fixing
+                // sendRequest("get", "simulation/running", "",
+                //     /* Response handler */
+                //     function(response) {
+                //
+                //         cooperationSimulationMetasXml = response;
+                //         if(typeof callback !== 'undefined') {
+                //             callback();
+                //         }
+                //     },
+                //     /* Error handler */
+                //     function(errorData) {
+                //         /*
+                //          * Cover metas request failed
+                //          */
+                //         showConnectionErrorMessage("Cover metas were not received.");
+                // });
             }
             /* Handles collapsable element for cooperation simulations in creation */
             function runningCooperationSimulationCollapsableHandler() {

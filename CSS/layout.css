@@ -19,9 +19,7 @@ body {
   background-color: #aecad5;
 }
 
-
 #wrapper {
-
     height: 100%;
     width: 100%;
     padding: 5px;
@@ -30,7 +28,6 @@ body {
 }
 
 #contentWrapper {
-
     width: 100%;
     height: 100%;
 }
@@ -75,6 +72,21 @@ body {
 
 #averageNameInput {
     width: 80%;
+}
+
+#centralityMeasureParameterDiv {
+    padding-left: unset;
+    padding-right: unset;
+}
+
+#eigenvalueDiv {
+    margin-bottom: 20px;
+}
+
+#groundTruthReference {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 /* General table */
@@ -328,6 +340,14 @@ td:last-child {
 
 .collapsableDisplayBtn {
     display: inline;
+}
+
+.in-line {
+    display: inline-block;
+}
+
+.info-section {
+    display: none;
 }
 
 /* OCD Viewer visualization elements */

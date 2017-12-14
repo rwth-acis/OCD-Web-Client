@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <!-- Displays the correlation matrix of the selected centralities. -->
+    <!-- Displays the precision at k of the selected centralities. -->
     <head>
         <title>Centrality Correlation</title>
         <meta charset="UTF-8">
@@ -32,11 +32,12 @@
                 var mapIds = mapIdsStr.split("&mapIds=");
                 // The first entry of mapIds is empty
                 numberOfMaps = mapIds.length-1;
+                var groundTruthMapId = mapIds[1];
                 var graphId = localStorage.getItem("graphId");
                 /* Identifiers for meta information to be displayed */
                 var cells = ["CentralityMapId", "Name", "Graph", "Creation Method", "Execution Time"];
                 var index;
-                for(index = 1; index < numberOfMaps+1; index++) {
+                for(index = 2; index < numberOfMaps+1; index++) {
                     var mapId = mapIds[index];
                     /* Requests centrality map meta information */
                     sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
@@ -57,17 +58,19 @@
                         showConnectionErrorMessage("Centrality map was not received.");
                     }, "text");
                 }
-                displayMatrix(localStorage.getItem("correlationMatrixXml"));
-
-                $("#precisionCheckbox").change(function() {
-                    $("#matrixTable thead").html("");
-                    $("#matrixTable tbody").html("");
-                    displayMatrix(localStorage.getItem("correlationMatrixXml"));
-                });
+                /* Request ground truth map information */
+                sendRequest("get", "centrality/" + groundTruthMapId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
+                function(mapMetaXml) {
+                    $('#groundTruthReference').html('Precision at ' + localStorage.getItem("k") + ' in relation to <a href="centrality.html?mapId='+ groundTruthMapId + '&graphId=' + graphId + '">' + $(mapMetaXml).find('Name').text() + '</a>:');
+                },
+                function(errorData) {
+                    showConnectionErrorMessage("Centrality map was not received.");
+                }, "text");
+                displayPrecisionTable(localStorage.getItem("precisionResult"));
             });
 
             function afterResponse() {
-                if(responseCounter == numberOfMaps) {
+                if(responseCounter == numberOfMaps-1) {
                     try {
                         $("#mapMetaTable").tablesorter({sortList: [[1,0],[0,0]],
                             headers: {}});
@@ -79,36 +82,15 @@
                 }
             }
 
-            function displayMatrix(matrixXml) {
-                var header = "<th/>";
-                $(matrixXml).find("Row").each(function() {
-                    header += "<th>" + $(this).attr("CentralityMapId") + "</th>";
+            function displayPrecisionTable(precisionXml) {
+                var header = "<tr><th>Id</th><th>Name</th><th>Precision</th></tr>";
+                $("#precisionTable").children("tbody").append(header);
+                $(precisionXml).find("CentralityMap").each(function() {
+                    var row = "<tr><td>" + $(this).find("CentralityMapId").text() + "</td>";
+                    row += "<td>" + $(this).find("Name").text() + "</td>";
+                    row += "<td>" + $(this).find("Value").text() + "</td></tr>";
+                    $("#precisionTable").children("tbody").append(row);
                 });
-                $("#matrixTable").children("tbody").append(header);
-                if(precisionCheckbox.checked) {
-                    $(matrixXml).find("Row").each(function() {
-                        var row = "<tr>"
-                        row += "<th>" + $(this).attr("CentralityMapId") + "</th>";
-                        var cellXml = $(this).find("Cell").each(function() {
-                            var entry = $(this).text();
-                            row += "<td>" + entry + "</td>";
-                        });
-                        row += "</tr>"
-                        $("#matrixTable").children("tbody").append(row);
-                    });
-                }
-                else {
-                    $(matrixXml).find("Row").each(function() {
-                        var row = "<tr>"
-                        row += "<th>" + $(this).attr("CentralityMapId") + "</th>";
-                        var cellXml = $(this).find("Cell").each(function() {
-                            var entry = parseFloat($(this).text());
-                            row += "<td>" + entry.toFixed(4) + "</td>";
-                        });
-                        row += "</tr>"
-                        $("#matrixTable").children("tbody").append(row);
-                    });
-                }
             }
         </script>
     </head>
@@ -151,14 +133,10 @@
                             <tbody></tbody>
                         </table>
                     </div>
-                    <div id="tableControls">
-                        <div class="checkbox">
-                            <label><input id="precisionCheckbox" type="checkbox" value="">High Precision</label>
-                        </div>
-                    </div>
-                    <h5 class="sub-header">Correlation Matrix</h5>
+                    <div id="groundTruthReference"></div>
+                    <h5 class="sub-header">Precision Table</h5>
                     <div class="table-responsive">
-                        <table id="matrixTable" class="table">
+                        <table id="precisionTable" class="table">
                             <thead></thead>
                             <tbody></tbody>
                         </table>
