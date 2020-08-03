@@ -49,6 +49,10 @@
                         showErrorMessage("Login is invalid!");
                 });
             } else {
+            	/* DEBUG */
+            	/*$.session.set('isLoggedIn', new Boolean(true));
+                window.location.replace("index.html");*/
+                /* DEBUG */
                 // if sign in was not successful, log the cause of the error on the console
                 console.log(result);
             }
@@ -67,10 +71,11 @@
 <!-- OpenID Connect Information -->
 <!-- for local host: data-clientid="15cdbd81-f6c1-4862-bb7a-7344deed3aaa" -->
 <!-- for server host: data-clientid="9c04fe4a-2b6b-436b-9896-83383377c497" -->
+<!-- http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png" -->
 	      <span class="oidc-signin"
 				    data-callback="signinCallback"
 				    data-name="Learning Layers"
-				    data-logo="http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png"
+				    data-logo="http://results.learning-layers.eu/images/learning-layers.svg" 
 				    data-server="https://api.learning-layers.eu/o/oauth2"
 				    data-clientid="9c04fe4a-2b6b-436b-9896-83383377c497"
                     data-redirecturi="http://localhost:8081/OCD-Web-Client/login.html"
