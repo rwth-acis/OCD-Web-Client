@@ -60,7 +60,8 @@ function createRequest(method, url, content, callback, errorcallback, mimeType) 
  * Checks whether an error xml is returned.
  */
 function checkForErrorXML(data, successCallback) {
-    if($(data).is("Error")) {
+    //Only Check if Document actually is xml TODO: Maybe find another way for this, it is a bit hacky
+    if(data.includes("<?xml version") && $(data).is("Error")) {
         /*
          * Error xml was returned.
          * Displays the error message via the content handler.
