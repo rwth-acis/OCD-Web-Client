@@ -9,9 +9,10 @@ Facilitates import / upload of new graphs and covers.
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <!-- TODO: Possibly omit https: again from the urls before pushing. Though this seems to be best practice now anyways -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -193,10 +194,19 @@ Facilitates import / upload of new graphs and covers.
                     });
                 });
                 $("#objectFormat").change(function() {
-                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
+                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST') {
                 		$("#startDatetr").removeClass('hidden');
                 		$("#endDatetr").removeClass('hidden');
-                	} else {
+                	}
+                    // !!This Code can only be used when webOCD supports edge types!!
+                	// } else if($("#objectFormat").val() === 'XGMML') {
+                    //     $("#startDatetr").addClass('hidden');
+                    //     $("#endDatetr").addClass('hidden');
+                    //     $("#keytr").removeClass('hidden');
+                    //     $("#type1tr").removeClass('hidden');
+                    //     $("#type2tr").removeClass('hidden');
+                    //     $("#type3tr").removeClass('hidden');
+                    else {
                 		$("#startDatetr").addClass('hidden');
                 		$("#endDatetr").addClass('hidden');
                 	}
@@ -212,6 +222,10 @@ Facilitates import / upload of new graphs and covers.
                 if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
                 	restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
                 }
+                // !!This Code can only be used when webOCD supports edge types!!
+                // if($("#objectFormat").val() === 'XGMML') {
+                //     restUrl = restUrl + "&key=" + $("#key").val() + "&type1=" + $("#type1").val() + "&type2=" + $("#type2").val() + "&type3=" + $("#type3").val()
+                // }
                 sendRequest("post", restUrl, content,
                             /* Response handler */
                             function(response) {
@@ -409,6 +423,23 @@ Facilitates import / upload of new graphs and covers.
                                     <label for="endDate" class="col-form-label">End Date:</label>
                                     <input id="endDate" type="text" placeholder="YYYY-MM-DD">
                                   </div>
+                                  <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
+                                  <div id="keytr" class="hidden">
+                                      <label for="key" class="col-form-label">Key:</label>
+                                      <input id="key" type="text" value="" placeholder="empty">
+                                  </div>
+                                  <div id="type1tr" class="hidden">
+                                      <label for="type1" class="col-form-label">Type 1:</label>
+                                      <input id="type1" type="text" value="" placeholder="empty">
+                                  </div>
+                                  <div id="type2tr" class="hidden">
+                                      <label for="type2" class="col-form-label">Type 2:</label>
+                                      <input id="type2" type="text" value="" placeholder="empty">
+                                  </div>
+                                  <div id="type3tr" class="hidden">
+                                      <label for="type3" class="col-form-label">Type 3:</label>
+                                      <input id="type3" type="text" value="" placeholder="empty">
+                                  </div> -->
                                 <!-- Name for imported object -->
                                 <div class="form-group">
                                   <label for="objectName" class="col-form-label">Name</label>
