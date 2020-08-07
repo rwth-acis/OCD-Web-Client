@@ -233,6 +233,7 @@ td:last-child {
     vertical-align: middle;
     display: inline-block;
     padding: 10px;
+    padding-left: 0px;
 }
 
 .formContentWrapper {
@@ -356,6 +357,118 @@ td:last-child {
     text-align: center;
 }
 
+.btn-group button {
+    background-color: #6bc15a; /* Green background */
+    font-weight: bold;
+    border: 1px solid #01a701; /* Green border */
+    color: #444444; /* White text */
+    padding: 10px 24px; /* Some padding */
+    cursor: pointer; /* Pointer/hand icon */
+    float: left; /* Float the buttons side by side */
+}
+
+.btn-group button:not(:last-child) {
+    border-right: none; /* Prevent double borders */
+}
+
+/* Clear floats (clearfix hack) */
+.btn-group:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+    background-color: #3e8e41;
+}
+
+.graphSelect {
+    height: 25px;
+    width: auto;
+}
+
+.sliderText {
+    position: relative;
+    height: 18px;
+    width: 60px;
+    left: 2.5px;
+    bottom: 1px;
+    float:left;
+}
+
+.sliderBox {
+    position: relative;
+    height: 18px;
+    width: 30px;
+    left: 64.5px;
+    top: 4px;
+}
+
+/* The switch - the box around the slider */
+.collapsableContentSwitch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 12px;
+}
+
+/* Hide default HTML checkbox */
+.collapsableContentSwitch {
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    left: 30px;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 13px;
+    width: 13px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 17px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
 .visualizationZoomer {
     width: 50%;
 }
@@ -367,6 +480,19 @@ td:last-child {
 }
 
 .visualizationGraphic {
+}
+
+.forceVisualization {
+    text-align: center;
+}
+
+.forceVisualizationContent {
+    display: block;
+    margin: auto;
+    vertical-align: middle;
+}
+
+.forceVisualizationGraphic {
 }
 
 /* Additional */

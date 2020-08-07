@@ -7,8 +7,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <!-- TODO: Possibly omit https: again from the urls before pushing. Though this seems to be best practice now anyways -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -20,6 +22,8 @@
         <script src="JS/jquery.tablesorter.js"></script>
         <script src="JS/jquery.panzoom.js"></script>
         <script src="JS/jquery.mousewheel.js"></script>
+        <script src="JS/force-graph/force-graph.js"></script>
+        <script src="JS/force-graph/3d-force-graph.js"></script>
         <script type="text/javascript">
             /* Id of the corresponding graph */
             var graphId = getUrlVar("graphId");
@@ -30,6 +34,9 @@
             /* Meta Data Xmls of corresponding ground truth candidates (for metric execution) */
             var groundTruthMetasXml;
 //            var coverDefaultXml;
+            /* Graph structure in JSON format */
+            var jsonGraph;
+            var have3D;
             /* SVG for Visualization */
             var visualization;
             /* Maximum ground truth candidates (for metric execution) displayed per page */
@@ -346,15 +353,158 @@
                         showConnectionErrorMessage("Cover was not received.");
                     }, "text");
             }
-            /* Handles the visualization collapsable element */
+
+            /* Handles what happens on the visualization type Button presses */
+            function buttonClick(number) {
+                $(document).ready(function () {
+
+                    let svgVizScroll = document.getElementById("visualizationZoomer");
+                    let svgViz = document.getElementById("visualizationContent");
+                    let forceViz = document.getElementById("forceVisualizationContent");
+
+                    highlightNodes = new Set();
+                    highlightLinks = new Set();
+
+                    if (number === 0) {
+                        forceViz.style.display = "none";
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph.width($('.forceVisualizationContent').width());
+                            jsonGraph.height(800);
+                        }
+                        svgViz.style.display = "inherit";
+                        svgVizScroll.style.display = "inline";
+                    } else if (number === 1 || number === 2) {
+                        forceViz.style.display = "inherit";
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph.width($('.forceVisualizationContent').width());
+                            jsonGraph.height(800);
+                        }
+                        svgViz.style.display = "none";
+                        svgVizScroll.style.display = "none";
+
+                        if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
+                            have3D = false;
+                            //console.log("2D");
+                            if (typeof jsonGraph !== "undefined") {
+                                jsonGraph._destructor();
+                            }
+                            getJSON();
+                        } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
+                            have3D = true;
+                            //console.log("3D");
+                            if (typeof jsonGraph !== "undefined") {
+                                jsonGraph._destructor();
+                            }
+                            getJSON();
+                        }
+                    }
+                })
+            }
+
+            /* Requests and stores a JSON representation of the graph.
+             * Then executes a callback function */
+            function getJSON() {
+                //TODO: Change
+                sendRequest("get", "visualization/cover/" + coverId + "/graph/"
+                    + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    function (response) {
+                        jsonGraph = response;
+                        //console.log("jsonGRAPH prev: " + jsonGraph)
+                        var graph = JSON.parse(jsonGraph);
+                        var sizes = new Map();
+                        var colors = new Map();
+                        for (let node of graph.nodes) {
+                            sizes[node.id] = node.size;
+                            colors[node.id] = node.color;
+                        }
+
+                        if (have3D === false) {
+                            jsonGraph = ForceGraph()
+                            (document.getElementById('forceVisualizationGraphic'))
+                                .graphData(graph)
+                                .nodeId('id')
+                                .nodeLabel('id')
+                                .nodeVal(function(node) {
+                                    return sizes[node.id] - 19
+                                })
+                                .nodeColor(function (node) {
+                                    return colors[node.id];
+                                })
+                                .onNodeDragEnd(node => {
+                                    node.fx = node.x;
+                                    node.fy = node.y;
+                                })
+                                .onNodeRightClick(node => {
+                                    //TODO: Seem a bit slow after restoring, check original forces/velocity
+                                    node.fx = null;
+                                    node.fy = null;
+                                })
+                                .linkSource('source')
+                                .linkDirectionalArrowLength(2)
+                                .linkDirectionalArrowRelPos(1)
+                                .linkTarget('target')
+                                .cooldownTicks(200);
+                        } else {
+                            jsonGraph = ForceGraph3D()
+                            (document.getElementById('forceVisualizationGraphic'))
+                                .graphData(graph)
+                                .nodeId('id')
+                                .nodeLabel('id')
+                                .nodeVal(function(node) {
+                                    return sizes[node.id] - 19
+                                })
+                                .nodeColor(function (node) {
+                                    return colors[node.id];
+                                })
+                                .onNodeDragEnd(node => {
+                                    node.fx = node.x;
+                                    node.fy = node.y;
+                                    node.fz = node.z;
+                                })
+                                .onNodeRightClick(node => {
+                                    //TODO: Seem a bit slow after restoring, check original forces/velocity
+                                    node.fx = null;
+                                    node.fy = null;
+                                    node.fz = null;
+                                })
+                                .linkSource('source')
+                                .linkOpacity(0.35)
+                                .linkColor("#dedede")
+                                .linkWidth(0)
+                                .linkDirectionalArrowLength(2)
+                                .linkDirectionalArrowRelPos(1)
+                                .linkTarget('target')
+                                .cooldownTicks(200);
+                        }
+
+                        jsonGraph.width($('.forceVisualizationContent').width());
+                        jsonGraph.height(800);
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Visualization was not received.");
+                    });
+            }
+
+            /* Handles the collapsable element for the graph visualization */
             function visualizationCollapsableHandler() {
-                /* Request the visualization */
-                if(typeof visualization === 'undefined') {
+                /* Requests the graph visualization */
+                if (typeof visualization === 'undefined') {
                     getVisualization();
                 }
+
                 /* Registers the visualization for panzoom */
-                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
-                $panzoom.on('mousewheel', function( e ) {
+                var $panzoom = $('body').find('.visualizationGraphic').panzoom({
+                    $zoomRange: $('body').find(".visualizationZoomer"),
+                    increment: 0.9,
+                    contain: 'invert',
+                    maxScale: 10,
+                    minScale: 1
+                });
+                $panzoom.on('mousewheel', function (e) {
                     e.preventDefault();
                     var delta = e.delta || e.originalEvent.wheelDelta;
                     var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
@@ -588,13 +738,22 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
+                            <!-- Three Graph type buttons in a group -->
+                            <div class="btn-group" style="width:100%">
+                                <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
+                                <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
+                                <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                            </div>
+                            <!-- Container for graph visualization -->
                             <div class="visualization">
-                                <div class="visualizationControl">
-                                    <input class="visualizationZoomer" type="range">
+                                <div class="visualizationControl" id="visualizationControl">
+                                    <input id="visualizationZoomer" class="visualizationZoomer" type="range">
                                 </div>
-                                <div class="visualizationContent">
-                                    <div class="visualizationGraphic">
-                                    </div>
+                                <div id="visualizationContent" class="visualizationContent">
+                                    <div class="visualizationGraphic"></div>
+                                </div>
+                                <div id="forceVisualizationContent" class="forceVisualizationContent">
+                                    <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
                                 </div>
                             </div>
                         </div>
