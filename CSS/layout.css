@@ -383,6 +383,67 @@ td:last-child {
     background-color: #3e8e41;
 }
 
+.optionRow {
+    margin-bottom: 3px;
+}
+
+/* Dropdown Button */
+.dropDownOpenButton {
+    background-color: #6098c6;
+    width: 100%;
+    height: 100%;
+    font-weight: bold;
+    color: #444444;
+    padding: 10px 24px;
+    border: none;
+    cursor: pointer;
+}
+
+/* Dropdown button on hover & focus */
+.dropDownOpenButton:hover, .dropDownOpenButton:focus {
+    background-color: #598db6;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dataBaseDropDown {
+    margin: 1px 5px 0px 0px;
+    padding: 0;
+    float: left;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dataBaseDropDownContent {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dataBaseDropDownContent a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dataBaseDropDownContent a:hover {background-color: #ddd}
+
+.dropDownCloseButton {
+    width: auto;
+}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show {display:block;}
+
 .graphSelect {
     height: 25px;
     width: auto;
@@ -482,13 +543,10 @@ input:checked + .slider:before {
 .visualizationGraphic {
 }
 
-.forceVisualization {
-    text-align: center;
-}
-
 .forceVisualizationContent {
-    display: block;
     margin: auto;
+    margin-top: 2px;
+    display: block;
     vertical-align: middle;
 }
 

@@ -24,6 +24,7 @@
         <script src="JS/jquery.mousewheel.js"></script>
         <script src="JS/force-graph/force-graph.js"></script>
         <script src="JS/force-graph/3d-force-graph.js"></script>
+        <script src="JS/arangojs@6.14.1/lib/web.js"></script>
         <script type="text/javascript">
             /* Id of the corresponding graph */
             var graphId = getUrlVar("graphId");
@@ -37,6 +38,15 @@
             /* Graph structure in JSON format */
             var jsonGraph;
             var have3D;
+
+            /* Database Information */
+            var arangoUser = localStorage.getItem("arangoUser@WebOCD");
+            var arangoPass = localStorage.getItem("arangoPass@WebOCD");
+            var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
+            var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
+
+            const db = new arangojs.Database('http://127.0.0.1:8529');
+
             /* SVG for Visualization */
             var visualization;
             /* Maximum ground truth candidates (for metric execution) displayed per page */
@@ -401,6 +411,32 @@
                 })
             }
 
+            function databaseInfoSubmit() {
+                arangoUser = $("#arangoUser").val();
+                arangoPass = $("#arangoPass").val();
+                arangoDataBase = $("#arangoDataBase").val();
+                arangoCollection = $("#arangoCollection").val();
+
+                localStorage.setItem("arangoUser@WebOCD",arangoUser);
+                localStorage.setItem("arangoPass@WebOCD",arangoPass);
+                localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
+                localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+            }
+
+            // Close the dropdown menu if the user clicks outside of it
+            window.onclick = function(event) {
+                if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm')) {
+                    var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                    var i;
+                    for (i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+            }
+
             /* Requests and stores a JSON representation of the graph.
              * Then executes a callback function */
             function getJSON() {
@@ -424,6 +460,29 @@
                                 .graphData(graph)
                                 .nodeId('id')
                                 .nodeLabel('id')
+                                .onNodeClick(node => {
+                                    if(arangoDataBase !== "" && arangoDataBase !== null
+                                        && arangoUser !== "" && arangoUser !== null
+                                        && arangoPass !== null
+                                        && arangoCollection !== "" && arangoCollection !== null) {
+
+                                        db.useDatabase(arangoDataBase);
+                                        db.useBasicAuth(arangoUser, arangoPass);
+                                        const docCollection = db.collection(arangoCollection);
+                                        docCollection.document(node.name, true).then(function (doc) {
+                                            let nodeWindow = window.open("", '_blank');
+
+                                            if (doc != null) {
+                                                //console.log(JSON.stringify(doc, null, '    '));
+                                                let docStr = JSON.stringify(doc, null, '    ');
+                                                docStr = docStr.replace(/\n/g, "<br />");
+                                                nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                            } else {
+                                                nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                            }
+                                        }).catch((err) => console.error(err));
+                                    }
+                                })
                                 .nodeVal(function(node) {
                                     return sizes[node.id] - 19
                                 })
@@ -450,6 +509,29 @@
                                 .graphData(graph)
                                 .nodeId('id')
                                 .nodeLabel('id')
+                                .onNodeClick(node => {
+                                    if(arangoDataBase !== "" && arangoDataBase !== null
+                                        && arangoUser !== "" && arangoUser !== null
+                                        && arangoPass !== null
+                                        && arangoCollection !== "" && arangoCollection !== null) {
+
+                                        db.useDatabase(arangoDataBase);
+                                        db.useBasicAuth(arangoUser, arangoPass);
+                                        const docCollection = db.collection(arangoCollection);
+                                        docCollection.document(node.name, true).then(function (doc) {
+                                            let nodeWindow = window.open("", '_blank');
+
+                                            if (doc != null) {
+                                                //console.log(JSON.stringify(doc, null, '    '));
+                                                let docStr = JSON.stringify(doc, null, '    ');
+                                                docStr = docStr.replace(/\n/g, "<br />");
+                                                nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                            } else {
+                                                nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                            }
+                                        }).catch((err) => console.error(err));
+                                    }
+                                })
                                 .nodeVal(function(node) {
                                     return sizes[node.id] - 19
                                 })
@@ -738,11 +820,22 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <!-- Three Graph type buttons in a group -->
-                            <div class="btn-group" style="width:100%">
-                                <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
-                                <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
-                                <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                            <div class="optionRow" style="width:100%">
+                                <div class="dataBaseDropDown" style="width:19%">
+                                    <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
+                                    <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent">
+                                        <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
+                                        <input class="dataBaseDropDownContentForm" id="arangoPass" type="text" name="arangoPass" placeholder="Password">
+                                        <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
+                                        <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
+                                        <button class="dropDownCloseButton" onclick="databaseInfoSubmit()">Save</button>
+                                    </form>
+                                </div>
+                                <div class="btn-group" style="width:80%">
+                                    <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
+                                    <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
+                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                                </div>
                             </div>
                             <!-- Container for graph visualization -->
                             <div class="visualization">
