@@ -44,6 +44,7 @@
         var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
         var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
 
+        //Testserver: http://ocd-web-client.duckdns.org:7071
         const db = new arangojs.Database('http://127.0.0.1:8529');
 
         /* Graph visualization in SVG format */
@@ -607,11 +608,10 @@
             sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
                 function (response) {
                     jsonGraph = response;
-                    //console.log("jsonGRAPH prev: " + jsonGraph)
-                    var graph = JSON.parse(jsonGraph);
-                    var degree = new Map();
-                    var outgoingNeighbours = new Map();
-                    var styles = []
+                    let graph = JSON.parse(jsonGraph);
+                    let degree = new Map();
+                    let outgoingNeighbours = new Map();
+                    let styles = []
                     for (let node of graph.nodes) {
                         degree[node.id] = 0;
                         outgoingNeighbours[node.id] = [];
@@ -629,11 +629,6 @@
                             .nodeId('id')
                             .nodeLabel('id')
                             .onNodeClick(node => {
-                                //console.log("|" + arangoDataBase + "|" + typeof arangoDataBase);
-                                //console.log("|" + arangoUser + "|" + typeof arangoUser);
-                                //console.log("|" + arangoPass + "|" + typeof arangoPass);
-                                //console.log("|" + arangoCollection + "|" + typeof arangoCollection);
-
                                 if(arangoDataBase !== "" && arangoDataBase !== null
                                     && arangoUser !== "" && arangoUser !== null
                                     && arangoPass !== null
@@ -646,7 +641,6 @@
                                         let nodeWindow = window.open("", '_blank');
 
                                         if (doc != null) {
-                                            //console.log(JSON.stringify(doc, null, '    '));
                                             let docStr = JSON.stringify(doc, null, '    ');
                                             docStr = docStr.replace(/\n/g, "<br />");
                                             nodeWindow.document.write("<pre>" + docStr + "</pre>");
@@ -670,12 +664,10 @@
                                         });
                                     }
                                     rightClickNode = node;
-                                    rightClickLink = null;
                                 } else {
                                     rightClickNode = null;
-                                    rightClickLink = null;
                                 }
-                                //document.getElementById('forceVisualizationGraphic').style.cursor = node ? '-webkit-grab' : null;
+                                rightClickLink = null;
                             })
                             .nodeVal(function (node) {
                                 return Math.log(degree[node.id] + 1)

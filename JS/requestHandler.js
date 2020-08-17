@@ -10,6 +10,7 @@
 
 /* Base URL of the OCD Service */
 var baseUrl = "http://127.0.0.1:8080/ocd";
+//var baseUrl = "http://ocd-web-client.duckdns.org:7070/ocd"
 //var baseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocd";
 
 

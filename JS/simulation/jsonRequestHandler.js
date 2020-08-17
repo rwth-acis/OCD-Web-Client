@@ -211,6 +211,7 @@
  }).call(this);
  /* Base URL of the Cooperation & Defection Service */
  var BaseUrl = "http://127.0.0.1:8080/ocd";
+ //var baseUrl = "http://ocd-web-client.duckdns.org:7070/ocd"
 
 /* API */
 var apiJson = i5.las2peer.jsAPI.json;
