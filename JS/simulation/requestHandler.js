@@ -10,7 +10,7 @@
 
  /* Base URL of the Cooperation & Defection Service */
  var BaseUrl = "http://127.0.0.1:8080/ocd";
- //Server ginkgo from rwth: http://192.168.178.20:8529
+ //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8080/ocd
  //var baseUrl = "http://ocd-web-client.duckdns.org:7070/ocd"
 
 /* API */

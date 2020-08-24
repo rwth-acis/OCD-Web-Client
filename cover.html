@@ -38,6 +38,7 @@
             /* Graph structure in JSON format */
             var jsonGraph;
             var have3D;
+            var rightClickLink = null;
 
             /* Database Information */
             var arangoUser = localStorage.getItem("arangoUser@WebOCD");
@@ -46,7 +47,7 @@
             var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
 
             //Testserver: http://ocd-web-client.duckdns.org:7071
-            //Server ginkgo from rwth: http://192.168.178.20:8529
+            //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8529
             const db = new arangojs.Database('http://127.0.0.1:8529');
 
             /* SVG for Visualization */
@@ -413,6 +414,61 @@
                 })
             }
 
+            /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
+            document.addEventListener('fullscreenchange', (event) => {
+                // document.fullscreenElement will point to the element that
+                // is in fullscreen mode if there is one. If there isn't one,
+                // the value of the property is null.
+                if (typeof document.fullscreenElement !== "undefined") {
+                    var elem = document.getElementById('forceVisualizationContent');
+
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph.width($('.forceVisualizationContent').width());
+                        jsonGraph.height($('.forceVisualizationContent').height());
+                    }
+                }
+            });
+
+            /* Handles fullscreen events on press of the F key over a force graph */
+            document.addEventListener('keyup', (e) => {
+                if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
+                {
+                    var elem = document.getElementById('forceVisualizationContent');
+
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.mozRequestFullScreen) { /* Firefox */
+                        elem.mozRequestFullScreen();
+                    } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                        elem.msRequestFullscreen();
+                    }
+
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph.width(screen.width);
+                        jsonGraph.height(screen.height);
+                    }
+                }
+                else if(e.code === "KeyF" && window.innerHeight === screen.height)
+                {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) { /* Firefox */
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { /* IE/Edge */
+                        document.msExitFullscreen();
+                    }
+                }
+            });
+
+            /* Opens the dropdown menu for entering database information */
+            function databaseInfoDropDown() {
+                document.getElementById("dataBaseDropDownContent").classList.toggle("show");
+            }
+
             function databaseInfoSubmit() {
                 arangoUser = $("#arangoUser").val();
                 arangoPass = $("#arangoPass").val();
@@ -423,6 +479,15 @@
                 localStorage.setItem("arangoPass@WebOCD",arangoPass);
                 localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
                 localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+
+                var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
             }
 
             // Close the dropdown menu if the user clicks outside of it
@@ -459,9 +524,10 @@
                         if (have3D === false) {
                             jsonGraph = ForceGraph()
                             (document.getElementById('forceVisualizationGraphic'))
+                                .backgroundColor("#fafafa")
                                 .graphData(graph)
                                 .nodeId('id')
-                                .nodeLabel('id')
+                                .nodeLabel('name')
                                 .onNodeClick(node => {
                                     if(arangoDataBase !== "" && arangoDataBase !== null
                                         && arangoUser !== "" && arangoUser !== null
@@ -501,7 +567,16 @@
                                     node.fy = null;
                                 })
                                 .linkSource('source')
-                                .linkDirectionalArrowLength(2)
+                                .onLinkRightClick(link => {
+                                    if (link !== rightClickLink) {
+                                        rightClickLink = link;
+                                    } else {
+                                        rightClickLink = null;
+                                    }
+                                })
+                                .linkWidth(link => link === rightClickLink ? 2.5 : 1.5)
+                                .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
+                                .linkDirectionalArrowLength(5)
                                 .linkDirectionalArrowRelPos(1)
                                 .linkTarget('target')
                                 .cooldownTicks(200);
@@ -510,7 +585,7 @@
                             (document.getElementById('forceVisualizationGraphic'))
                                 .graphData(graph)
                                 .nodeId('id')
-                                .nodeLabel('id')
+                                .nodeLabel('name')
                                 .onNodeClick(node => {
                                     if(arangoDataBase !== "" && arangoDataBase !== null
                                         && arangoUser !== "" && arangoUser !== null
@@ -552,17 +627,28 @@
                                     node.fz = null;
                                 })
                                 .linkSource('source')
+                                .onLinkRightClick(link => {
+                                    if (link !== rightClickLink) {
+                                        rightClickLink = link;
+                                    } else {
+                                        rightClickLink = null;
+                                    }
+                                    jsonGraph
+                                        .linkColor(jsonGraph.linkColor())
+                                        .linkWidth(jsonGraph.linkWidth())
+                                })
                                 .linkOpacity(0.35)
-                                .linkColor("#dedede")
-                                .linkWidth(0)
-                                .linkDirectionalArrowLength(2)
+                                .linkColor(link => link === rightClickLink ? "rgba(126,234,10,0.85)" : "#dedede")
+                                .linkWidth(link => link === rightClickLink ? 2 : 0)
+                                .linkDirectionalArrowLength(4)
                                 .linkDirectionalArrowRelPos(1)
                                 .linkTarget('target')
                                 .cooldownTicks(200);
                         }
 
                         jsonGraph.width($('.forceVisualizationContent').width());
-                        jsonGraph.height(800);
+                        jsonGraph.height($('.forceVisualizationContent').height());
+
                     },
                     /* Error handler */
                     function (errorData) {
@@ -824,13 +910,13 @@
                         <div class="collapsableContent">
                             <div class="optionRow" style="width:100%">
                                 <div class="dataBaseDropDown" style="width:19%">
-                                    <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
+                                    <button class="dropDownOpenButton" onclick="databaseInfoDropDown()" type='button'>Database</button>
                                     <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent">
                                         <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
-                                        <input class="dataBaseDropDownContentForm" id="arangoPass" type="text" name="arangoPass" placeholder="Password">
+                                        <input class="dataBaseDropDownContentForm" id="arangoPass" type="password" name="arangoPass" placeholder="Password">
                                         <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
                                         <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
-                                        <button class="dropDownCloseButton" onclick="databaseInfoSubmit()">Save</button>
+                                        <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
                                     </form>
                                 </div>
                                 <div class="btn-group" style="width:80%">
