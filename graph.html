@@ -539,17 +539,14 @@
 
                 if (number === 0) {
                     forceViz.style.display = "none";
-                    if (typeof jsonGraph !== "undefined") {
-                        jsonGraph.width($('.forceVisualizationContent').width());
-                        jsonGraph.height(800);
-                    }
+
                     svgViz.style.display = "inherit";
                     svgVizScroll.style.display = "inline";
                 } else if (number === 1 || number === 2) {
                     forceViz.style.display = "inherit";
                     if (typeof jsonGraph !== "undefined") {
                         jsonGraph.width($('.forceVisualizationContent').width());
-                        jsonGraph.height(800);
+                        jsonGraph.height($('.forceVisualizationContent').height());
                     }
                     svgViz.style.display = "none";
                     svgVizScroll.style.display = "none";
@@ -625,7 +622,35 @@
 
         /* Opens the dropdown menu for entering database information */
         function databaseInfoDropDown() {
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
             document.getElementById("dataBaseDropDownContent").classList.toggle("show");
+        }
+        /* Opens the search bar for nodes */
+        function searchDropDown() {
+            document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+            document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
+            if(document.getElementById("visualizationContent").style.display === "none") {
+                document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+            }
         }
 
         function databaseInfoSubmit() {
@@ -651,13 +676,59 @@
 
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function(event) {
-            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm')) {
+            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')) {
                 var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
                 var i;
                 for (i = 0; i < dropdowns.length; i++) {
                     var openDropdown = dropdowns[i];
                     if (openDropdown.classList.contains('show')) {
                         openDropdown.classList.remove('show');
+                    }
+                }
+                dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        /* Let the camera look at a specified node (if found) */
+        function nodeSearch(){
+            if (typeof jsonGraph !== "undefined") {
+                let searchNodeName = $("#nodeSearchForm").val();
+                for(let node of jsonGraph.graphData().nodes)
+                {
+                    if(node.name === searchNodeName)
+                    {
+                        if(have3D === false) {
+                            jsonGraph.centerAt(node.x, node.y);
+                            jsonGraph.zoom(9, 200);
+                            searchNodeName = undefined;
+                        } else {
+                            const distance = 40;
+                            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                            jsonGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                            searchNodeName = undefined;
+                        }
+                    }
+                }
+                if (typeof searchNodeName !== "undefined") {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
+                    document.getElementById("nodeSearchForm").placeholder = "Not found";
+                    document.getElementById("nodeSearchForm").value = "";
+                } else {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+                    document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+                    let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        let openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
                     }
                 }
             }
@@ -772,13 +843,6 @@
                             .linkDirectionalArrowRelPos(1)
                             .linkTarget('target')
                             .nodeCanvasObjectMode(node => highlightNodes.has(node.id) ? 'after' : undefined)
-                            /*.nodeCanvasObject((node, ctx) => {
-                            // add ring just for highlighted nodes
-                            ctx.beginPath();
-                            ctx.arc(node.x, node.y, (Math.log(degree[node.id] + 1)) + 6, 0, 2 * Math.PI, false);
-                            ctx.fillStyle = (node === rightClickNode) ? 'red' : 'orange';
-                            ctx.fill();
-                        })*/
                             .cooldownTicks(200);
                     } else {
                         jsonGraph = ForceGraph3D()
@@ -1250,7 +1314,7 @@
                         <div class="collapsableContent">
                             <!-- Three Graph type buttons in a group -->
                             <div class="optionRow" style="width:100%">
-                                <div class="dataBaseDropDown" style="width:19%">
+                                <div class="dataBaseDropDown" style="width:10%">
                                     <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
                                     <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
                                         <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
@@ -1260,7 +1324,14 @@
                                         <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
                                     </form>
                                 </div>
-                                <div class="btn-group" style="width:80%">
+                                <div class="searchDropDown" style="width:8%">
+                                    <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
+                                    <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button'>
+                                        <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
+                                        <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
+                                    </form>
+                                </div>
+                                <div class="btn-group" style="width:81%">
                                     <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
                                     <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
                                     <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
