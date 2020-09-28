@@ -585,7 +585,7 @@
             }
         });
 
-        /* Handles fullscreen events on press of the F key over a force graph */
+        /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search */
         document.addEventListener('keyup', (e) => {
             if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
             {
@@ -618,6 +618,10 @@
                     document.msExitFullscreen();
                 }
             }
+            else if(e.code === "Enter" && document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm"))
+            {
+                nodeSearch();
+            }
         });
 
         /* Opens the dropdown menu for entering database information */
@@ -633,6 +637,7 @@
             }
             document.getElementById("dataBaseDropDownContent").classList.toggle("show");
         }
+
         /* Opens the search bar for nodes */
         function searchDropDown() {
             document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
@@ -699,6 +704,7 @@
         function nodeSearch(){
             if (typeof jsonGraph !== "undefined") {
                 let searchNodeName = $("#nodeSearchForm").val();
+
                 for(let node of jsonGraph.graphData().nodes)
                 {
                     if(node.name === searchNodeName)
@@ -715,10 +721,9 @@
                         }
                     }
                 }
-                if (typeof searchNodeName !== "undefined") {
+                if (typeof searchNodeName !== "undefined" && searchNodeName !== "") {
                     document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
                     document.getElementById("nodeSearchForm").placeholder = "Not found";
-                    document.getElementById("nodeSearchForm").value = "";
                 } else {
                     document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
                     document.getElementById("nodeSearchForm").placeholder = "Node Name";
@@ -731,6 +736,7 @@
                         }
                     }
                 }
+                document.getElementById("nodeSearchForm").value = "";
             }
         }
 
@@ -1326,7 +1332,7 @@
                                 </div>
                                 <div class="searchDropDown" style="width:8%">
                                     <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
-                                    <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button'>
+                                    <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button' onSubmit="return false;">
                                         <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
                                         <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
                                     </form>
