@@ -38,6 +38,8 @@
             /* Graph structure in JSON format */
             var jsonGraph;
             var have3D;
+            var nodeName = "";
+            var keysPressed = new Map();
             var rightClickLink = null;
 
             /* Database Information */
@@ -426,7 +428,14 @@
                 }
             });
 
-            /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search */
+            /* Listener for Ctrl+C presses */
+            document.addEventListener('keydown', (e) => {
+                if(e.code === "KeyC" || e.code === "ControlLeft") {
+                    keysPressed.set(e.code,true);
+                }
+            });
+
+            /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
             document.addEventListener('keyup', (e) => {
                 if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
                 {
@@ -462,6 +471,19 @@
                 else if(e.code === "Enter" && document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm"))
                 {
                     nodeSearch();
+                }
+                else if(e.code === "KeyC" || e.code === "ControlLeft")
+                {
+                    if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
+                        if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
+                            searchDropDown();
+                        }
+
+                        document.getElementById("nodeSearchForm").value = nodeName;
+                        document.getElementById("nodeSearchForm").select();
+                        document.execCommand("copy", false, document.getElementById("nodeSearchForm").value);
+                    }
+                    keysPressed.set(e.code, false);
                 }
             });
 
@@ -604,6 +626,11 @@
                                 .graphData(graph)
                                 .nodeId('id')
                                 .nodeLabel('name')
+                                .onNodeHover(node => {
+                                    if(node != null) {
+                                        nodeName = node.name;
+                                    }
+                                })
                                 .onNodeClick(node => {
                                     if(arangoDataBase !== "" && arangoDataBase !== null
                                         && arangoUser !== "" && arangoUser !== null
@@ -662,6 +689,11 @@
                                 .graphData(graph)
                                 .nodeId('id')
                                 .nodeLabel('name')
+                                .onNodeHover(node => {
+                                    if(node != null) {
+                                        nodeName = node.name;
+                                    }
+                                })
                                 .onNodeClick(node => {
                                     if(arangoDataBase !== "" && arangoDataBase !== null
                                         && arangoUser !== "" && arangoUser !== null
