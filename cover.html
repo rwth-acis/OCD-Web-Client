@@ -472,7 +472,7 @@
                 {
                     nodeSearch();
                 }
-                else if(e.code === "KeyC" || e.code === "ControlLeft")
+                else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
                 {
                     if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
                         if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
