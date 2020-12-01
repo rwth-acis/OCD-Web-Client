@@ -7,8 +7,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <!-- TODO: Possibly omit https: again from the urls before pushing. Though this seems to be best practice now anyways -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script src="JS/bootstrap.min.js"></script>
         <script src="JS/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
@@ -20,6 +22,9 @@
         <script src="JS/jquery.tablesorter.js"></script>
         <script src="JS/jquery.panzoom.js"></script>
         <script src="JS/jquery.mousewheel.js"></script>
+        <script src="JS/force-graph/force-graph.js"></script>
+        <script src="JS/force-graph/3d-force-graph.js"></script>
+        <script src="JS/arangojs@6.14.1/lib/web.js"></script>
         <script type="text/javascript">
             /* Id of the corresponding graph */
             var graphId = getUrlVar("graphId");
@@ -30,6 +35,23 @@
             /* Meta Data Xmls of corresponding ground truth candidates (for metric execution) */
             var groundTruthMetasXml;
 //            var coverDefaultXml;
+            /* Graph structure in JSON format */
+            var jsonGraph;
+            var have3D;
+            var nodeName = "";
+            var keysPressed = new Map();
+            var rightClickLink = null;
+
+            /* Database Information */
+            var arangoUser = localStorage.getItem("arangoUser@WebOCD");
+            var arangoPass = localStorage.getItem("arangoPass@WebOCD");
+            var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
+            var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
+
+            //Testserver: http://ocd-web-client.duckdns.org:7071
+            //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8529
+            const db = new arangojs.Database('http://127.0.0.1:8529');
+
             /* SVG for Visualization */
             var visualization;
             /* Maximum ground truth candidates (for metric execution) displayed per page */
@@ -346,15 +368,421 @@
                         showConnectionErrorMessage("Cover was not received.");
                     }, "text");
             }
-            /* Handles the visualization collapsable element */
+
+            /* Handles what happens on the visualization type Button presses */
+            function buttonClick(number) {
+                $(document).ready(function () {
+
+                    let svgVizScroll = document.getElementById("visualizationZoomer");
+                    let svgViz = document.getElementById("visualizationContent");
+                    let forceViz = document.getElementById("forceVisualizationContent");
+
+                    highlightNodes = new Set();
+                    highlightLinks = new Set();
+
+                    if (number === 0) {
+                        forceViz.style.display = "none";
+
+                        svgViz.style.display = "inherit";
+                        svgVizScroll.style.display = "inline";
+                    } else if (number === 1 || number === 2) {
+                        forceViz.style.display = "inherit";
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph.width($('.forceVisualizationContent').width());
+                            jsonGraph.height($('.forceVisualizationContent').height());
+                        }
+                        svgViz.style.display = "none";
+                        svgVizScroll.style.display = "none";
+
+                        if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
+                            have3D = false;
+                            //console.log("2D");
+                            if (typeof jsonGraph !== "undefined") {
+                                jsonGraph._destructor();
+                            }
+                            getJSON();
+                        } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
+                            have3D = true;
+                            //console.log("3D");
+                            if (typeof jsonGraph !== "undefined") {
+                                jsonGraph._destructor();
+                            }
+                            getJSON();
+                        }
+                    }
+                })
+            }
+
+            /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
+            document.addEventListener('fullscreenchange', (event) => {
+                // document.fullscreenElement will point to the element that
+                // is in fullscreen mode if there is one. If there isn't one,
+                // the value of the property is null.
+                if (typeof document.fullscreenElement !== "undefined") {
+                    var elem = document.getElementById('forceVisualizationContent');
+
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph.width($('.forceVisualizationContent').width());
+                        jsonGraph.height($('.forceVisualizationContent').height());
+                    }
+                }
+            });
+
+            /* Listener for Ctrl+C presses */
+            document.addEventListener('keydown', (e) => {
+                if(e.code === "KeyC" || e.code === "ControlLeft") {
+                    keysPressed.set(e.code,true);
+                }
+            });
+
+            /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
+            document.addEventListener('keyup', (e) => {
+                if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
+                {
+                    var elem = document.getElementById('forceVisualizationContent');
+
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.mozRequestFullScreen) { /* Firefox */
+                        elem.mozRequestFullScreen();
+                    } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                        elem.msRequestFullscreen();
+                    }
+
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph.width(screen.width);
+                        jsonGraph.height(screen.height);
+                    }
+                }
+                else if(e.code === "KeyF" && window.innerHeight === screen.height)
+                {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) { /* Firefox */
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { /* IE/Edge */
+                        document.msExitFullscreen();
+                    }
+                }
+                else if(e.code === "Enter" && document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm"))
+                {
+                    nodeSearch();
+                }
+                else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
+                {
+                    if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
+                        if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
+                            searchDropDown();
+                        }
+
+                        document.getElementById("nodeSearchForm").value = nodeName;
+                        document.getElementById("nodeSearchForm").select();
+                        document.execCommand("copy", false, document.getElementById("nodeSearchForm").value);
+                    }
+                    keysPressed.set(e.code, false);
+                }
+            });
+
+            /* Opens the dropdown menu for entering database information */
+            function databaseInfoDropDown() {
+                // Close other menu
+                let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                let i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+                document.getElementById("dataBaseDropDownContent").classList.toggle("show");
+            }
+            /* Opens the search bar for nodes */
+            function searchDropDown() {
+                document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+                document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+                // Close other menu
+                let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                let i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+
+                if(document.getElementById("visualizationContent").style.display === "none") {
+                    document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+                }
+            }
+
+            function databaseInfoSubmit() {
+                arangoUser = $("#arangoUser").val();
+                arangoPass = $("#arangoPass").val();
+                arangoDataBase = $("#arangoDataBase").val();
+                arangoCollection = $("#arangoCollection").val();
+
+                localStorage.setItem("arangoUser@WebOCD",arangoUser);
+                localStorage.setItem("arangoPass@WebOCD",arangoPass);
+                localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
+                localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+
+                var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+
+            // Close the dropdown menu if the user clicks outside of it
+            window.onclick = function(event) {
+                if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')) {
+                    var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                    var i;
+                    for (i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                    dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                    for (i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+            }
+
+            /* Let the camera look at a specified node (if found) */
+            function nodeSearch(){
+                if (typeof jsonGraph !== "undefined") {
+                    let searchNodeName = $("#nodeSearchForm").val();
+
+                    for(let node of jsonGraph.graphData().nodes)
+                    {
+                        if(node.name === searchNodeName)
+                        {
+                            if(have3D === false) {
+                                jsonGraph.centerAt(node.x, node.y);
+                                jsonGraph.zoom(9, 200);
+                                searchNodeName = undefined;
+                            } else {
+                                const distance = 40;
+                                const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                                jsonGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                                searchNodeName = undefined;
+                            }
+                        }
+                    }
+                    if (typeof searchNodeName !== "undefined" && searchNodeName !== "") {
+                        document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
+                        document.getElementById("nodeSearchForm").placeholder = "Not found";
+                    } else {
+                        document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+                        document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+                        let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                        for (let i = 0; i < dropdowns.length; i++) {
+                            let openDropdown = dropdowns[i];
+                            if (openDropdown.classList.contains('show')) {
+                                openDropdown.classList.remove('show');
+                            }
+                        }
+                    }
+                    document.getElementById("nodeSearchForm").value = "";
+                }
+            }
+
+            /* Requests and stores a JSON representation of the graph.
+             * Then executes a callback function */
+            function getJSON() {
+                //TODO: Change
+                sendRequest("get", "visualization/cover/" + coverId + "/graph/"
+                    + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    function (response) {
+                        jsonGraph = response;
+                        //console.log("jsonGRAPH prev: " + jsonGraph)
+                        var graph = JSON.parse(jsonGraph);
+                        var sizes = new Map();
+                        var colors = new Map();
+                        for (let node of graph.nodes) {
+                            sizes[node.id] = node.size;
+                            colors[node.id] = node.color;
+                        }
+
+                        if (have3D === false) {
+                            jsonGraph = ForceGraph()
+                            (document.getElementById('forceVisualizationGraphic'))
+                                .backgroundColor("#fafafa")
+                                .graphData(graph)
+                                .nodeId('id')
+                                .nodeLabel('name')
+                                .onNodeHover(node => {
+                                    if(node != null) {
+                                        nodeName = node.name;
+                                    }
+                                })
+                                .onNodeClick(node => {
+                                    if(arangoDataBase !== "" && arangoDataBase !== null
+                                        && arangoUser !== "" && arangoUser !== null
+                                        && arangoPass !== null
+                                        && arangoCollection !== "" && arangoCollection !== null) {
+
+                                        db.useDatabase(arangoDataBase);
+                                        db.useBasicAuth(arangoUser, arangoPass);
+                                        const docCollection = db.collection(arangoCollection);
+                                        docCollection.document(node.name, true).then(function (doc) {
+                                            let nodeWindow = window.open("", '_blank');
+
+                                            if (doc != null) {
+                                                //console.log(JSON.stringify(doc, null, '    '));
+                                                let docStr = JSON.stringify(doc, null, '    ');
+                                                docStr = docStr.replace(/\n/g, "<br />");
+                                                nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                            } else {
+                                                nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                            }
+                                        }).catch((err) => console.error(err));
+                                    }
+                                })
+                                .nodeVal(function(node) {
+                                    return sizes[node.id] - 19
+                                })
+                                .nodeColor(function (node) {
+                                    return colors[node.id];
+                                })
+                                .onNodeDragEnd(node => {
+                                    node.fx = node.x;
+                                    node.fy = node.y;
+                                })
+                                .onNodeRightClick(node => {
+                                    //TODO: Seem a bit slow after restoring, check original forces/velocity
+                                    node.fx = null;
+                                    node.fy = null;
+                                })
+                                .linkSource('source')
+                                .onLinkRightClick(link => {
+                                    if (link !== rightClickLink) {
+                                        rightClickLink = link;
+                                    } else {
+                                        rightClickLink = null;
+                                    }
+                                })
+                                .linkWidth(link => link === rightClickLink ? 2.5 : 1.5)
+                                .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
+                                .linkDirectionalArrowLength(5)
+                                .linkDirectionalArrowRelPos(1)
+                                .linkTarget('target')
+                                .cooldownTicks(200);
+                        } else {
+                            jsonGraph = ForceGraph3D()
+                            (document.getElementById('forceVisualizationGraphic'))
+                                .graphData(graph)
+                                .nodeId('id')
+                                .nodeLabel('name')
+                                .onNodeHover(node => {
+                                    if(node != null) {
+                                        nodeName = node.name;
+                                    }
+                                })
+                                .onNodeClick(node => {
+                                    if(arangoDataBase !== "" && arangoDataBase !== null
+                                        && arangoUser !== "" && arangoUser !== null
+                                        && arangoPass !== null
+                                        && arangoCollection !== "" && arangoCollection !== null) {
+
+                                        db.useDatabase(arangoDataBase);
+                                        db.useBasicAuth(arangoUser, arangoPass);
+                                        const docCollection = db.collection(arangoCollection);
+                                        docCollection.document(node.name, true).then(function (doc) {
+                                            let nodeWindow = window.open("", '_blank');
+
+                                            if (doc != null) {
+                                                //console.log(JSON.stringify(doc, null, '    '));
+                                                let docStr = JSON.stringify(doc, null, '    ');
+                                                docStr = docStr.replace(/\n/g, "<br />");
+                                                nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                            } else {
+                                                nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                            }
+                                        }).catch((err) => console.error(err));
+                                    }
+                                })
+                                .nodeVal(function(node) {
+                                    return sizes[node.id] - 19
+                                })
+                                .nodeColor(function (node) {
+                                    return colors[node.id];
+                                })
+                                .onNodeDragEnd(node => {
+                                    node.fx = node.x;
+                                    node.fy = node.y;
+                                    node.fz = node.z;
+                                })
+                                .onNodeRightClick(node => {
+                                    //TODO: Seem a bit slow after restoring, check original forces/velocity
+                                    node.fx = null;
+                                    node.fy = null;
+                                    node.fz = null;
+                                })
+                                .linkSource('source')
+                                .onLinkRightClick(link => {
+                                    if (link !== rightClickLink) {
+                                        rightClickLink = link;
+                                    } else {
+                                        rightClickLink = null;
+                                    }
+                                    jsonGraph
+                                        .linkColor(jsonGraph.linkColor())
+                                        .linkWidth(jsonGraph.linkWidth())
+                                })
+                                .linkOpacity(0.35)
+                                .linkColor(link => link === rightClickLink ? "rgba(126,234,10,0.85)" : "#dedede")
+                                .linkWidth(link => link === rightClickLink ? 2 : 0)
+                                .linkDirectionalArrowLength(4)
+                                .linkDirectionalArrowRelPos(1)
+                                .linkTarget('target')
+                                .cooldownTicks(200);
+                        }
+
+                        jsonGraph.width($('.forceVisualizationContent').width());
+                        jsonGraph.height($('.forceVisualizationContent').height());
+
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                         * GraphIds request failed
+                         */
+                        showConnectionErrorMessage("Visualization was not received.");
+                    });
+            }
+
+            /* Handles the collapsable element for the graph visualization */
             function visualizationCollapsableHandler() {
-                /* Request the visualization */
-                if(typeof visualization === 'undefined') {
+                /* Requests the graph visualization */
+                if (typeof visualization === 'undefined') {
                     getVisualization();
                 }
+
                 /* Registers the visualization for panzoom */
-                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
-                $panzoom.on('mousewheel', function( e ) {
+                var $panzoom = $('body').find('.visualizationGraphic').panzoom({
+                    $zoomRange: $('body').find(".visualizationZoomer"),
+                    increment: 0.9,
+                    contain: 'invert',
+                    maxScale: 10,
+                    minScale: 1
+                });
+                $panzoom.on('mousewheel', function (e) {
                     e.preventDefault();
                     var delta = e.delta || e.originalEvent.wheelDelta;
                     var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
@@ -588,13 +1016,40 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <div class="visualization">
-                                <div class="visualizationControl">
-                                    <input class="visualizationZoomer" type="range">
+                            <div class="optionRow" style="width:100%">
+                                <div class="dataBaseDropDown" style="width:10%">
+                                    <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
+                                    <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
+                                        <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
+                                        <input class="dataBaseDropDownContentForm" id="arangoPass" type="password" name="arangoPass" placeholder="Password">
+                                        <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
+                                        <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
+                                        <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
+                                    </form>
                                 </div>
-                                <div class="visualizationContent">
-                                    <div class="visualizationGraphic">
-                                    </div>
+                                <div class="searchDropDown" style="width:8%">
+                                    <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
+                                    <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button' onSubmit="return false;">
+                                        <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
+                                        <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
+                                    </form>
+                                </div>
+                                <div class="btn-group" style="width:81%">
+                                    <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
+                                    <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
+                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                                </div>
+                            </div>
+                            <!-- Container for graph visualization -->
+                            <div class="visualization">
+                                <div class="visualizationControl" id="visualizationControl">
+                                    <input id="visualizationZoomer" class="visualizationZoomer" type="range">
+                                </div>
+                                <div id="visualizationContent" class="visualizationContent">
+                                    <div class="visualizationGraphic"></div>
+                                </div>
+                                <div id="forceVisualizationContent" class="forceVisualizationContent">
+                                    <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
                                 </div>
                             </div>
                         </div>

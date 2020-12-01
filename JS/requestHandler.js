@@ -9,7 +9,9 @@
  */
 
 /* Base URL of the OCD Service */
-var baseUrl = "http://127.0.0.1:8080/ocd";
+var baseUrl = "http://127.0.0.1:8080/ocd"
+//Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8080/ocd
+//var baseUrl = "http://ocd-web-client.duckdns.org:7070/ocd"
 //var baseUrl = "http://beckmann.informatik.rwth-aachen.de:7070/ocd";
 
 
@@ -60,7 +62,8 @@ function createRequest(method, url, content, callback, errorcallback, mimeType) 
  * Checks whether an error xml is returned.
  */
 function checkForErrorXML(data, successCallback) {
-    if($(data).is("Error")) {
+    //Only Check if Document actually is xml TODO: Maybe find another way for this, it is a bit hacky
+    if(data.includes("<?xml version") && $(data).is("Error")) {
         /*
          * Error xml was returned.
          * Displays the error message via the content handler.

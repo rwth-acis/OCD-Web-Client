@@ -1,395 +1,895 @@
 <!DOCTYPE html>
 <!-- Displays detailed information on a single centrality. -->
 <html>
-    <head>
-        <title>Centrality Map</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
-        <script src="JS/bootstrap.min.js"></script>
-        <script src="JS/jquery.session.js"></script>
-        <script src="JS/contentHandler.js"></script>
-        <script src="JS/ServiceAPI/b64.js"></script>
-        <script src="JS/ServiceAPI/moduleHelper.js"></script>
-        <script src="JS/ServiceAPI/serviceAPI.js"></script>
-        <script src="JS/requestHandler.js"></script>
-        <script src="JS/centralityTableHandler.js"></script>
-        <script src="JS/jquery.tablesorter.js"></script>
-        <script src="JS/jquery.panzoom.js"></script>
-        <script src="JS/jquery.mousewheel.js"></script>
-        <script type="text/javascript">
-            /* Id of the corresponding graph */
-            var graphId = getUrlVar("graphId");
-            /* Id of the centrality map */
-            var mapId = getUrlVar("mapId");
-            /* Meta Data Xml */
-            var mapMetaXml;
-            /* Map Data Xml */
-            var mapDefaultXml;
-            /* SVG for Visualization */
-            var visualization;
-            /* Names of all visualization types */
-            var visualizationTypeNames;
-            /* Maximum ground truth candidates (for metric execution) displayed per page */
-            var ENTRIES_PER_PAGE = 20;
-            /* Current page of ground truth candidates (for metric execution) */
-            var pageNumber = 0;
-            /* Default select option value */
-            var selectOptionVal = "SELECT";
-            /* Default select option code */
-            var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
-            /* Indicates whether the values were already added to the table */
-            var valuesAdded = false;
-            /* Indicates whether the parameters were already added to the table */
-            var parametersAdded = false;
-            /* Indicates whether the mapDefaultXml was already requested and saved */
-            var xmlSet = false;
-            /* Indicates whether the values modal has been answered */
-            var modalAnswered = false;
+<head>
+    <title>Centrality Map</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+    <!-- TODO: Possibly omit https: again from the urls before pushing. Though this seems to be best practice now anyways -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/jquery.session.js"></script>
+    <script src="JS/contentHandler.js"></script>
+    <script src="JS/ServiceAPI/b64.js"></script>
+    <script src="JS/ServiceAPI/moduleHelper.js"></script>
+    <script src="JS/ServiceAPI/serviceAPI.js"></script>
+    <script src="JS/requestHandler.js"></script>
+    <script src="JS/centralityTableHandler.js"></script>
+    <script src="JS/jquery.tablesorter.js"></script>
+    <script src="JS/jquery.panzoom.js"></script>
+    <script src="JS/jquery.mousewheel.js"></script>
+    <script src="JS/force-graph/force-graph.js"></script>
+    <script src="JS/force-graph/3d-force-graph.js"></script>
+    <script src="JS/arangojs@6.14.1/lib/web.js"></script>
+    <script type="text/javascript">
+        /* Id of the corresponding graph */
+        var graphId = getUrlVar("graphId");
+        /* Id of the centrality map */
+        var mapId = getUrlVar("mapId");
+        /* Meta Data Xml */
+        var mapMetaXml;
+        /* Map Data Xml */
+        var mapDefaultXml;
+        /* Graph structure in JSON format */
+        var jsonGraph;
+        var have3D;
+        var nodeName = "";
+        var keysPressed = new Map();
+        var rightClickLink = null;
+        var displayingForceGraph = false;
 
-            $(document).ready(function() {
-                /* Identifiers for meta information to be displayed */
-                var cells = ["Name", "Graph", "Creation Method", "Execution Time", "R"];
-                /* Requests centrality map meta information */
-                sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
-                    /* Response handler */
-                    function(response) {
-                        /*
-                         * Init meta table
-                         */
-                        mapMetaXml = response;
-                        appendCentralityMapRow($('#mapMetaTable'), mapMetaXml, cells);
+        /* Database Information */
+        var arangoUser = localStorage.getItem("arangoUser@WebOCD");
+        var arangoPass = localStorage.getItem("arangoPass@WebOCD");
+        var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
+        var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
 
-                        registerCentralityTable();
-                        registerCollapsable("#valuesCollapsable", valuesCollapsableHandler);
-                        registerCollapsable("#parametersCollapsable", parametersCollapsableHandler);
-                        registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        /*
-                         * Centrality map request failed
-                         */
-                        showConnectionErrorMessage("Centrality map was not received.");
-                    }, "text");
+        //Testserver: http://ocd-web-client.duckdns.org:7071
+        //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8529
+        const db = new arangojs.Database('http://127.0.0.1:8529');
 
-                $('#showAllButton').click(function() {
-                    modalAnswered = true;
-                    /* Sends a request for the centrality map information */
-                    getDefaultXml(function() {
-                        initValuesTable(mapDefaultXml, "#valuesTable", false);
-                        valuesAdded = true;
-                    });
-                });
-                $('#showTopKButton').click(function() {
-                    modalAnswered = true;
-                    var k = $('#topNodesInput').val();
-                    if(k != "") {
-                        var graphSize = $(mapMetaXml).find('GraphSize').text();
-                        if(k <= graphSize) {
-                            getDefaultXmlTopNodesOnly(true, k, function() {
-                                initValuesTable(mapDefaultXml, "#valuesTable", false);
-                                valuesAdded = true;
-                            });
-                            $('#showValuesModal').modal('toggle');
-                        }
-                        else {
-                            $('#showValuesModalBody').html("<p>Please select a smaller value.</p>");
-                        }
-                    }
+        /* SVG for Visualization */
+        var visualization;
+        /* Names of all visualization types */
+        var visualizationTypeNames;
+        /* Maximum ground truth candidates (for metric execution) displayed per page */
+        var ENTRIES_PER_PAGE = 20;
+        /* Current page of ground truth candidates (for metric execution) */
+        var pageNumber = 0;
+        /* Default select option value */
+        var selectOptionVal = "SELECT";
+        /* Default select option code */
+        var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
+        /* Indicates whether the values were already added to the table */
+        var valuesAdded = false;
+        /* Indicates whether the parameters were already added to the table */
+        var parametersAdded = false;
+        /* Indicates whether the mapDefaultXml was already requested and saved */
+        var xmlSet = false;
+        /* Indicates whether the values modal has been answered */
+        var modalAnswered = false;
+
+        $(document).ready(function () {
+            /* Identifiers for meta information to be displayed */
+            var cells = ["Name", "Graph", "Creation Method", "Execution Time", "R"];
+            /* Requests centrality map meta information */
+            sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
+                /* Response handler */
+                function (response) {
+                    /*
+                     * Init meta table
+                     */
+                    mapMetaXml = response;
+                    appendCentralityMapRow($('#mapMetaTable'), mapMetaXml, cells);
+
+                    registerCentralityTable();
+                    registerCollapsable("#valuesCollapsable", valuesCollapsableHandler);
+                    registerCollapsable("#parametersCollapsable", parametersCollapsableHandler);
+                    registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Centrality map request failed
+                     */
+                    showConnectionErrorMessage("Centrality map was not received.");
+                }, "text");
+
+            $('#showAllButton').click(function () {
+                modalAnswered = true;
+                /* Sends a request for the centrality map information */
+                getDefaultXml(function () {
+                    initValuesTable(mapDefaultXml, "#valuesTable", false);
+                    valuesAdded = true;
                 });
             });
-
-            /*
-             * Add centrality values to the table and register precision checkbox
-             */
-            function valuesCollapsableHandler() {
-                if(!valuesAdded) {
-                    /*
-                    * Init values table
-                    */
-                    if(!xmlSet || !modalAnswered) {
-                        $('#showValuesModal').modal();
-                    }
-                    else {
-                        initValuesTable(mapDefaultXml, "#valuesTable", false);
-                        valuesAdded = true;
-                    }
-                    $('#precisionCheckbox').change(function() {
-                        $("#tableWrapper1").html("");
-                        $("#tableWrapper1").append('<table id="valuesTable" class="table"><thead><tr><th title="Node">Node</th><th title="Value">Value</th></tr></thead><tbody></tbody></table>');
-                        if(xmlSet && modalAnswered) {
-                            if (this.checked) {
-                                initValuesTable(mapDefaultXml, "#valuesTable", true);
-                            } else {
-                                initValuesTable(mapDefaultXml, "#valuesTable", false);
-                            }
-                        }
-                    });
-                }
-            }
-
-            function parametersCollapsableHandler() {
-                if(!parametersAdded) {
-                    /*
-                    * Init parameters table
-                    */
-                    if(!xmlSet) {
-                        getDefaultXml(function() {
-                            $(mapDefaultXml).find("Parameter").each(function() {
-                                addParameters($(this), "#parametersTable");
-                            });
+            $('#showTopKButton').click(function () {
+                modalAnswered = true;
+                var k = $('#topNodesInput').val();
+                if (k != "") {
+                    var graphSize = $(mapMetaXml).find('GraphSize').text();
+                    if (k <= graphSize) {
+                        getDefaultXmlTopNodesOnly(true, k, function () {
+                            initValuesTable(mapDefaultXml, "#valuesTable", false);
+                            valuesAdded = true;
                         });
+                        $('#showValuesModal').modal('toggle');
+                    } else {
+                        $('#showValuesModalBody').html("<p>Please select a smaller value.</p>");
                     }
-                    else {
-                        $(mapDefaultXml).find("Parameter").each(function() {
+                }
+            });
+        });
+
+        /*
+         * Add centrality values to the table and register precision checkbox
+         */
+        function valuesCollapsableHandler() {
+            if (!valuesAdded) {
+                /*
+                * Init values table
+                */
+                if (!xmlSet || !modalAnswered) {
+                    $('#showValuesModal').modal();
+                } else {
+                    initValuesTable(mapDefaultXml, "#valuesTable", false);
+                    valuesAdded = true;
+                }
+                $('#precisionCheckbox').change(function () {
+                    $("#tableWrapper1").html("");
+                    $("#tableWrapper1").append('<table id="valuesTable" class="table"><thead><tr><th title="Node">Node</th><th title="Value">Value</th></tr></thead><tbody></tbody></table>');
+                    if (xmlSet && modalAnswered) {
+                        if (this.checked) {
+                            initValuesTable(mapDefaultXml, "#valuesTable", true);
+                        } else {
+                            initValuesTable(mapDefaultXml, "#valuesTable", false);
+                        }
+                    }
+                });
+            }
+        }
+
+        function parametersCollapsableHandler() {
+            if (!parametersAdded) {
+                /*
+                * Init parameters table
+                */
+                if (!xmlSet) {
+                    getDefaultXml(function () {
+                        $(mapDefaultXml).find("Parameter").each(function () {
                             addParameters($(this), "#parametersTable");
                         });
+                    });
+                } else {
+                    $(mapDefaultXml).find("Parameter").each(function () {
+                        addParameters($(this), "#parametersTable");
+                    });
+                }
+                parametersAdded = true;
+            }
+        }
+
+        /* Requests the default / general information about the centrality map
+         * Then executes a callback function */
+        function getDefaultXml(callback) {
+            getDefaultXmlTopNodesOnly(false, 0, callback);
+        }
+
+        /* Requests the default / general information about the centrality map
+         * Then executes a callback function */
+        function getDefaultXmlTopNodesOnly(onlyTopNode, k, callback) {
+            sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=DEFAULT_XML&onlyTopNodes=" + onlyTopNode + "&topNodesNumber=" + k, "",
+                /* Response handler */
+                function (response) {
+                    mapDefaultXml = response;
+                    xmlSet = true;
+                    if (typeof callback !== 'undefined') {
+                        callback();
                     }
-                    parametersAdded = true;
-                }
-            }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Centrality map request failed
+                     */
+                    showConnectionErrorMessage("Centrality map was not received.");
+                }, "text");
+        }
 
-            /* Requests the default / general information about the centrality map
-             * Then executes a callback function */
-            function getDefaultXml(callback) {
-                getDefaultXmlTopNodesOnly(false, 0, callback);
-            }
+        /* Handles what happens on the visualization type Button presses */
+        function buttonClick(number) {
+            $(document).ready(function () {
+                let svgVizScroll = document.getElementById("visualizationZoomer");
+                let svgViz = document.getElementById("visualizationContent");
+                let forceViz = document.getElementById("forceVisualizationContent");
 
-            /* Requests the default / general information about the centrality map
-             * Then executes a callback function */
-            function getDefaultXmlTopNodesOnly(onlyTopNode, k, callback) {
-                sendRequest("get", "centrality/" + mapId + "/graphs/" + graphId + "?outputFormat=DEFAULT_XML&onlyTopNodes=" + onlyTopNode + "&topNodesNumber=" + k, "",
-                    /* Response handler */
-                    function(response) {
-                        mapDefaultXml = response;
-                        xmlSet = true;
-                        if(typeof callback !== 'undefined') {
-                            callback();
+                highlightNodes = new Set();
+                highlightLinks = new Set();
+
+                if (number === 0) {
+                    displayingForceGraph = false;
+
+                    forceViz.style.display = "none";
+
+                    svgViz.style.display = "inherit";
+                    svgVizScroll.style.display = "inline";
+                } else if (number === 1 || number === 2) {
+                    displayingForceGraph = true;
+
+                    forceViz.style.display = "inherit";
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph.width($('.forceVisualizationContent').width());
+                        jsonGraph.height($('.forceVisualizationContent').height());
+                    }
+                    svgViz.style.display = "none";
+                    svgVizScroll.style.display = "none";
+
+                    if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
+                        have3D = false;
+                        //console.log("2D");
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph._destructor();
                         }
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        /*
-                         * Centrality map request failed
-                         */
-                        showConnectionErrorMessage("Centrality map was not received.");
-                    }, "text");
+                        getJSON();
+                    } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
+                        have3D = true;
+                        //console.log("3D");
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph._destructor();
+                        }
+                        getJSON();
+                    }
+                }
+            })
+        }
+
+        /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
+        document.addEventListener('fullscreenchange', (event) => {
+            // document.fullscreenElement will point to the element that
+            // is in fullscreen mode if there is one. If there isn't one,
+            // the value of the property is null.
+            if (typeof document.fullscreenElement !== "undefined") {
+                var elem = document.getElementById('forceVisualizationContent');
+
+                if (typeof jsonGraph !== "undefined") {
+                    jsonGraph.width($('.forceVisualizationContent').width());
+                    jsonGraph.height($('.forceVisualizationContent').height());
+                }
+            }
+        });
+
+        /* Listener for Ctrl+C presses */
+        document.addEventListener('keydown', (e) => {
+            if(e.code === "KeyC" || e.code === "ControlLeft") {
+                keysPressed.set(e.code,true);
+            }
+        });
+
+        /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
+        document.addEventListener('keyup', (e) => {
+            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
+            {
+                var elem = document.getElementById('forceVisualizationContent');
+
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                    elem.msRequestFullscreen();
+                }
+
+                if (typeof jsonGraph !== "undefined") {
+                    jsonGraph.width(screen.width);
+                    jsonGraph.height(screen.height);
+                }
+            }
+            else if(e.code === "KeyF" && window.innerHeight === screen.height)
+            {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { /* Firefox */
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE/Edge */
+                    document.msExitFullscreen();
+                }
+            }
+            else if(e.code === "Enter" && document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm"))
+            {
+                nodeSearch();
+            }
+            else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
+            {
+                if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
+                    if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
+                        searchDropDown();
+                    }
+
+                    document.getElementById("nodeSearchForm").value = nodeName;
+                    document.getElementById("nodeSearchForm").select();
+                    document.execCommand("copy", false, document.getElementById("nodeSearchForm").value);
+                }
+                keysPressed.set(e.code, false);
+            }
+        });
+
+        /* Opens the dropdown menu for entering database information */
+        function databaseInfoDropDown() {
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+            document.getElementById("dataBaseDropDownContent").classList.toggle("show");
+        }
+        /* Opens the search bar for nodes */
+        function searchDropDown() {
+            document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+            document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
             }
 
-            /* Handles the collapsable element for the graph visualization */
-            function visualizationCollapsableHandler() {
-                $("#visualizationType").change(function() {
-                    getVisualization();
+            if(document.getElementById("visualizationContent").style.display === "none") {
+                document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+            }
+        }
+
+        function databaseInfoSubmit() {
+            arangoUser = $("#arangoUser").val();
+            arangoPass = $("#arangoPass").val();
+            arangoDataBase = $("#arangoDataBase").val();
+            arangoCollection = $("#arangoCollection").val();
+
+            localStorage.setItem("arangoUser@WebOCD",arangoUser);
+            localStorage.setItem("arangoPass@WebOCD",arangoPass);
+            localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
+            localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+
+            var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')) {
+                var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+                dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        /* Let the camera look at a specified node (if found) */
+        function nodeSearch(){
+            if (typeof jsonGraph !== "undefined") {
+                let searchNodeName = $("#nodeSearchForm").val();
+
+                for(let node of jsonGraph.graphData().nodes)
+                {
+                    if(node.name === searchNodeName)
+                    {
+                        if(have3D === false) {
+                            jsonGraph.centerAt(node.x, node.y);
+                            jsonGraph.zoom(9, 200);
+                            searchNodeName = undefined;
+                        } else {
+                            const distance = 40;
+                            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                            jsonGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                            searchNodeName = undefined;
+                        }
+                    }
+                }
+                if (typeof searchNodeName !== "undefined" && searchNodeName !== "") {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
+                    document.getElementById("nodeSearchForm").placeholder = "Not found";
+                } else {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+                    document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+                    let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        let openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+                document.getElementById("nodeSearchForm").value = "";
+            }
+        }
+
+        /* Requests and stores a JSON representation of the graph.
+         * Then executes a callback function */
+        function getJSON() {
+            var visualizationType = "NODE_SIZE";
+            if ($('#visualizationType').val() !== null) {
+                visualizationType = $('#visualizationType').val();
+            }
+
+            sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+                function (response) {
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph._destructor();
+                    }
+
+                    jsonGraph = response;
+                    //console.log("jsonGRAPH prev: " + jsonGraph + visualizationType)
+                    let graph = JSON.parse(jsonGraph);
+                    let sizes = new Map();
+                    let colors = new Map();
+                    let size_min = Number.MAX_VALUE;
+                    for (let node of graph.nodes) {
+                        sizes[node.id] = node.size;
+                        if (node.size < size_min) {
+                            size_min = node.size;
+                        }
+
+                        colors[node.id] = node.color;
+                    }
+                    //console.log(size_min);
+
+                    if (have3D === false) {
+                        jsonGraph = ForceGraph()
+                        (document.getElementById('forceVisualizationGraphic'))
+                            .backgroundColor("#fafafa")
+                            .graphData(graph)
+                            .nodeId('id')
+                            .nodeLabel('name')
+                            .onNodeHover(node => {
+                                if(node != null) {
+                                    nodeName = node.name;
+                                }
+                            })
+                            .onNodeClick(node => {
+                                if(arangoDataBase !== "" && arangoDataBase !== null
+                                    && arangoUser !== "" && arangoUser !== null
+                                    && arangoPass !== null
+                                    && arangoCollection !== "" && arangoCollection !== null) {
+
+                                    db.useDatabase(arangoDataBase);
+                                    db.useBasicAuth(arangoUser, arangoPass);
+                                    const docCollection = db.collection(arangoCollection);
+                                    docCollection.document(node.name, true).then(function (doc) {
+                                        let nodeWindow = window.open("", '_blank');
+
+                                        if (doc != null) {
+                                            //console.log(JSON.stringify(doc, null, '    '));
+                                            let docStr = JSON.stringify(doc, null, '    ');
+                                            docStr = docStr.replace(/\n/g, "<br />");
+                                            nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                        } else {
+                                            nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                        }
+                                    }).catch((err) => console.error(err));
+                                }
+                            })
+                            .nodeVal(function (node) {
+                                if (visualizationType === "NODE_SIZE") {
+                                    return sizes[node.id] - size_min + 1;
+                                } else {
+                                    return 2;
+                                }
+                            })
+                            .nodeColor(function (node) {
+                                if (visualizationType !== "NODE_SIZE") {
+                                    return colors[node.id];
+                                } else {
+                                    return '#3183ba';
+                                }
+                            })
+                            .onNodeDragEnd(node => {
+                                node.fx = node.x;
+                                node.fy = node.y;
+                            })
+                            .onNodeRightClick(node => {
+                                //TODO: Seem a bit slow after restoring, check original forces/velocity
+                                node.fx = null;
+                                node.fy = null;
+                            })
+                            .linkSource('source')
+                            .onLinkRightClick(link => {
+                                if (link !== rightClickLink) {
+                                    rightClickLink = link;
+                                } else {
+                                    rightClickLink = null;
+                                }
+                            })
+                            .linkWidth(link => link === rightClickLink ? 2.5 : 1.5)
+                            .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
+                            .linkDirectionalArrowLength(5)
+                            .linkDirectionalArrowRelPos(1)
+                            .linkTarget('target')
+                            .cooldownTicks(200);
+                    } else {
+                        jsonGraph = ForceGraph3D()
+                        (document.getElementById('forceVisualizationGraphic'))
+                            .graphData(graph)
+                            .nodeId('id')
+                            .nodeLabel('name')
+                            .onNodeHover(node => {
+                                if(node != null) {
+                                    nodeName = node.name;
+                                }
+                            })
+                            .onNodeClick(node => {
+                                if(arangoDataBase !== "" && arangoDataBase !== null
+                                    && arangoUser !== "" && arangoUser !== null
+                                    && arangoPass !== null
+                                    && arangoCollection !== "" && arangoCollection !== null) {
+
+                                    db.useDatabase(arangoDataBase);
+                                    db.useBasicAuth(arangoUser, arangoPass);
+                                    const docCollection = db.collection(arangoCollection);
+                                    docCollection.document(node.name, true).then(function (doc) {
+                                        let nodeWindow = window.open("", '_blank');
+
+                                        if (doc != null) {
+                                            //console.log(JSON.stringify(doc, null, '    '));
+                                            let docStr = JSON.stringify(doc, null, '    ');
+                                            docStr = docStr.replace(/\n/g, "<br />");
+                                            nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                        } else {
+                                            nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                        }
+                                    }).catch((err) => console.error(err));
+                                }
+                            })
+                            .nodeVal(function (node) {
+                                if (visualizationType === "NODE_SIZE") {
+                                    return sizes[node.id] - size_min + 1;
+                                } else {
+                                    return 2;
+                                }
+                            })
+                            .nodeColor(function (node) {
+                                if (visualizationType !== "NODE_SIZE") {
+                                    return colors[node.id];
+                                } else {
+                                    return '#3183ba';
+                                }
+                            })
+                            .onNodeDragEnd(node => {
+                                node.fx = node.x;
+                                node.fy = node.y;
+                                node.fz = node.z;
+                            })
+                            .onNodeRightClick(node => {
+                                //TODO: Seem a bit slow after restoring, check original forces/velocity
+                                node.fx = null;
+                                node.fy = null;
+                                node.fz = null;
+                            })
+                            .linkSource('source')
+                            .onLinkRightClick(link => {
+                                if (link !== rightClickLink) {
+                                    rightClickLink = link;
+                                } else {
+                                    rightClickLink = null;
+                                }
+                                jsonGraph
+                                    .linkColor(jsonGraph.linkColor())
+                                    .linkWidth(jsonGraph.linkWidth())
+                            })
+                            .linkOpacity(0.35)
+                            .linkColor(link => link === rightClickLink ? "rgba(126,234,10,0.85)" : "#dedede")
+                            .linkWidth(link => link === rightClickLink ? 2 : 0)
+                            .linkDirectionalArrowLength(4)
+                            .linkDirectionalArrowRelPos(1)
+                            .linkTarget('target')
+                            .cooldownTicks(200);
+                    }
+
+                    jsonGraph.width($('.forceVisualizationContent').width());
+                    jsonGraph.height($('.forceVisualizationContent').height());
+
+                    //jsonGraph.style.width = document.getElementById('forceVisualizationContent').style.width -106;
+                    //jsonGraph.style.height = document.getElementById('forceVisualizationContent').style.height -6;
+
+                    //jsonGraph.onEngineStop(jsonGraph.zoomToFit(400));
+
+                    //$('.forceVisualizationGraphic').append(jsonGraph);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Visualization was not received.");
                 });
-                if(typeof visualizationTypeNames === "undefined") {
-                  getVisualizationTypeNames(function() {
-                      $(visualizationTypeNames).find('Name').each(function() {
-                          $("#visualizationType").append(
-                              '<option value="' + $(this).text()
-                              + '">' + parseEnumName($(this).text()) + '</option>');
-                      });
-                  });
+        }
+
+        /* Handles the collapsable element for the graph visualization */
+        function visualizationCollapsableHandler() {
+            $("#visualizationType").change(function () {
+                getVisualization();
+                getJSON();
+                if(displayingForceGraph === false) {
+                    document.getElementById("forceVisualizationContent").style.display = "none";
                 }
-                /* Requests the graph visualization */
-                if(typeof visualization === 'undefined') {
-                    getVisualization();
-                }
-                /* Registers the visualization for panzoom */
-                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
-                $panzoom.on('mousewheel', function( e ) {
-                    e.preventDefault();
-                    var delta = e.delta || e.originalEvent.wheelDelta;
-                    var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
-                    $panzoom.panzoom('zoom', zoomOut, {
-                        increment: 0.1,
-                        animate: false,
-                        focal: e
+            });
+            if (typeof visualizationTypeNames === "undefined") {
+                getVisualizationTypeNames(function () {
+                    $(visualizationTypeNames).find('Name').each(function () {
+                        $("#visualizationType").append(
+                            '<option value="' + $(this).text()
+                            + '">' + parseEnumName($(this).text()) + '</option>');
                     });
                 });
             }
-            /* Requests and stores the graph visualization */
-            function getVisualization() {
-                if(typeof visualization !== 'undefined') {
-                    $('.visualizationGraphic').empty();
-                }
-                var visualizationType = "NODE_SIZE";
-                if($('#visualizationType').val() !== null) {
-                    visualizationType = $('#visualizationType').val();
-                }
-                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
-                    /* Request handler */
-                    function(response) {
-                        visualization = response;
-                        $('.visualizationGraphic').append(visualization);
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        /*
-                         * GraphIds request failed
-                         */
-                        showConnectionErrorMessage("Visualization was not received.");
-                });
+            /* Requests the graph visualization */
+            if (typeof visualization === 'undefined') {
+                getVisualization();
             }
-
-            function getVisualizationTypeNames(callback) {
-                sendRequest("get", "visualization/centralityVisualizationTypes/names", "",
-                    /* Response handler */
-                    function(response) {
-                        visualizationTypeNames = response;
-                        if(typeof callback !== 'undefined') {
-                            callback();
-                        }
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        /*
-                         * Visualization type name request failed
-                         */
-                        showConnectionErrorMessage("Visualization type names were not received.");
+            /* Registers the visualization for panzoom */
+            var $panzoom = $('body').find('.visualizationGraphic').panzoom({
+                $zoomRange: $('body').find(".visualizationZoomer"),
+                increment: 0.9,
+                contain: 'invert',
+                maxScale: 10,
+                minScale: 1
+            });
+            $panzoom.on('mousewheel', function (e) {
+                e.preventDefault();
+                var delta = e.delta || e.originalEvent.wheelDelta;
+                var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+                $panzoom.panzoom('zoom', zoomOut, {
+                    increment: 0.1,
+                    animate: false,
+                    focal: e
                 });
-            }
-        </script>
-    </head>
-    <body>
-        <!-- Modal -->
-        <div id="showValuesModal" class="modal fade" role="dialog">
-          <div class="modal-dialog">
+            });
+        }
 
-            <!-- Modal content-->
-            <div class="modal-content">
-              <div class="modal-header">
-              </div>
-              <div id="showValuesModalBody" class="modal-body">
+        /* Requests and stores the graph visualization */
+        function getVisualization() {
+            if (typeof visualization !== 'undefined') {
+                $('.visualizationGraphic').empty();
+            }
+            var visualizationType = "NODE_SIZE";
+            if ($('#visualizationType').val() !== null) {
+                visualizationType = $('#visualizationType').val();
+            }
+            sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+                /* Request handler */
+                function (response) {
+                    visualization = response;
+                    $('.visualizationGraphic').append(visualization);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Visualization was not received.");
+                });
+        }
+
+        function getVisualizationTypeNames(callback) {
+            sendRequest("get", "visualization/centralityVisualizationTypes/names", "",
+                /* Response handler */
+                function (response) {
+                    visualizationTypeNames = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Visualization type name request failed
+                     */
+                    showConnectionErrorMessage("Visualization type names were not received.");
+                });
+        }
+    </script>
+</head>
+<body>
+<!-- Modal -->
+<div id="showValuesModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+            </div>
+            <div id="showValuesModalBody" class="modal-body">
                 <p>Show all the nodes or only the top ones?</p>
-              </div>
-              <div class="modal-footer">
+            </div>
+            <div class="modal-footer">
                 <button id="showAllButton" type="button" class="btn btn-default" data-dismiss="modal">Show All</button>
                 <button id="showTopKButton" type="button" class="btn btn-default">Show Top K</button>
                 <input id="topNodesInput" type="text"></input>
-              </div>
             </div>
-
-          </div>
         </div>
-        <div id="wrapper">
-            <div id="contentWrapper">
-                <div id="content">
-                    <!-- Container for display of error messages -->
-                    <div id="errorMessageWrapper">
-                        <div id="errorMessage"></div>
+
+    </div>
+</div>
+<div id="wrapper">
+    <div id="contentWrapper">
+        <div id="content">
+            <!-- Container for display of error messages -->
+            <div id="errorMessageWrapper">
+                <div id="errorMessage"></div>
+            </div>
+            <!-- Centrality map meta information table -->
+            <div class="tableWrapper table-responsive">
+                <table id="mapMetaTable" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th class="hidden" title="CentralityMapId"></th>
+                        <th class="hidden" title="GraphId"></th>
+                        <th width="300" title="Name" class="sortable">
+                            Name
+                        </th>
+                        <th width="300" title="Graph Name" class="sortable">
+                            Graph
+                        </th>
+                        <th width="300" title="Creation Method" class="sortable">
+                            Creation Method
+                        </th>
+                        <th width="200" title="Execution Time" class="sortable">
+                            Execution Time (ms)
+                        </th>
+                        <th width="20" title="Remove Centrality">
+                            R
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <!-- Collapsable element for centrality value display -->
+            <div id="valuesCollapsable" class="collapsable">
+                <div class="collapsableHeader">
+                    <div class="collapsableTitle">Centrality Values</div>
+                    <div class="collapsableCollapser">
+                        <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg"
+                             alt="d">
+                        <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg"
+                             alt="c">
                     </div>
-                    <!-- Centrality map meta information table -->
-                    <div class="tableWrapper table-responsive">
-                        <table id="mapMetaTable" class="table table-striped">
+                </div>
+                <div class="collapsableContent">
+                    <label><input id="precisionCheckbox" type="checkbox" value="">High Precision</label>
+                    <div id="tableWrapper1" class="tableWrapper table-responsive">
+                        <table id="valuesTable" class="table">
                             <thead>
-                              <tr>
-                                  <th class="hidden" title="CentralityMapId"></th>
-                                  <th class="hidden" title="GraphId"></th>
-                                  <th width="300" title="Name" class="sortable">
-                                      Name
-                                  </th>
-                                  <th width="300" title="Graph Name" class="sortable">
-                                      Graph
-                                  </th>
-                                  <th width="300" title="Creation Method" class="sortable">
-                                      Creation Method
-                                  </th>
-                                  <th width="200" title="Execution Time" class="sortable">
-                                      Execution Time (ms)
-                                  </th>
-                                  <th width="20" title="Remove Centrality">
-                                      R
-                                  </th>
-                              </tr>
+                            <tr>
+                                <th title="Node">
+                                    Node
+                                </th>
+                                <th title="Value">
+                                    Value
+                                </th>
+                            </tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
-                    <!-- Collapsable element for centrality value display -->
-                    <div id="valuesCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Centrality Values</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
+                </div>
+            </div>
+            <!-- Collapsable element for algorithm parameter display -->
+            <div id="parametersCollapsable" class="collapsable">
+                <div class="collapsableHeader">
+                    <div class="collapsableTitle">Parameters</div>
+                    <div class="collapsableCollapser">
+                        <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg"
+                             alt="d">
+                        <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg"
+                             alt="c">
+                    </div>
+                </div>
+                <div class="collapsableContent">
+                    <div class="tableWrapper table-responsive">
+                        <table id="parametersTable" class="table">
+                            <thead>
+                            <tr>
+                                <th title="Parameter">
+                                    Parameter
+                                </th>
+                                <th title="Value">
+                                    Value
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Collapsable for centrality map visualization -->
+            <div id="visualizationCollapsable" class="collapsable">
+                <div class="collapsableHeader">
+                    <div class="collapsableTitle">Visualization</div>
+                    <div class="collapsableCollapser">
+                        <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg"
+                             alt="d">
+                        <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg"
+                             alt="c">
+                    </div>
+                </div>
+                <div class="collapsableContent">
+                    <div class="optionRow" style="width:100%">
+                        <div class="dataBaseDropDown" style="width:10%">
+                            <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
+                            <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
+                                <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
+                                <input class="dataBaseDropDownContentForm" id="arangoPass" type="password" name="arangoPass" placeholder="Password">
+                                <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
+                                <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
+                                <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
+                            </form>
                         </div>
-                        <div class="collapsableContent">
-                            <label><input id="precisionCheckbox" type="checkbox" value="">High Precision</label>
-                            <div id="tableWrapper1" class="tableWrapper table-responsive">
-                                <table id="valuesTable" class="table">
-                                    <thead>
-                                    <tr>
-                                        <th title="Node">
-                                            Node
-                                        </th>
-                                        <th title="Value">
-                                            Value
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
+                        <div class="searchDropDown" style="width:8%">
+                            <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
+                            <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button' onSubmit="return false;">
+                                <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
+                                <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
+                            </form>
+                        </div>
+                        <div class="btn-group" style="width:81%">
+                            <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
+                            <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
+                            <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
                         </div>
                     </div>
-                    <!-- Collapsable element for algorithm parameter display -->
-                    <div id="parametersCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Parameters</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    <!-- Container for graph visualization -->
+                    <div class="visualization">
+                        <div class="visualizationControl">
+                            <select id="visualizationType" class="visualizationTypeSelect">
+                            </select>
+                            <input id="visualizationZoomer" class="visualizationZoomer" type="range">
+                        </div>
+                        <div id="visualizationContent" class="visualizationContent">
+                            <div class="visualizationGraphic">
                             </div>
                         </div>
-                        <div class="collapsableContent">
-                            <div class="tableWrapper table-responsive">
-                                <table id="parametersTable" class="table">
-                                    <thead>
-                                    <tr>
-                                        <th title="Parameter">
-                                            Parameter
-                                        </th>
-                                        <th title="Value">
-                                            Value
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Collapsable for centrality map visualization -->
-                    <div id="visualizationCollapsable" class="collapsable">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Visualization</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <div class="visualization">
-                                <div class="visualizationControl">
-                                    <select id="visualizationType" class="visualizationTypeSelect">
-                                    </select>
-                                    <input class="visualizationZoomer" type="range">
-                                </div>
-                                <div class="visualizationContent">
-                                    <div class="visualizationGraphic">
-                                    </div>
-                                </div>
-                            </div>
+                        <div id="forceVisualizationContent" class="forceVisualizationContent">
+                            <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </body>
+    </div>
+</div>
+</body>
 </html>

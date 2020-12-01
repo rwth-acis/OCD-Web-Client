@@ -1,608 +1,1125 @@
 <!DOCTYPE html>
 <html>
-    <!-- Displays detailed information on a single graph. Allows OCD algorithm execution. -->
-    <head>
-        <title>OCD - Graph</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
-        <script src="JS/bootstrap.min.js"></script>
-        <script src="JS/jquery.session.js"></script>
-        <script src="JS/contentHandler.js"></script>
-        <script src="JS/ServiceAPI/b64.js"></script>
-        <script src="JS/ServiceAPI/moduleHelper.js"></script>
-        <script src="JS/ServiceAPI/serviceAPI.js"></script>
-        <script src="JS/requestHandler.js"></script>
-        <script src="JS/graphTableHandler.js"></script>
-        <script src="JS/jquery.tablesorter.js"></script>
-        <script src="JS/jquery.panzoom.js"></script>
-        <script src="JS/jquery.mousewheel.js"></script>
-        <script src="JS/simulation/jsonRequestHandler.js"></script>
-        <script src="JS/simulation/simulationForm.js"></script>
-        <script type="text/javascript">
-            /* Id of the graph */
-            var graphId = getUrlVar("id");
-            /* Graph meta information in xml format */
-            var graphMetaXml;
-            /* Graph structure in edge list format */
-            var graphProperties;
-            /* Graph structure in edge list format */
-            var graphEdgeList;
-            /* Graph visualization in SVG format */
-            var visualization;
-            /* Names of all OCD algorithms */
-            var algorithmNames;
-            /* Names of all centrality measures */
-            var centralityMeasureNames;
-            /* Names of all centrality simulations */
-            var centralitySimulationNames;
-            /* Principal eigenvalue of the grapph's adjacency matrix */
-            var eigenvalue;
-            /* Executed after page loading */
-            $(document).ready(function() {
-                /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
-                    /* Requests the graph meta information */
-                    sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
+<!-- Displays detailed information on a single graph. Allows OCD algorithm execution. -->
+<head>
+    <title>OCD - Graph</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+    <!-- TODO: Possibly omit https: again from the urls before pushing. Though this seems to be best practice now anyways -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/jquery.session.js"></script>
+    <script src="JS/contentHandler.js"></script>
+    <script src="JS/ServiceAPI/b64.js"></script>
+    <script src="JS/ServiceAPI/moduleHelper.js"></script>
+    <script src="JS/ServiceAPI/serviceAPI.js"></script>
+    <script src="JS/requestHandler.js"></script>
+    <script src="JS/graphTableHandler.js"></script>
+    <script src="JS/jquery.tablesorter.js"></script>
+    <script src="JS/jquery.panzoom.js"></script>
+    <script src="JS/jquery.mousewheel.js"></script>
+    <script src="JS/simulation/jsonRequestHandler.js"></script>
+    <script src="JS/simulation/simulationForm.js"></script>
+    <script src="JS/force-graph/force-graph.js"></script>
+    <script src="JS/force-graph/3d-force-graph.js"></script>
+    <script src="JS/arangojs@6.14.1/lib/web.js"></script>
+    <script type="text/javascript">
+        /* Id of the graph */
+        var graphId = getUrlVar("id");
+        /* Graph meta information in xml format */
+        var graphMetaXml;
+        /* Graph structure in edge list format */
+        var graphProperties;
+        /* Graph structure in JSON format */
+        var jsonGraph;
+        var have3D;
+        var nodeName = "";
+        var keysPressed = new Map();
+
+        /* Database Information */
+        var arangoUser = localStorage.getItem("arangoUser@WebOCD");
+        var arangoPass = localStorage.getItem("arangoPass@WebOCD");
+        var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
+        var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
+
+        //Testserver: http://ocd-web-client.duckdns.org:7071
+        //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8529
+        const db = new arangojs.Database('http://127.0.0.1:8529');
+
+        /* Graph visualization in SVG format */
+        var highlightNodes = new Set();
+        var highlightLinks = new Set();
+        var rightClickNode = null;
+        var rightClickLink = null;
+
+        var visualization;
+        /* Names of all OCD algorithms */
+        var algorithmNames;
+        /* Names of all centrality measures */
+        var centralityMeasureNames;
+        /* Names of all centrality simulations */
+        var centralitySimulationNames;
+        /* Principal eigenvalue of the grapph's adjacency matrix */
+        var eigenvalue;
+        /* Executed after page loading */
+        $(document).ready(function () {
+            /* Identifiers for the graph information to be displayed */
+            var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
+            /* Requests the graph meta information */
+            sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
+                /* Response handler */
+                function (response) {
+                    /* Stores graph meta information and adds it to the graph header */
+                    graphMetaXml = response;
+                    var name = $(graphMetaXml).find('Name').text();
+                    var nodes = $(graphMetaXml).find('NodeCount').text();
+                    var edges = $(graphMetaXml).find('EdgeCount').text();
+                    /* Graph types */
+                    var types = [];
+                    $(graphMetaXml).children('Types').find('Type').each(function () {
+                        types.push($(this).text());
+                    });
+                    var directed = $.inArray("DIRECTED", types);
+                    var weighted = $.inArray("WEIGHTED", types);
+
+                    var description = "A";
+                    if (directed == -1 && weighted == -1)
+                        description += " simple ";
+                    if (directed > -1)
+                        description += " directed ";
+                    if (weighted > -1)
+                        description += " weighted ";
+
+                    description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
+                    $('#graphHeader').html(getHeadLine(name, description));
+                    $('#graphCovers').html('<a href="covers.html?graphId=' + graphId + '">Covers</a>');
+                    $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId=' + graphId + '">Simulations</a>');
+                    $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId + '">Centralities</a>');
+                    $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
+
+                    /* Registers components and event handlers */
+                    registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
+                    registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
+                    registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                    registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
+                    registerCollapsable("#runSimulationCollapsable", runSimulationCollapsableHandler);
+                    registerCollapsable("#runCentralityCalculationCollapsable", runCentralityCalculationCollapsableHandler);
+                    registerCollapsable("#runCentralitySimulationCollapsable", runCentralitySimulationCollapsableHandler);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Graph was not received.");
+                }, "text");
+            /*
+            * Run algorithm form listener.
+            */
+            $('#runAlgorithmForm').submit(function () {
+                var algo = $('#algorithm').val();
+                if (algo !== getSelectOptionVal()) {
+                    var params = getParameterXml("#algorithmParameterDiv");
+                    var coverName = $("#coverName").val();
+                    var contentWeighting = $("#contentWeighting").is(':checked');
+                    if (coverName === "") {
+                        showErrorMessage('Please define a cover name.');
+                        window.scrollTo(0, 0);
+                        return;
+                    }
+                    /* Requests an algorithm execution  */
+                    //console.log("post" + " " + "covers/graphs/" + graphId
+                    //    + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting + " " + params);
+                    sendRequest("post", "covers/graphs/" + graphId
+                        + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
                         /* Response handler */
-                        function(response) {
-                            /* Stores graph meta information and adds it to the graph header */
-                            graphMetaXml = response;
-                            var name = $(graphMetaXml).find('Name').text();
-                            var nodes = $(graphMetaXml).find('NodeCount').text();
-                            var edges = $(graphMetaXml).find('EdgeCount').text();
-                            /* Graph types */
-                            var types = [];
-                            $(graphMetaXml).children('Types').find('Type').each(function() {
-                                types.push($(this).text());
-                            });
-                            var directed =  $.inArray("DIRECTED", types);
-                            var weighted =  $.inArray("WEIGHTED", types);
-
-                            var description = "A";
-                            if(directed == -1 && weighted == -1)
-                              description += " simple ";
-                            if(directed > -1)
-                              description += " directed ";
-                            if(weighted > -1)
-                              description += " weighted ";
-
-                            description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
-                            $('#graphHeader').html(getHeadLine(name, description));
-                            $('#graphCovers').html('<a href="covers.html?graphId=' + graphId +'">Covers</a>');
-                            $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId='+ graphId +'">Simulations</a>');
-                            $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId +'">Centralities</a>');
-                            $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
-
-                            /* Registers components and event handlers */
-                            registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
-                            registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
-                            registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
-                            registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
-                            registerCollapsable("#runSimulationCollapsable", runSimulationCollapsableHandler);
-                            registerCollapsable("#runCentralityCalculationCollapsable", runCentralityCalculationCollapsableHandler);
-                            registerCollapsable("#runCentralitySimulationCollapsable", runCentralitySimulationCollapsableHandler);
+                        function (response) {
+                            window.location.href = 'index.html';
                         },
                         /* Error handler */
-                        function(errorData) {
+                        function (errorData) {
                             /*
-                             * GraphIds request failed
+                             * Run algorithm request failed
                              */
-                            showConnectionErrorMessage("Graph was not received.");
-                    }, "text");
-                /*
-                * Run algorithm form listener.
-                */
-                $('#runAlgorithmForm').submit(function(){
-                    var algo = $('#algorithm').val();
-                    if(algo !== getSelectOptionVal()) {
-                        var params = getParameterXml("#algorithmParams");
-                        var coverName = $("#coverName").val();
-                        var contentWeighting = $("#contentWeighting").is(':checked');
-                        if(coverName === "") {
-                            showErrorMessage('Please define a cover name.');
-                            window.scrollTo(0, 0);
-                            return;
-                        }
-                        /* Requests an algorithm execution  */
-                        sendRequest("post", "covers/graphs/" + graphId
-                                + "/algorithms?algorithm="+ algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
+                            showConnectionErrorMessage("Algorithm request failed.");
+                        });
+                }
+                return false;
+            });
+            /*
+             * Run centrality calculation form listener.
+             */
+            $('#runCentralityCalculationForm').submit(function () {
+                var c_algo = $('#centralityMeasure').val();
+                if (c_algo !== getSelectOptionVal()) {
+                    var params = getParameterXml("#centralityMeasureParameterDiv");
+                    sendRequest("post", "centrality/graphs/" + graphId
+                        + "/algorithms?algorithm=" + c_algo, params,
+                        /* Response handler */
+                        function (response) {
+                            //window.location.href = 'index.html';
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            /*
+                             * Run centrality calculation request failed
+                             */
+                            if (errorData.includes("Show Error")) {
+                                var errorSplit = errorData.split(":");
+                                showErrorMessage(errorSplit[errorSplit.length - 1]);
+                                window.scrollTo(0, 0);
+                            } else {
+                                showConnectionErrorMessage("Centrality calculation request failed.");
+                            }
+                        });
+                } else {
+                    showErrorMessage("Please select a centrality measure.");
+                    window.scrollTo(0, 0);
+                }
+                return false;
+            });
+            /*
+             * Run centrality simulation form listener.
+             */
+            $('#runCentralitySimulationForm').submit(function () {
+                var sim = $('#centralitySimulation').val();
+                if (sim !== getSelectOptionVal()) {
+                    var params = getParameterXml("#centralitySimulationParameterDiv");
+                    var runs = 1;
+                    if ($('#multipleRuns').prop("checked")) {
+                        runs = $('#runsInput').val();
+                    }
+                    var counter;
+                    for (counter = 0; counter < runs; counter++) {
+                        sendRequest("post", "centrality/simulation/graphs/" + graphId
+                            + "?simulation=" + sim + "&runs=" + runs, params,
                             /* Response handler */
-                            function(response) {
-                                window.location.href = 'index.html';
+                            function (response) {
+                                //window.location.href = 'index.html';
                             },
                             /* Error handler */
-                            function(errorData) {
+                            function (errorData) {
                                 /*
-                                 * Run algorithm request failed
+                                 * Run centrality simulation request failed
                                  */
-                                showConnectionErrorMessage("Algorithm request failed.");
-                        });
+                                if (errorData.includes("Show Error")) {
+                                    var errorSplit = errorData.split(":");
+                                    showErrorMessage(errorSplit[errorSplit.length - 1]);
+                                    window.scrollTo(0, 0);
+                                } else {
+                                    showConnectionErrorMessage("Centrality simulation request failed.");
+                                }
+                            });
                     }
-                    return false;
-                });
-                /*
-                 * Run centrality calculation form listener.
-                 */
-                 $('#runCentralityCalculationForm').submit(function(){
-                   var c_algo = $('#centralityMeasure').val();
-                   if(c_algo !== getSelectOptionVal()) {
-                     var params = getParameterXml("#centralityMeasureParameterDiv");
-                     sendRequest("post", "centrality/graphs/" + graphId
-                             + "/algorithms?algorithm="+ c_algo, params,
-                         /* Response handler */
-                         function(response) {
-                             //window.location.href = 'index.html';
-                         },
-                         /* Error handler */
-                         function(errorData) {
-                             /*
-                              * Run centrality calculation request failed
-                              */
-                             if(errorData.includes("Show Error")) {
-                                  var errorSplit = errorData.split(":");
-                                  showErrorMessage(errorSplit[errorSplit.length-1]);
-                                  window.scrollTo(0, 0);
-                             }
-                             else {
-                                 showConnectionErrorMessage("Centrality calculation request failed.");
-                             }
-                     });
-                   }
-                   else {
-                       showErrorMessage("Please select a centrality measure.");
-                       window.scrollTo(0, 0);
-                   }
-                   return false;
-                 });
-                 /*
-                  * Run centrality simulation form listener.
-                  */
-                  $('#runCentralitySimulationForm').submit(function(){
-                    var sim = $('#centralitySimulation').val();
-                    if(sim !== getSelectOptionVal()) {
-                      var params = getParameterXml("#centralitySimulationParameterDiv");
-                      var runs = 1;
-                      if($('#multipleRuns').prop("checked")) {
-                          runs = $('#runsInput').val();
-                      }
-                      var counter;
-                      for(counter = 0; counter < runs; counter++) {
-                          sendRequest("post", "centrality/simulation/graphs/" + graphId
-                                  + "?simulation="+ sim + "&runs=" + runs, params,
-                              /* Response handler */
-                              function(response) {
-                                  //window.location.href = 'index.html';
-                              },
-                              /* Error handler */
-                              function(errorData) {
-                                  /*
-                                   * Run centrality simulation request failed
-                                   */
-                                  if(errorData.includes("Show Error")) {
-                                      var errorSplit = errorData.split(":");
-                                      showErrorMessage(errorSplit[errorSplit.length-1]);
-                                      window.scrollTo(0, 0);
-                                  }
-                                  else {
-                                      showConnectionErrorMessage("Centrality simulation request failed.");
-                                  }
-                          });
-                        }
-                      }
-                      else {
-                          showErrorMessage("Please select a centrality simulation.");
-                          window.scrollTo(0, 0);
-                      }
-                      return false;
-                  });
-                  $('#centralityMeasure').change(function () {
-                      $('#annotationDiv').hide();
-                  });
-                  $('#centralityInfo').click(function() {
-                      var measureName = $('#centralityMeasure').val();
-                      if(measureName == getSelectOptionVal()) {
-                          window.location.href = "centralities_info.html";
-                      }
-                      else {
-                          window.location.href = "centralities_info.html?measureName=" + measureName.replace(/ /g,"_");
-                      }
-                  });
-                  $('#centralitySimulationInfo').click(function() {
-                      var simulationName = $('#centralitySimulation').val();
-                      if(simulationName == getSelectOptionVal()) {
-                          window.location.href = "centrality_simulations_info.html";
-                      }
-                      else {
-                          window.location.href = "centrality_simulations_info.html?simulationName=" + simulationName.replace(/ /g,"_");
-                      }
-                  });
+                } else {
+                    showErrorMessage("Please select a centrality simulation.");
+                    window.scrollTo(0, 0);
+                }
+                return false;
             });
-            /* Requests the names of all OCD algorithms.
-             * Then executes a callback function */
-            function getAlgorithmNames(callback) {
-                sendRequest("get", "algorithms", "",
-                        /* Response handler */
-                        function(response) {
-                            algorithmNames = response;
-                            if(typeof callback !== 'undefined') {
-                                callback();
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * OCD algorithm request failed
-                             */
-                            showConnectionErrorMessage("Algorithm names were not received.");
-                        });
-            }
-            /* Requests the names of all centrality measures.
-             * Then executes a callback function */
-            function getCentralityMeasureNames(callback) {
-                sendRequest("get", "centralities", "",
-                        /* Response handler */
-                        function(response) {
-                			centralityMeasureNames = response;
-                            if(typeof callback !== 'undefined') {
-                                callback();
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * Centrality measure name request failed
-                             */
-                            showConnectionErrorMessage("Centrality measure names were not received.");
-                        });
-            }
-            /* Requests the names of all centrality simulations.
-             * Then executes a callback function */
-            function getCentralitySimulationNames(callback) {
-                sendRequest("get", "centralitysimulations", "",
-                        /* Response handler */
-                        function(response) {
-                			centralitySimulationNames = response;
-                            if(typeof callback !== 'undefined') {
-                                callback();
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * Centrality simulation name request failed
-                             */
-                            showConnectionErrorMessage("Simulation names were not received.");
-                        });
-            }
-            /* Requests all parameter names for a given algorithm.
-             * Then executes a calllback function */
-            function getAlgorithmParameters(algorithmName, callback) {
-                sendRequest("get", "algorithms/" + algorithmName + "/parameters/default", "",
-                        /* Response handler */
-                        function(response) {
-                            if(typeof callback !== 'undefined') {
-                                callback(response);
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * GraphIds request failed
-                             */
-                            showConnectionErrorMessage("Algorithm parameters were not received.");
-                        });
-            }
-            /* Requests all parameter names for a given centrality measure.
-             * Then executes a calllback function */
-            function getCentralityMeasureParameters(centralityMeasureName, callback) {
-                sendRequest("get", "centralities/" + centralityMeasureName + "/parameters/default", "",
-                        /* Response handler */
-                        function(response) {
-                            $('#annotationText').html("");
-                            if(centralityMeasureName == "Katz Centrality") {
-                                displayEigenvalue();
-                            }
-                            var graphSize = $(graphMetaXml).find('NodeCount').text();
-                            if(graphSize > 200 && (centralityMeasureName == "Katz Centrality" || centralityMeasureName == "Current-Flow Closeness" || centralityMeasureName == "Current-Flow Betweenness")) {
-                                $('#annotationText').append("<p>Warning: The computation of this measure may take a long time on this graph.</p>");
-                                $('#annotationDiv').show();
-                            }
-                            if(typeof callback !== 'undefined') {
-                                callback(response);
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * Centrality measure parameter request failed
-                             */
-                            showConnectionErrorMessage("Centrality measure parameters were not received.");
-                        });
-            }
-            /* Requests all parameter names for a given centrality simulation.
-             * Then executes a calllback function */
-            function getCentralitySimulationParameters(centralitySimulationName, callback) {
-                sendRequest("get", "centralitysimulations/" + centralitySimulationName + "/parameters/default", "",
-                        /* Response handler */
-                        function(response) {
-                            if(typeof callback !== 'undefined') {
-                                callback(response);
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * Centrality simulation parameter request failed
-                             */
-                            showConnectionErrorMessage("Centrality simulation parameters were not received.");
-                        });
-            }
-            /* Handles the collapsable element for the algorithm execution. */
-            function runAlgorithmCollapsableHandler() {
-                if(typeof algorithmNames === 'undefined') {
-                    /* Adds all algorithm names to the form */
-                    getAlgorithmNames(function() {
-                        $(algorithmNames).find('Name').each(function() {
-                            if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH') {
-                                $("#algorithm").append(
-                                    '<option value="' + $(this).text()
-                                    + '">' + parseEnumName($(this).text()) + '</option>');
-                            }
-                        });
-                    });
-                    /* Registers the parameter component for the contentHandler */
-                    registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
+            $('#centralityMeasure').change(function () {
+                $('#annotationDiv').hide();
+            });
+            $('#centralityInfo').click(function () {
+                var measureName = $('#centralityMeasure').val();
+                if (measureName == getSelectOptionVal()) {
+                    window.location.href = "centralities_info.html";
+                } else {
+                    window.location.href = "centralities_info.html?measureName=" + measureName.replace(/ /g, "_");
                 }
-            }
-            /* Handles the collapsable element for the algorithm execution. */
-            function runSimulationCollapsableHandler() {
-                if(typeof algorithmNames === 'undefined') {
-                    /* Adds all algorithm names to the form */
-                    getAlgorithmNames(function() {
-                        $(algorithmNames).find('Name').each(function() {
-                            if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'GROUND_TRUTH') {
-                                $("#algorithm").append(
-                                    '<option value="' + $(this).text()
-                                    + '">' + parseEnumName($(this).text()) + '</option>');
-                            }
-                        });
-                    });
+            });
+            $('#centralitySimulationInfo').click(function () {
+                var simulationName = $('#centralitySimulation').val();
+                if (simulationName == getSelectOptionVal()) {
+                    window.location.href = "centrality_simulations_info.html";
+                } else {
+                    window.location.href = "centrality_simulations_info.html?simulationName=" + simulationName.replace(/ /g, "_");
                 }
-            }
-            /* Handles the collapsable element for the centrality calculation. */
-            function runCentralityCalculationCollapsableHandler() {
-                if(typeof centralityMeasureNames === 'undefined') {
-                    /* Adds all centrality measure names to the form */
-                    getCentralityMeasureNames(function() {
-                        $(centralityMeasureNames).find('Name').each(function() {
-                        	if($(this).text() !== 'Undefined') {
-                                $("#centralityMeasure").append(
-                                    '<option value="' + $(this).text()
-                                    + '">' + $(this).text() + '</option>');
-                            }
-                        });
-                    });
-                    /* Registers the parameter component for the contentHandler */
-                    registerParameterSelect("#centralityMeasure", "#centralityMeasureParameterDiv", getCentralityMeasureParameters);
-                }
-            }
-            /* Handles the collapsable element for the centrality simulation. */
-            function runCentralitySimulationCollapsableHandler() {
-                if(typeof centralitySimulationNames === 'undefined') {
-                    /* Adds all centrality simulation names to the form */
-                    getCentralitySimulationNames(function() {
-                        $(centralitySimulationNames).find('Name').each(function() {
-                            if($(this).text() !== 'Undefined') {
-                                $("#centralitySimulation").append(
-                                    '<option value="' + $(this).text()
-                                    + '">' + $(this).text() + '</option>');
-                            }
-                        });
-                    });
-                    $('#multipleRuns').change(function() {
-                        $('#runsInput').toggleClass("hidden");
-                    });
-                    /* Registers the parameter component for the contentHandler */
-                    registerParameterSelect("#centralitySimulation", "#centralitySimulationParameterDiv", getCentralitySimulationParameters);
-                }
-            }
-            /* Requests and stores the properties of the graph.
-             * Then executes a callback function */
-            function getProperties(callback) {
-                sendRequest("get", "graphs/" + graphId + "?outputFormat=PROPERTIES_XML", "",
-                        /* Response handler */
-                        function(response) {
-                            graphProperties = response;
-                            if(typeof callback !== 'undefined') {
-                                callback();
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * GraphIds request failed
-                             */
-                            showConnectionErrorMessage("Graph Properties was not received.");
-                        }, "text");
-            }
-            /* Requests and stores the edge list of the graph.
-             * Then executes a callback function */
-            function getEdgeList(callback) {
-                sendRequest("get", "graphs/" + graphId + "?outputFormat=WEIGHTED_EDGE_LIST", "",
-                        /* Response handler */
-                        function(response) {
-                            graphEdgeList = response;
-                            if(typeof callback !== 'undefined') {
-                                callback();
-                            }
-                        },
-                        /* Error handler */
-                        function(errorData) {
-                            /*
-                             * GraphIds request failed
-                             */
-                            showConnectionErrorMessage("Graph was not received.");
-                        }, "text");
-            }
-            /* Handles the collapsable element for the properties. */
-            function propertiesCollapsableHandler() {
-                if(typeof graphProperties === 'undefined') {
-                    /* Requests the edge list */
-                    getProperties(function() {
-                            /* Adds properties information to a table */
-                            var properties = $(graphProperties).children();
-                            for (i = 0; i < properties.length; i++) {
-                              var name = $(properties)[i].nodeName;
-                              var value = $(graphProperties).find($(properties)[i].nodeName).text();
-                                if(name !== 'ID' &&  name !== 'NAME') {
-                                  name = name.replace("_", " ");
-                                  var row = '<tr>'
-                                      + '<td>' + name + '</td>'
-                                      + '<td>' + value + '</td>'
-                                      + '</tr>';
-                                    $("#graphPropertiesTable tbody").append(row);
-                                }
-                              }
-                            });
+            });
+        });
 
-                }
-            }
-            /* Handles the collapsable element for the edge list. */
-            function edgeListCollapsableHandler() {
-                if(typeof graphEdgeList === 'undefined') {
-                    /* Requests the edge list */
-                    getEdgeList(function() {
-                            /* Adds the edge list information to a table */
-                            var lines = graphEdgeList.split('\n');
-                            $.each(lines, function(key, line) {
-                                var parts = line.split(' ');
-                                if($(parts).length === 3) {
-                                    var row = '<tr>'
-                                        + '<td>' + parts[0] + '</td>'
-                                        + '<td>' + parts[1] + '</td>'
-                                        + '<td>' + parts[2] + '</td>'
-                                        + '</tr>';
-                                    $("#graphEdgeTable tbody").append(row);
-                                }
-                            });
-                            $("#graphEdgeTable").tablesorter({sortList: [[0,0], [1,0]]});
-                        });
-                }
-            }
-            /* Handles the collapsable element for the graph visualization */
-            function visualizationCollapsableHandler() {
-                /* Requests the graph visualization */
-                if(typeof visualization === 'undefined') {
-                    getVisualization();
-                }
-                /* Registers the visualization for panzoom */
-                var $panzoom = $('body').find('.visualizationGraphic').panzoom({$zoomRange: $('body').find(".visualizationZoomer"), increment: 0.9, contain: 'invert', maxScale: 10, minScale: 1});
-                $panzoom.on('mousewheel', function( e ) {
-                    e.preventDefault();
-                    var delta = e.delta || e.originalEvent.wheelDelta;
-                    var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
-                    $panzoom.panzoom('zoom', zoomOut, {
-                        increment: 0.1,
-                        animate: false,
-                        focal: e
-                    });
+        /* Requests the names of all OCD algorithms.
+         * Then executes a callback function */
+        function getAlgorithmNames(callback) {
+            sendRequest("get", "algorithms", "",
+                /* Response handler */
+                function (response) {
+                    algorithmNames = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * OCD algorithm request failed
+                     */
+                    showConnectionErrorMessage("Algorithm names were not received.");
                 });
-            }
-            /* Requests and stores the graph visualization */
-            function getVisualization() {
-                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
-                    /* Request handler */
-                    function(response) {
-                        visualization = response;
-                        $('.visualizationGraphic').append(visualization);
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        /*
-                         * GraphIds request failed
-                         */
-                        showConnectionErrorMessage("Visualization was not received.");
+        }
+
+        /* Requests the names of all centrality measures.
+         * Then executes a callback function */
+        function getCentralityMeasureNames(callback) {
+            sendRequest("get", "centralities", "",
+                /* Response handler */
+                function (response) {
+                    centralityMeasureNames = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Centrality measure name request failed
+                     */
+                    showConnectionErrorMessage("Centrality measure names were not received.");
                 });
-            }
+        }
 
-            function deleteGraph() {
-              sendRequest("delete", "graphs/" + graphId, "",
-                  /* Request handler */
-                  function(response) {
-                    showSuccess(response);
-                  },
-                  /* Error handler */
-                  function(errorData) {
-                      /*
-                       * GraphIds request failed
-                       */
-                      showConnectionErrorMessage(errorData);
-              });
-            }
+        /* Requests the names of all centrality simulations.
+         * Then executes a callback function */
+        function getCentralitySimulationNames(callback) {
+            sendRequest("get", "centralitysimulations", "",
+                /* Response handler */
+                function (response) {
+                    centralitySimulationNames = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Centrality simulation name request failed
+                     */
+                    showConnectionErrorMessage("Simulation names were not received.");
+                });
+        }
 
-            /* Request and display the principal eigenvalue of the graph's adjacency matrix */
-            function displayEigenvalue() {
-                sendRequest("get", "centrality/graphs/" + graphId
-                        + "/eigenvalue", "",
-                    /* Response handler */
-                    function(response) {
-                        if(response !== 'undefined') {
-                            eigenvalue = $(response).filter('Value').text();
-                            $('#annotationText').append("<p>Alpha should be smaller than " + 1/eigenvalue + ".</p>");
-                            $('#annotationDiv').show();
+        /* Requests all parameter names for a given algorithm.
+         * Then executes a calllback function */
+        function getAlgorithmParameters(algorithmName, callback) {
+            sendRequest("get", "algorithms/" + algorithmName + "/parameters/default", "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Algorithm parameters were not received.");
+                });
+        }
+
+        /* Requests all parameter names for a given centrality measure.
+         * Then executes a calllback function */
+        function getCentralityMeasureParameters(centralityMeasureName, callback) {
+            sendRequest("get", "centralities/" + centralityMeasureName + "/parameters/default", "",
+                /* Response handler */
+                function (response) {
+                    $('#annotationText').html("");
+                    if (centralityMeasureName == "Katz Centrality") {
+                        displayEigenvalue();
+                    }
+                    var graphSize = $(graphMetaXml).find('NodeCount').text();
+                    if (graphSize > 200 && (centralityMeasureName == "Katz Centrality" || centralityMeasureName == "Current-Flow Closeness" || centralityMeasureName == "Current-Flow Betweenness")) {
+                        $('#annotationText').append("<p>Warning: The computation of this measure may take a long time on this graph.</p>");
+                        $('#annotationDiv').show();
+                    }
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Centrality measure parameter request failed
+                     */
+                    showConnectionErrorMessage("Centrality measure parameters were not received.");
+                });
+        }
+
+        /* Requests all parameter names for a given centrality simulation.
+         * Then executes a calllback function */
+        function getCentralitySimulationParameters(centralitySimulationName, callback) {
+            sendRequest("get", "centralitysimulations/" + centralitySimulationName + "/parameters/default", "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * Centrality simulation parameter request failed
+                     */
+                    showConnectionErrorMessage("Centrality simulation parameters were not received.");
+                });
+        }
+
+        /* Handles the collapsable element for the algorithm execution. */
+        function runAlgorithmCollapsableHandler() {
+            if (typeof algorithmNames === 'undefined') {
+                /* Adds all algorithm names to the form */
+                getAlgorithmNames(function () {
+                    $(algorithmNames).find('Name').each(function () {
+                        if ($(this).text() !== 'UNDEFINED' && $(this).text() !== 'GROUND_TRUTH') {
+                            $("#algorithm").append(
+                                '<option value="' + $(this).text()
+                                + '">' + parseEnumName($(this).text()) + '</option>');
                         }
-                    },
-                    /* Error handler */
-                    function(errorData) {
-                        showErrorMessage("The eigenvalue of the adjacency matrix could not be calculated.");
+                    });
+                });
+                /* Registers the parameter component for the contentHandler */
+                registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
+            }
+        }
+
+        /* Handles the collapsable element for the algorithm execution. */
+        function runSimulationCollapsableHandler() {
+            if (typeof algorithmNames === 'undefined') {
+                /* Adds all algorithm names to the form */
+                getAlgorithmNames(function () {
+                    $(algorithmNames).find('Name').each(function () {
+                        if ($(this).text() !== 'UNDEFINED' && $(this).text() !== 'GROUND_TRUTH') {
+                            $("#algorithm").append(
+                                '<option value="' + $(this).text()
+                                + '">' + parseEnumName($(this).text()) + '</option>');
+                        }
+                    });
                 });
             }
-        </script>
-    </head>
-    <body>
-        <div id="wrapper">
-            <div id="contentWrapper">
-                <div id="content">
-                    <!-- Container for error message display -->
-                    <div id="errorMessageWrapper">
-                        <div id="errorMessage"></div>
-                    </div>
-                    <!-- Graph meta information and related data -->
-                    <div style="margin-bottom: 1em;">
-                      <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
+        }
 
-                      </div>
-                      <div class="side-nav d-flex flex-row">
-                        <ul class="nav" style="width:100%;">
+        /* Handles the collapsable element for the centrality calculation. */
+        function runCentralityCalculationCollapsableHandler() {
+            if (typeof centralityMeasureNames === 'undefined') {
+                /* Adds all centrality measure names to the form */
+                getCentralityMeasureNames(function () {
+                    $(centralityMeasureNames).find('Name').each(function () {
+                        if ($(this).text() !== 'Undefined') {
+                            $("#centralityMeasure").append(
+                                '<option value="' + $(this).text()
+                                + '">' + $(this).text() + '</option>');
+                        }
+                    });
+                });
+                /* Registers the parameter component for the contentHandler */
+                registerParameterSelect("#centralityMeasure", "#centralityMeasureParameterDiv", getCentralityMeasureParameters);
+            }
+        }
+
+        /* Handles the collapsable element for the centrality simulation. */
+        function runCentralitySimulationCollapsableHandler() {
+            if (typeof centralitySimulationNames === 'undefined') {
+                /* Adds all centrality simulation names to the form */
+                getCentralitySimulationNames(function () {
+                    $(centralitySimulationNames).find('Name').each(function () {
+                        if ($(this).text() !== 'Undefined') {
+                            $("#centralitySimulation").append(
+                                '<option value="' + $(this).text()
+                                + '">' + $(this).text() + '</option>');
+                        }
+                    });
+                });
+                $('#multipleRuns').change(function () {
+                    $('#runsInput').toggleClass("hidden");
+                });
+                /* Registers the parameter component for the contentHandler */
+                registerParameterSelect("#centralitySimulation", "#centralitySimulationParameterDiv", getCentralitySimulationParameters);
+            }
+        }
+
+        /* Requests and stores the properties of the graph.
+         * Then executes a callback function */
+        function getProperties(callback) {
+            sendRequest("get", "graphs/" + graphId + "?outputFormat=PROPERTIES_XML", "",
+                /* Response handler */
+                function (response) {
+                    graphProperties = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Graph Properties was not received.");
+                }, "text");
+        }
+
+        /* Requests and stores the edge list of the graph.
+         * Then executes a callback function */
+        function getEdgeList(callback) {
+            sendRequest("get", "graphs/" + graphId + "?outputFormat=WEIGHTED_EDGE_LIST", "",
+                /* Response handler */
+                function (response) {
+                    graphEdgeList = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Graph was not received.");
+                }, "text");
+        }
+
+        /* Handles the collapsable element for the properties. */
+        function propertiesCollapsableHandler() {
+            if (typeof graphProperties === 'undefined') {
+                /* Requests the edge list */
+                getProperties(function () {
+                    /* Adds properties information to a table */
+                    var properties = $(graphProperties).children();
+                    for (i = 0; i < properties.length; i++) {
+                        var name = $(properties)[i].nodeName;
+                        var value = $(graphProperties).find($(properties)[i].nodeName).text();
+                        if (name !== 'ID' && name !== 'NAME') {
+                            name = name.replace("_", " ");
+                            var row = '<tr>'
+                                + '<td>' + name + '</td>'
+                                + '<td>' + value + '</td>'
+                                + '</tr>';
+                            $("#graphPropertiesTable tbody").append(row);
+                        }
+                    }
+                });
+
+            }
+        }
+
+        /* Handles the collapsable element for the edge list. */
+        function edgeListCollapsableHandler() {
+            if (typeof graphEdgeList === 'undefined') {
+                /* Requests the edge list */
+                getEdgeList(function () {
+                    /* Adds the edge list information to a table */
+                    var lines = graphEdgeList.split('\n');
+                    $.each(lines, function (key, line) {
+                        var parts = line.split(' ');
+                        if ($(parts).length === 3) {
+                            var row = '<tr>'
+                                + '<td>' + parts[0] + '</td>'
+                                + '<td>' + parts[1] + '</td>'
+                                + '<td>' + parts[2] + '</td>'
+                                + '</tr>';
+                            $("#graphEdgeTable tbody").append(row);
+                        }
+                    });
+                    $("#graphEdgeTable").tablesorter({sortList: [[0, 0], [1, 0]]});
+                });
+            }
+        }
+
+        /* Handles what happens on the visualization type Button presses */
+        function buttonClick(number) {
+            $(document).ready(function () {
+
+                let svgVizScroll = document.getElementById("visualizationZoomer");
+                let svgViz = document.getElementById("visualizationContent");
+                let forceViz = document.getElementById("forceVisualizationContent");
+
+                highlightNodes = new Set();
+                highlightLinks = new Set();
+
+                if (number === 0) {
+                    forceViz.style.display = "none";
+
+                    svgViz.style.display = "inherit";
+                    svgVizScroll.style.display = "inline";
+                } else if (number === 1 || number === 2) {
+                    forceViz.style.display = "inherit";
+                    if (typeof jsonGraph !== "undefined") {
+                        jsonGraph.width($('.forceVisualizationContent').width());
+                        jsonGraph.height($('.forceVisualizationContent').height());
+                    }
+                    svgViz.style.display = "none";
+                    svgVizScroll.style.display = "none";
+
+                    if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
+                        have3D = false;
+                        //console.log("2D");
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph._destructor();
+                        }
+                        getJSON();
+                    } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
+                        have3D = true;
+                        //console.log("3D");
+                        if (typeof jsonGraph !== "undefined") {
+                            jsonGraph._destructor();
+                        }
+                        getJSON();
+                    }
+                }
+            })
+        }
+
+        /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
+        document.addEventListener('fullscreenchange', (event) => {
+            // document.fullscreenElement will point to the element that
+            // is in fullscreen mode if there is one. If there isn't one,
+            // the value of the property is null.
+            if (typeof document.fullscreenElement !== "undefined") {
+                var elem = document.getElementById('forceVisualizationContent');
+
+                if (typeof jsonGraph !== "undefined") {
+                    jsonGraph.width($('.forceVisualizationContent').width());
+                    jsonGraph.height($('.forceVisualizationContent').height());
+                }
+            }
+        });
+
+        /* Listener for Ctrl+C presses */
+        document.addEventListener('keydown', (e) => {
+            if(e.code === "KeyC" || e.code === "ControlLeft") {
+                keysPressed.set(e.code,true);
+            }
+        });
+
+        /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
+        document.addEventListener('keyup', (e) => {
+            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
+            {
+                var elem = document.getElementById('forceVisualizationContent');
+
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                    elem.msRequestFullscreen();
+                }
+
+                if (typeof jsonGraph !== "undefined") {
+                    jsonGraph.width(screen.width);
+                    jsonGraph.height(screen.height);
+                }
+            }
+            else if(e.code === "KeyF" && window.innerHeight === screen.height)
+            {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { /* Firefox */
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE/Edge */
+                    document.msExitFullscreen();
+                }
+            }
+            else if(e.code === "Enter" && document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm"))
+            {
+                nodeSearch();
+            }
+            else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
+            {
+                if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
+                    if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
+                        searchDropDown();
+                    }
+
+                    document.getElementById("nodeSearchForm").value = nodeName;
+                    document.getElementById("nodeSearchForm").select();
+                    document.execCommand("copy", false, document.getElementById("nodeSearchForm").value);
+                }
+                keysPressed.set(e.code, false);
+            }
+        });
+
+        /* Opens the dropdown menu for entering database information */
+        function databaseInfoDropDown() {
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+            document.getElementById("dataBaseDropDownContent").classList.toggle("show");
+        }
+
+        /* Opens the search bar for nodes */
+        function searchDropDown() {
+            document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+            document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
+            document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+        }
+
+        function databaseInfoSubmit() {
+            arangoUser = $("#arangoUser").val();
+            arangoPass = $("#arangoPass").val();
+            arangoDataBase = $("#arangoDataBase").val();
+            arangoCollection = $("#arangoCollection").val();
+
+            localStorage.setItem("arangoUser@WebOCD",arangoUser);
+            localStorage.setItem("arangoPass@WebOCD",arangoPass);
+            localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
+            localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+
+            var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')) {
+                var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+                dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        /* Let the camera look at a specified node (if found) */
+        function nodeSearch(){
+            if (typeof jsonGraph !== "undefined") {
+                let searchNodeName = $("#nodeSearchForm").val();
+
+                for(let node of jsonGraph.graphData().nodes)
+                {
+                    if(node.name === searchNodeName)
+                    {
+                        if(have3D === false) {
+                            jsonGraph.centerAt(node.x, node.y);
+                            jsonGraph.zoom(9, 200);
+                            searchNodeName = undefined;
+                        } else {
+                            const distance = 40;
+                            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                            jsonGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                            searchNodeName = undefined;
+                        }
+                    }
+                }
+                if (typeof searchNodeName !== "undefined" && searchNodeName !== "") {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
+                    document.getElementById("nodeSearchForm").placeholder = "Not found";
+                } else {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+                    document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+                    let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        let openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+                document.getElementById("nodeSearchForm").value = "";
+            }
+        }
+
+        /* Requests and stores a JSON representation of the graph.
+         * Then executes a callback function */
+        function getJSON() {
+            sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                function (response) {
+                    jsonGraph = response;
+                    let graph = JSON.parse(jsonGraph);
+                    let degree = new Map();
+                    let outgoingNeighbours = new Map();
+                    let styles = []
+                    for (let node of graph.nodes) {
+                        degree[node.id] = 0;
+                        outgoingNeighbours[node.id] = [];
+                    }
+                    for (let edge of graph.links) {
+                        degree[edge.source] += 1;
+                        outgoingNeighbours[edge.source].push(edge.target);
+                        styles.push(edge.style);
+                    }
+
+                    if (have3D === false) {
+                        jsonGraph = ForceGraph()
+                        (document.getElementById('forceVisualizationGraphic'))
+                            .backgroundColor("#fafafa")
+                            .graphData(graph)
+                            .nodeId('id')
+                            .nodeLabel('name')
+                            .onNodeHover(node => {
+                                if(node != null) {
+                                    nodeName = node.name;
+                                }
+                            })
+                            .onNodeClick(node => {
+                                if(arangoDataBase !== "" && arangoDataBase !== null
+                                    && arangoUser !== "" && arangoUser !== null
+                                    && arangoPass !== null
+                                    && arangoCollection !== "" && arangoCollection !== null) {
+
+                                    db.useDatabase(arangoDataBase);
+                                    db.useBasicAuth(arangoUser, arangoPass);
+                                    const docCollection = db.collection(arangoCollection);
+                                    docCollection.document(node.name, true).then(function (doc) {
+                                        let nodeWindow = window.open("", '_blank');
+
+                                        if (doc != null) {
+                                            let docStr = JSON.stringify(doc, null, '    ');
+                                            docStr = docStr.replace(/\n/g, "<br />");
+                                            nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                        } else {
+                                            nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                        }
+                                    }).catch((err) => console.error(err));
+                                }
+                            })
+                            .onNodeRightClick(node => {
+                                highlightNodes.clear();
+                                highlightLinks.clear();
+                                if (node !== rightClickNode) {
+                                    if (node) {
+                                        highlightNodes.add(node.id);
+                                        outgoingNeighbours[node.id].forEach(neighbor => highlightNodes.add(neighbor));
+                                        graph.links.forEach(link => {
+                                            if (link.source.id === node.id) {
+                                                highlightLinks.add(link)
+                                            }
+                                        });
+                                    }
+                                    rightClickNode = node;
+                                } else {
+                                    rightClickNode = null;
+                                }
+                                rightClickLink = null;
+                            })
+                            .nodeVal(function (node) {
+                                return Math.log(degree[node.id] + 1)
+                            } /*<= 14 ? degree[node.id] : 14}*/)
+                            .nodeColor(function (node) {
+                                if (highlightNodes.has(node.id)) {
+                                    return ((node === rightClickNode) ? '#f54a06' : '#fd970d');
+                                } else {
+                                    return '#3183ba';
+                                }
+                            })
+                            .linkSource('source')
+                            .onLinkRightClick(link => {
+                                //console.log(link);
+                                highlightNodes.clear();
+                                highlightLinks.clear();
+                                if (link !== rightClickLink) {
+                                    if (link) {
+                                        highlightLinks.add(link);
+                                        highlightNodes.add(link.source.id);
+                                        highlightNodes.add(link.target.id);
+                                    }
+                                    rightClickLink = link;
+                                    rightClickNode = null;
+                                } else {
+                                    rightClickLink = null;
+                                    rightClickNode = null;
+                                }
+                            })
+                            .linkLineDash(function (link) {
+                                if (styles[link.index] === 1) {
+                                    return [10, 10]
+                                } else if (styles[link.index] === 2) {
+                                    return [5, 5]
+                                }
+                            })
+                            .linkWidth(link => highlightLinks.has(link) ? 2.5 : 1.5)
+                            .linkColor(link => highlightLinks.has(link) ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
+                            .linkDirectionalArrowLength(5)
+                            .linkDirectionalArrowRelPos(1)
+                            .linkTarget('target')
+                            .nodeCanvasObjectMode(node => highlightNodes.has(node.id) ? 'after' : undefined)
+                            .cooldownTicks(200);
+                    } else {
+                        jsonGraph = ForceGraph3D()
+                        (document.getElementById('forceVisualizationGraphic'))
+                            .graphData(graph)
+                            .nodeId('id')
+                            .nodeLabel('name')
+                            .onNodeHover(node => {
+                                if(node != null) {
+                                    nodeName = node.name;
+                                }
+                            })
+                            .onNodeClick(node => {
+                                if(arangoDataBase !== "" && arangoDataBase !== null
+                                    && arangoUser !== "" && arangoUser !== null
+                                    && arangoPass !== null
+                                    && arangoCollection !== "" && arangoCollection !== null) {
+
+                                    db.useDatabase(arangoDataBase);
+                                    db.useBasicAuth(arangoUser, arangoPass);
+                                    const docCollection = db.collection(arangoCollection);
+                                    docCollection.document(node.name, true).then(function (doc) {
+                                        let nodeWindow = window.open("", '_blank');
+
+                                        if (doc != null) {
+                                            //console.log(JSON.stringify(doc, null, '    '));
+                                            let docStr = JSON.stringify(doc, null, '    ');
+                                            docStr = docStr.replace(/\n/g, "<br />");
+                                            nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                        } else {
+                                            nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                        }
+                                    }).catch((err) => console.error(err));
+                                }
+                            })
+                            .onNodeRightClick(node => {
+                                highlightNodes.clear();
+                                highlightLinks.clear();
+                                if (node !== rightClickNode) {
+                                    if (node) {
+                                        highlightNodes.add(node.id);
+                                        outgoingNeighbours[node.id].forEach(neighbor => highlightNodes.add(neighbor));
+                                        graph.links.forEach(link => {
+                                            if (link.source.id === node.id) {
+                                                highlightLinks.add(link)
+                                            }
+                                        });
+                                    }
+                                    rightClickNode = node;
+                                    rightClickLink = null;
+                                } else {
+                                    rightClickNode = null;
+                                    rightClickLink = null;
+                                }
+
+                                updateHighlight();
+                            })
+                            .nodeColor(function (node) {
+                                if (highlightNodes.has(node.id)) {
+                                    return ((node === rightClickNode) ? '#f53e06' : '#f5fd0d');
+                                } else {
+                                    return '#3183ba';
+                                }
+                            })
+                            .nodeVal(function (node) {
+                                return Math.log(degree[node.id] + 1)
+                            })
+                            .linkSource('source')
+                            .onLinkRightClick(link => {
+                                //console.log(link);
+                                highlightNodes.clear();
+                                highlightLinks.clear();
+                                if (link !== rightClickLink) {
+                                    if (link) {
+                                        highlightLinks.add(link);
+                                        highlightNodes.add(link.source.id);
+                                        highlightNodes.add(link.target.id);
+                                    }
+                                    rightClickLink = link;
+                                    rightClickNode = null;
+                                } else {
+                                    rightClickLink = null;
+                                    rightClickNode = null;
+                                }
+
+                                updateHighlight();
+                            })
+                            .linkOpacity(0.35)
+                            .linkColor(link => highlightLinks.has(link) ? "rgba(126,234,10,0.85)" : "#dedede")
+                            .linkWidth(link => highlightLinks.has(link) ? 2 : 0)
+                            .linkDirectionalArrowLength(4)
+                            .linkDirectionalArrowRelPos(1)
+                            .linkTarget('target')
+                            .cooldownTicks(200);
+
+                        function updateHighlight() {
+                            // trigger update of highlighted objects in scene
+                            jsonGraph
+                                .nodeColor(jsonGraph.nodeColor())
+                                .linkColor(jsonGraph.linkColor())
+                                .linkWidth(jsonGraph.linkWidth());
+                        }
+                    }
+
+                    jsonGraph.width($('.forceVisualizationContent').width());
+                    jsonGraph.height($('.forceVisualizationContent').height());
+
+                    //jsonGraph.style.width = document.getElementById('forceVisualizationContent').style.width -106;
+                    //jsonGraph.style.height = document.getElementById('forceVisualizationContent').style.height -6;
+
+                    //jsonGraph.onEngineStop(jsonGraph.zoomToFit(400));
+
+                    //$('.forceVisualizationGraphic').append(jsonGraph);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Visualization was not received.");
+                });
+        }
+
+        /* Handles the collapsable element for the graph visualization */
+        function visualizationCollapsableHandler() {
+            /* Requests the graph visualization */
+            if (typeof visualization === 'undefined') {
+                getVisualization();
+            }
+            // if (typeof jsonGraph === 'undefined') {
+            //     getJSON();
+            //     document.getElementById("forceVisualizationContent").style.display = "none";
+            //     console.log("jsonGRAPH after: " + jsonGraph)
+            // }
+            /* Registers the visualization for panzoom */
+            var $panzoom = $('body').find('.visualizationGraphic').panzoom({
+                $zoomRange: $('body').find(".visualizationZoomer"),
+                increment: 0.9,
+                contain: 'invert',
+                maxScale: 10,
+                minScale: 1
+            });
+            $panzoom.on('mousewheel', function (e) {
+                e.preventDefault();
+                var delta = e.delta || e.originalEvent.wheelDelta;
+                var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+                $panzoom.panzoom('zoom', zoomOut, {
+                    increment: 0.1,
+                    animate: false,
+                    focal: e
+                });
+            });
+        }
+
+        /* Requests and stores the graph visualization */
+        function getVisualization() {
+            sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+                /* Request handler */
+                function (response) {
+                    visualization = response;
+                    $('.visualizationGraphic').append(visualization);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Visualization was not received.");
+                });
+        }
+
+        function deleteGraph() {
+            sendRequest("delete", "graphs/" + graphId, "",
+                /* Request handler */
+                function (response) {
+                    showSuccess(response);
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage(errorData);
+                });
+        }
+
+        /* Request and display the principal eigenvalue of the graph's adjacency matrix */
+        function displayEigenvalue() {
+            sendRequest("get", "centrality/graphs/" + graphId
+                + "/eigenvalue", "",
+                /* Response handler */
+                function (response) {
+                    if (response !== 'undefined') {
+                        eigenvalue = $(response).filter('Value').text();
+                        $('#annotationText').append("<p>Alpha should be smaller than " + 1 / eigenvalue + ".</p>");
+                        $('#annotationDiv').show();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    showErrorMessage("The eigenvalue of the adjacency matrix could not be calculated.");
+                });
+        }
+    </script>
+</head>
+<body>
+<div id="wrapper">
+    <div id="contentWrapper">
+        <div id="content">
+            <!-- Container for error message display -->
+            <div id="errorMessageWrapper">
+                <div id="errorMessage"></div>
+            </div>
+            <!-- Graph meta information and related data -->
+            <div style="margin-bottom: 1em;">
+                <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
+
+                </div>
+                <div class="side-nav d-flex flex-row">
+                    <ul class="nav" style="width: 100%;">
                         <div class="p-2 coverColor col-md-3 col-sm-6">
-                          <li id="graphCovers" class="nav-item coverColor"></li>
+                            <li id="graphCovers" class="nav-item coverColor"></li>
                         </div>
                         <div class="p-2 simulationColor col-md-3 col-sm-6">
-                          <li id="graphSimulations" class="nav-item simulationColor"></li>
+                            <li id="graphSimulations" class="nav-item simulationColor"></li>
                         </div>
                         <div class="p-2 centralityColor col-md-3 col-sm-6">
-                          <li id="graphCentralities" class="nav-item centralityColor"></li>
+                            <li id="graphCentralities" class="nav-item centralityColor"></li>
                         </div>
                         <div class="p-2 deleteColor col-md-3 col-sm-6">
-                          <li id="graphDelete" class="nav-item deleteColor"></li>
+                            <li id="graphDelete" class="nav-item deleteColor"></li>
                         </div>
-                        </ul>
-                      </div>
-                    </div>
-                    <div class="container-fluid">
-                    <div class="row">
+                    </ul>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row">
                     <!-- Collapsable for graph properties -->
                     <div id="propertiesCollapsable" class="collapsable col-lg-6">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Properties</div>
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
@@ -611,12 +1128,8 @@
                                 <table id="graphPropertiesTable" class="table">
                                     <thead>
                                     <tr>
-                                        <th title="Property">
-                                            Property
-                                        </th>
-                                        <th title="Value">
-                                            Value
-                                        </th>
+                                        <th title="Property">Property</th>
+                                        <th title="Value">Value</th>
                                     </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -625,13 +1138,16 @@
                         </div>
                     </div>
                     <!-- Collapsable for graph edge list -->
-                    <div id="edgeListCollapsable" class="collapsable col-sm-12 col-lg-6">
+                    <div id="edgeListCollapsable"
+                         class="collapsable col-sm-12 col-lg-6">
                         <div class="collapsableHeader">
-                          <div class="collapsableTitle">Edges</div>
+                            <div class="collapsableTitle">Edges</div>
 
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
@@ -640,15 +1156,9 @@
                                 <table id="graphEdgeTable" class="table">
                                     <thead>
                                     <tr>
-                                        <th title="Source Node">
-                                            Source
-                                        </th>
-                                        <th title="Target Node">
-                                            Target
-                                        </th>
-                                        <th title="Edge Weight">
-                                            Weight
-                                        </th>
+                                        <th title="Source Node">Source</th>
+                                        <th title="Target Node">Target</th>
+                                        <th title="Edge Weight">Weight</th>
                                     </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -656,180 +1166,231 @@
                             </div>
                         </div>
                     </div>
-                  </div>
-                  <div class="row">
+                </div>
+                <div class="row">
                     <!-- Collapsable for algorithm execution -->
                     <div id="runAlgorithmCollapsable" class="collapsable col-sm-12">
                         <div class="collapsableHeader coverColor">
                             <div class="collapsableTitle">Run OCD Algorithm</div>
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
-                          <div id="ocdContainer" class="container">
-                            <form id="runAlgorithmForm" action="javascript:void(0); return false;">
-                              <!-- Cover Name -->
-                              <div class="form-group row">
-                                <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
-                                <div class="col-sm-10">
-                                   <input id="coverName" type="text" class="form-control" name="name" placeholder="name">
-                                </div>
-                              </div>
-                              <!-- Algorithm -->
-                              <div class="form-group row">
-                                <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
-                                <div class="col-sm-10">
-                                  <select id="algorithm" class="form-control custom-select">
-                                  </select>
-                                </div>
-                              </div>
-                              <!-- Algorithm Parameters -->
-                                <div class="col-sm-10" id="algorithmParameterDiv">
-                                </div>
+                            <div id="ocdContainer" class="container">
+                                <form id="runAlgorithmForm"
+                                      action="javascript:void(0); return false;">
+                                    <!-- Cover Name -->
+                                    <div class="form-group row">
+                                        <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
+                                        <div class="col-sm-10">
+                                            <input id="coverName" type="text" class="form-control"
+                                                   name="name" placeholder="name">
+                                        </div>
+                                    </div>
+                                    <!-- Algorithm -->
+                                    <div class="form-group row">
+                                        <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                                        <div class="col-sm-10">
+                                            <select id="algorithm" class="form-control custom-select">
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!-- Algorithm Parameters -->
+                                    <div class="col-sm-10" id="algorithmParameterDiv"></div>
 
-                              <div class="form-group row">
-                                <div class="container">
-                                <label class="custom-control custom-checkbox">
-                                  <input id="contentWeighting" type="checkbox" class="custom-control-input">
-                                  <span class="custom-control-indicator"></span>
-                                  <span class="custom-control-description">Content Weighting</span>
-                                </label>
-                              </div>
-                              </div>
-                              <div class="form-group">
-                                 <button type="submit" name="submit" id="runAlgorithmBtn" class="btn btn-primary">Run</button>
-                              </div>
-                              </form>
-                          </div>
+                                    <div class="form-group row">
+                                        <div class="container">
+                                            <label class="custom-control custom-checkbox"> <input
+                                                    id="contentWeighting" type="checkbox"
+                                                    class="custom-control-input"> <span
+                                                    class="custom-control-indicator"></span> <span
+                                                    class="custom-control-description">Content Weighting</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" name="submit" id="runAlgorithmBtn"
+                                                class="btn btn-primary">Run
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
 
                         </div>
                     </div>
-                  </div>
-                  <div class="row">
+                </div>
+                <div class="row">
                     <!-- Collapsable for simulation execution -->
                     <div id="runSimulationCollapsable" class="collapsable col-sm-12">
                         <div class="collapsableHeader simulationColor">
                             <div class="collapsableTitle">Run Cooperation Simulation</div>
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for simulation execution -->
-                                <div id="simulationContainer" class="container">
-
-                                </div>
+                            <div id="simulationContainer" class="container"></div>
                         </div>
                     </div>
-                  </div>
-                    <div class="row">
+                </div>
+                <div class="row">
                     <!-- Collapsable for centrality calculation execution -->
-                    <div id="runCentralityCalculationCollapsable" class="collapsable col-sm-12">
+                    <div id="runCentralityCalculationCollapsable"
+                         class="collapsable col-sm-12">
                         <div class="collapsableHeader centralityColor">
                             <div class="collapsableTitle">Run Centrality Calculation</div>
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for centrality calculation execution -->
                             <form id="runCentralityCalculationForm" class="container">
-                                  <div class="form-group row">
-                                  <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality Measure</label>
+                                <div class="form-group row">
+                                    <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality
+                                        Measure</label>
                                     <div class="col-sm-7">
-                                      <select id="centralityMeasure" class="form-control in-line"></select>
+                                        <select id="centralityMeasure" class="form-control in-line"></select>
                                     </div>
                                     <div class="col-sm-1">
-                                        <button id="centralityInfo" class="btn btn-default in-line" type="button">
-                                            <img src="IMG/open-iconic/svg/info.svg" width="20" />
+                                        <button id="centralityInfo" class="btn btn-default in-line"
+                                                type="button">
+                                            <img src="IMG/open-iconic/svg/info.svg" width="20"/>
                                         </button>
                                     </div>
-                                  </div>
+                                </div>
 
-                                  <div class="form-group col-sm-12" id="centralityMeasureParameterDiv">
-                                  </div>
+                                <div class="form-group col-sm-12"
+                                     id="centralityMeasureParameterDiv"></div>
 
-                                  <div id="annotationDiv" class="row justify-content-end hidden">
-                                    <div id="annotationText" class="col-12">
-                                    </div>
-                                  </div>
+                                <div id="annotationDiv" class="row justify-content-end hidden">
+                                    <div id="annotationText" class="col-12"></div>
+                                </div>
 
-                                  <div class="form-group row col-sm-12">
-                                      <button type="submit" id="runCentralityCalculationBtn" class="btn btn-primary">Run</button>
-                                  </div>
+                                <div class="form-group row col-sm-12">
+                                    <button type="submit" id="runCentralityCalculationBtn"
+                                            class="btn btn-primary">Run
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
-                  </div>
-                  <div class="row">
+                </div>
+                <div class="row">
                     <!-- Collapsable for centrality simulation execution -->
-                    <div id="runCentralitySimulationCollapsable" class="collapsable col-sm-12">
+                    <div id="runCentralitySimulationCollapsable"
+                         class="collapsable col-sm-12">
                         <div class="collapsableHeader centralityColor">
                             <div class="collapsableTitle">Run Centrality Simulation</div>
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
                             <!-- Form for centrality simulation execution -->
                             <form id="runCentralitySimulationForm" class="container">
-                                  <div class="form-group row">
-                                  <label for="centralitySimulation" class="col-sm-4 col-form-label">Simulation</label>
+                                <div class="form-group row">
+                                    <label for="centralitySimulation"
+                                           class="col-sm-4 col-form-label">Simulation</label>
                                     <div class="col-sm-7">
-                                      <select id="centralitySimulation" class="form-control in-line"></select>
+                                        <select id="centralitySimulation"
+                                                class="form-control in-line"></select>
                                     </div>
                                     <div class="col-sm-1">
-                                        <button id="centralitySimulationInfo" class="btn btn-default in-line" type="button">
-                                            <img src="IMG/open-iconic/svg/info.svg" width="20" />
+                                        <button id="centralitySimulationInfo"
+                                                class="btn btn-default in-line" type="button">
+                                            <img src="IMG/open-iconic/svg/info.svg" width="20"/>
                                         </button>
                                     </div>
-                                  </div>
-                                  <div class="form-group col-sm-12" id="centralitySimulationParameterDiv">
-                                  </div>
-                                  <div class="form-group row col-sm-12" id="centralitySimulationRunsDiv">
-                                      <label><input type="checkbox" id="multipleRuns"> Multiple Runs</label>
-                                      <input type="text" class="form-control hidden" value="2" id="runsInput">
-                                  </div>
+                                </div>
+                                <div class="form-group col-sm-12"
+                                     id="centralitySimulationParameterDiv"></div>
+                                <div class="form-group row col-sm-12"
+                                     id="centralitySimulationRunsDiv">
+                                    <label><input type="checkbox" id="multipleRuns">
+                                        Multiple Runs</label> <input type="text" class="form-control hidden"
+                                                                     value="2" id="runsInput">
+                                </div>
 
-                                  <div class="form-group">
-                                      <button type="submit" id="runCentralitySimulationBtn" class="btn btn-primary">Run</button>
-                                  </div>
+                                <div class="form-group">
+                                    <button type="submit" id="runCentralitySimulationBtn"
+                                            class="btn btn-primary">Run
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
-                  </div>
-                    <!-- Collapsable for graph visualization -->
-                    <div class="row">
+                </div>
+                <!-- Collapsable for graph visualization -->
+                <div class="row">
                     <div id="visualizationCollapsable" class="collapsable col-sm-12">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Visualization</div>
                             <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
-                                <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                             </div>
                         </div>
                         <div class="collapsableContent">
+                            <!-- Three Graph type buttons in a group -->
+                            <div class="optionRow" style="width:100%">
+                                <div class="dataBaseDropDown" style="width:10%">
+                                    <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
+                                    <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
+                                        <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
+                                        <input class="dataBaseDropDownContentForm" id="arangoPass" type="password" name="arangoPass" placeholder="Password">
+                                        <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
+                                        <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
+                                        <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
+                                    </form>
+                                </div>
+                                <div class="searchDropDown" style="width:8%">
+                                    <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
+                                    <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button' onSubmit="return false;">
+                                        <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
+                                        <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
+                                    </form>
+                                </div>
+                                <div class="btn-group" style="width:81%">
+                                    <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
+                                    <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
+                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                                </div>
+                            </div>
                             <!-- Container for graph visualization -->
                             <div class="visualization">
-                                <div class="visualizationControl">
-                                    <input class="visualizationZoomer" type="range">
+                                <div class="visualizationControl" id="visualizationControl">
+                                    <input id="visualizationZoomer" class="visualizationZoomer" type="range">
                                 </div>
-                                <div class="visualizationContent">
-                                    <div class="visualizationGraphic">
-                                    </div>
+                                <div id="visualizationContent" class="visualizationContent">
+                                    <div class="visualizationGraphic"></div>
+                                </div>
+                                <div id="forceVisualizationContent" class="forceVisualizationContent">
+                                    <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                  </div>
                 </div>
-              </div>
             </div>
         </div>
-    </body>
+    </div>
+</div>
+</body>
 </html>
