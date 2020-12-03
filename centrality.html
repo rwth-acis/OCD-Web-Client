@@ -25,6 +25,7 @@
     <script src="JS/force-graph/force-graph.js"></script>
     <script src="JS/force-graph/3d-force-graph.js"></script>
     <script src="JS/arangojs@6.14.1/lib/web.js"></script>
+    <script src="JS/FileSaver.js"></script>
     <script type="text/javascript">
         /* Id of the corresponding graph */
         var graphId = getUrlVar("graphId");
@@ -36,6 +37,9 @@
         var mapDefaultXml;
         /* Graph structure in JSON format */
         var jsonGraph;
+        var forceGraph;
+        var visualizationType = "NODE_SIZE";
+        var visualizationTypeChange = true;
         var have3D;
         var nodeName = "";
         var keysPressed = new Map();
@@ -221,9 +225,9 @@
                     displayingForceGraph = true;
 
                     forceViz.style.display = "inherit";
-                    if (typeof jsonGraph !== "undefined") {
-                        jsonGraph.width($('.forceVisualizationContent').width());
-                        jsonGraph.height($('.forceVisualizationContent').height());
+                    if (typeof forceGraph !== "undefined") {
+                        forceGraph.width($('.forceVisualizationContent').width());
+                        forceGraph.height($('.forceVisualizationContent').height());
                     }
                     svgViz.style.display = "none";
                     svgVizScroll.style.display = "none";
@@ -231,15 +235,15 @@
                     if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
                         have3D = false;
                         //console.log("2D");
-                        if (typeof jsonGraph !== "undefined") {
-                            jsonGraph._destructor();
+                        if (typeof forceGraph !== "undefined") {
+                            forceGraph._destructor();
                         }
                         getJSON();
                     } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
                         have3D = true;
                         //console.log("3D");
-                        if (typeof jsonGraph !== "undefined") {
-                            jsonGraph._destructor();
+                        if (typeof forceGraph !== "undefined") {
+                            forceGraph._destructor();
                         }
                         getJSON();
                     }
@@ -255,9 +259,9 @@
             if (typeof document.fullscreenElement !== "undefined") {
                 var elem = document.getElementById('forceVisualizationContent');
 
-                if (typeof jsonGraph !== "undefined") {
-                    jsonGraph.width($('.forceVisualizationContent').width());
-                    jsonGraph.height($('.forceVisualizationContent').height());
+                if (typeof forceGraph !== "undefined") {
+                    forceGraph.width($('.forceVisualizationContent').width());
+                    forceGraph.height($('.forceVisualizationContent').height());
                 }
             }
         });
@@ -285,9 +289,9 @@
                     elem.msRequestFullscreen();
                 }
 
-                if (typeof jsonGraph !== "undefined") {
-                    jsonGraph.width(screen.width);
-                    jsonGraph.height(screen.height);
+                if (typeof forceGraph !== "undefined") {
+                    forceGraph.width(screen.width);
+                    forceGraph.height(screen.height);
                 }
             }
             else if(e.code === "KeyF" && window.innerHeight === screen.height)
@@ -302,9 +306,14 @@
                     document.msExitFullscreen();
                 }
             }
-            else if(e.code === "Enter" && document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm"))
+            else if(e.code === "Enter")
             {
-                nodeSearch();
+                if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm")) {
+                    nodeSearch();
+                }
+                else if(document.getElementById("toolsFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("saveJsonForm")) {
+                    saveJSON();
+                }
             }
             else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
             {
@@ -332,8 +341,17 @@
                     openDropdown.classList.remove('show');
                 }
             }
+            dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
             document.getElementById("dataBaseDropDownContent").classList.toggle("show");
         }
+
         /* Opens the search bar for nodes */
         function searchDropDown() {
             document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
@@ -348,10 +366,37 @@
                     openDropdown.classList.remove('show');
                 }
             }
-
-            if(document.getElementById("visualizationContent").style.display === "none") {
-                document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+            dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
             }
+
+            document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+        }
+
+        /* Opens the tool bar(s) */
+        function toolsDropDownDots() {
+            // Close other menus
+            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+            dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
+            document.getElementById("toolsFormDropDown").classList.toggle("show");
         }
 
         function databaseInfoSubmit() {
@@ -377,7 +422,9 @@
 
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function(event) {
-            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')) {
+            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
+                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm')){
+
                 var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
                 var i;
                 for (i = 0; i < dropdowns.length; i++) {
@@ -393,26 +440,33 @@
                         openDropdown.classList.remove('show');
                     }
                 }
+                dropdowns = document.getElementsByClassName("toolsFormDropDown");
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
             }
         }
 
         /* Let the camera look at a specified node (if found) */
         function nodeSearch(){
-            if (typeof jsonGraph !== "undefined") {
+            if (typeof forceGraph !== "undefined") {
                 let searchNodeName = $("#nodeSearchForm").val();
 
-                for(let node of jsonGraph.graphData().nodes)
+                for(let node of forceGraph.graphData().nodes)
                 {
                     if(node.name === searchNodeName)
                     {
                         if(have3D === false) {
-                            jsonGraph.centerAt(node.x, node.y);
-                            jsonGraph.zoom(9, 200);
+                            forceGraph.centerAt(node.x, node.y);
+                            forceGraph.zoom(9, 200);
                             searchNodeName = undefined;
                         } else {
                             const distance = 40;
                             const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
-                            jsonGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                            forceGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
                             searchNodeName = undefined;
                         }
                     }
@@ -436,209 +490,242 @@
             }
         }
 
-        /* Requests and stores a JSON representation of the graph.
-         * Then executes a callback function */
+        /* Save the Graph in JSON format */
+        function saveJSON() {
+            let fileName = $("#saveJsonForm").val();
+
+            if(typeof jsonGraph === 'undefined') {
+                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                    function (response) {
+                        jsonGraph = response;
+                        const blob = new Blob([jsonGraph],
+                            { type: "application/json" });
+                        saveAs(blob, fileName + ".json");
+                    });
+            }
+            else {
+                const blob = new Blob([jsonGraph],
+                    { type: "application/json" });
+                saveAs(blob, fileName + ".json");
+            }
+
+            let  dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            for (let i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+
+        /* Builds a force graph from json data */
+        function buildGraph() {
+            let graph = JSON.parse(jsonGraph);
+            let sizes = new Map();
+            let colors = new Map();
+            let size_min = Number.MAX_VALUE;
+            for (let node of graph.nodes) {
+                sizes[node.id] = node.size;
+                if (node.size < size_min) {
+                    size_min = node.size;
+                }
+
+                colors[node.id] = node.color;
+            }
+            //console.log(size_min);
+
+            if (have3D === false) {
+                forceGraph = ForceGraph()
+                (document.getElementById('forceVisualizationGraphic'))
+                    .backgroundColor("#fafafa")
+                    .graphData(graph)
+                    .nodeId('id')
+                    .nodeLabel('name')
+                    .onNodeHover(node => {
+                        if (node != null) {
+                            nodeName = node.name;
+                        }
+                    })
+                    .onNodeClick(node => {
+                        if (arangoDataBase !== "" && arangoDataBase !== null
+                            && arangoUser !== "" && arangoUser !== null
+                            && arangoPass !== null
+                            && arangoCollection !== "" && arangoCollection !== null) {
+
+                            db.useDatabase(arangoDataBase);
+                            db.useBasicAuth(arangoUser, arangoPass);
+                            const docCollection = db.collection(arangoCollection);
+                            docCollection.document(node.name, true).then(function (doc) {
+                                let nodeWindow = window.open("", '_blank');
+
+                                if (doc != null) {
+                                    //console.log(JSON.stringify(doc, null, '    '));
+                                    let docStr = JSON.stringify(doc, null, '    ');
+                                    docStr = docStr.replace(/\n/g, "<br />");
+                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                } else {
+                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                }
+                            }).catch((err) => console.error(err));
+                        }
+                    })
+                    .nodeVal(function (node) {
+                        if (visualizationType === "NODE_SIZE") {
+                            return sizes[node.id] - size_min + 1;
+                        } else {
+                            return 2;
+                        }
+                    })
+                    .nodeColor(function (node) {
+                        if (visualizationType !== "NODE_SIZE") {
+                            return colors[node.id];
+                        } else {
+                            return '#3183ba';
+                        }
+                    })
+                    .onNodeDragEnd(node => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    })
+                    .onNodeRightClick(node => {
+                        //TODO: Seem a bit slow after restoring, check original forces/velocity
+                        node.fx = null;
+                        node.fy = null;
+                    })
+                    .linkSource('source')
+                    .onLinkRightClick(link => {
+                        if (link !== rightClickLink) {
+                            rightClickLink = link;
+                        } else {
+                            rightClickLink = null;
+                        }
+                    })
+                    .linkWidth(link => link === rightClickLink ? 2.5 : 1.5)
+                    .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
+                    .linkDirectionalArrowLength(5)
+                    .linkDirectionalArrowRelPos(1)
+                    .linkTarget('target')
+                    .cooldownTicks(200);
+            } else {
+                forceGraph = ForceGraph3D()
+                (document.getElementById('forceVisualizationGraphic'))
+                    .graphData(graph)
+                    .nodeId('id')
+                    .nodeLabel('name')
+                    .onNodeHover(node => {
+                        if (node != null) {
+                            nodeName = node.name;
+                        }
+                    })
+                    .onNodeClick(node => {
+                        if (arangoDataBase !== "" && arangoDataBase !== null
+                            && arangoUser !== "" && arangoUser !== null
+                            && arangoPass !== null
+                            && arangoCollection !== "" && arangoCollection !== null) {
+
+                            db.useDatabase(arangoDataBase);
+                            db.useBasicAuth(arangoUser, arangoPass);
+                            const docCollection = db.collection(arangoCollection);
+                            docCollection.document(node.name, true).then(function (doc) {
+                                let nodeWindow = window.open("", '_blank');
+
+                                if (doc != null) {
+                                    //console.log(JSON.stringify(doc, null, '    '));
+                                    let docStr = JSON.stringify(doc, null, '    ');
+                                    docStr = docStr.replace(/\n/g, "<br />");
+                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                } else {
+                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                }
+                            }).catch((err) => console.error(err));
+                        }
+                    })
+                    .nodeVal(function (node) {
+                        if (visualizationType === "NODE_SIZE") {
+                            return sizes[node.id] - size_min + 1;
+                        } else {
+                            return 2;
+                        }
+                    })
+                    .nodeColor(function (node) {
+                        if (visualizationType !== "NODE_SIZE") {
+                            return colors[node.id];
+                        } else {
+                            return '#3183ba';
+                        }
+                    })
+                    .nodeOpacity(1)
+                    .onNodeDragEnd(node => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                        node.fz = node.z;
+                    })
+                    .onNodeRightClick(node => {
+                        //TODO: Seem a bit slow after restoring, check original forces/velocity
+                        node.fx = null;
+                        node.fy = null;
+                        node.fz = null;
+                    })
+                    .linkSource('source')
+                    .onLinkRightClick(link => {
+                        if (link !== rightClickLink) {
+                            rightClickLink = link;
+                        } else {
+                            rightClickLink = null;
+                        }
+                        forceGraph
+                            .linkColor(forceGraph.linkColor())
+                            .linkWidth(forceGraph.linkWidth())
+                    })
+                    .linkOpacity(0.35)
+                    .linkColor(link => link === rightClickLink ? "rgba(126,234,10,0.85)" : "#dedede")
+                    .linkWidth(link => link === rightClickLink ? 2 : 0)
+                    .linkDirectionalArrowLength(4)
+                    .linkDirectionalArrowRelPos(1)
+                    .linkTarget('target')
+                    .cooldownTicks(200);
+            }
+
+            forceGraph.width($('.forceVisualizationContent').width());
+            forceGraph.height($('.forceVisualizationContent').height());
+
+        }
+
+        /* Requests and stores a JSON representation of the graph and builds it */
         function getJSON() {
-            var visualizationType = "NODE_SIZE";
+            visualizationType = "NODE_SIZE";
             if ($('#visualizationType').val() !== null) {
                 visualizationType = $('#visualizationType').val();
             }
 
-            sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
-                function (response) {
-                    if (typeof jsonGraph !== "undefined") {
-                        jsonGraph._destructor();
-                    }
+            if (typeof forceGraph !== "undefined") {
+                forceGraph._destructor();
+            }
 
-                    jsonGraph = response;
-                    //console.log("jsonGRAPH prev: " + jsonGraph + visualizationType)
-                    let graph = JSON.parse(jsonGraph);
-                    let sizes = new Map();
-                    let colors = new Map();
-                    let size_min = Number.MAX_VALUE;
-                    for (let node of graph.nodes) {
-                        sizes[node.id] = node.size;
-                        if (node.size < size_min) {
-                            size_min = node.size;
-                        }
-
-                        colors[node.id] = node.color;
-                    }
-                    //console.log(size_min);
-
-                    if (have3D === false) {
-                        jsonGraph = ForceGraph()
-                        (document.getElementById('forceVisualizationGraphic'))
-                            .backgroundColor("#fafafa")
-                            .graphData(graph)
-                            .nodeId('id')
-                            .nodeLabel('name')
-                            .onNodeHover(node => {
-                                if(node != null) {
-                                    nodeName = node.name;
-                                }
-                            })
-                            .onNodeClick(node => {
-                                if(arangoDataBase !== "" && arangoDataBase !== null
-                                    && arangoUser !== "" && arangoUser !== null
-                                    && arangoPass !== null
-                                    && arangoCollection !== "" && arangoCollection !== null) {
-
-                                    db.useDatabase(arangoDataBase);
-                                    db.useBasicAuth(arangoUser, arangoPass);
-                                    const docCollection = db.collection(arangoCollection);
-                                    docCollection.document(node.name, true).then(function (doc) {
-                                        let nodeWindow = window.open("", '_blank');
-
-                                        if (doc != null) {
-                                            //console.log(JSON.stringify(doc, null, '    '));
-                                            let docStr = JSON.stringify(doc, null, '    ');
-                                            docStr = docStr.replace(/\n/g, "<br />");
-                                            nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                                        } else {
-                                            nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                                        }
-                                    }).catch((err) => console.error(err));
-                                }
-                            })
-                            .nodeVal(function (node) {
-                                if (visualizationType === "NODE_SIZE") {
-                                    return sizes[node.id] - size_min + 1;
-                                } else {
-                                    return 2;
-                                }
-                            })
-                            .nodeColor(function (node) {
-                                if (visualizationType !== "NODE_SIZE") {
-                                    return colors[node.id];
-                                } else {
-                                    return '#3183ba';
-                                }
-                            })
-                            .onNodeDragEnd(node => {
-                                node.fx = node.x;
-                                node.fy = node.y;
-                            })
-                            .onNodeRightClick(node => {
-                                //TODO: Seem a bit slow after restoring, check original forces/velocity
-                                node.fx = null;
-                                node.fy = null;
-                            })
-                            .linkSource('source')
-                            .onLinkRightClick(link => {
-                                if (link !== rightClickLink) {
-                                    rightClickLink = link;
-                                } else {
-                                    rightClickLink = null;
-                                }
-                            })
-                            .linkWidth(link => link === rightClickLink ? 2.5 : 1.5)
-                            .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
-                            .linkDirectionalArrowLength(5)
-                            .linkDirectionalArrowRelPos(1)
-                            .linkTarget('target')
-                            .cooldownTicks(200);
-                    } else {
-                        jsonGraph = ForceGraph3D()
-                        (document.getElementById('forceVisualizationGraphic'))
-                            .graphData(graph)
-                            .nodeId('id')
-                            .nodeLabel('name')
-                            .onNodeHover(node => {
-                                if(node != null) {
-                                    nodeName = node.name;
-                                }
-                            })
-                            .onNodeClick(node => {
-                                if(arangoDataBase !== "" && arangoDataBase !== null
-                                    && arangoUser !== "" && arangoUser !== null
-                                    && arangoPass !== null
-                                    && arangoCollection !== "" && arangoCollection !== null) {
-
-                                    db.useDatabase(arangoDataBase);
-                                    db.useBasicAuth(arangoUser, arangoPass);
-                                    const docCollection = db.collection(arangoCollection);
-                                    docCollection.document(node.name, true).then(function (doc) {
-                                        let nodeWindow = window.open("", '_blank');
-
-                                        if (doc != null) {
-                                            //console.log(JSON.stringify(doc, null, '    '));
-                                            let docStr = JSON.stringify(doc, null, '    ');
-                                            docStr = docStr.replace(/\n/g, "<br />");
-                                            nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                                        } else {
-                                            nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                                        }
-                                    }).catch((err) => console.error(err));
-                                }
-                            })
-                            .nodeVal(function (node) {
-                                if (visualizationType === "NODE_SIZE") {
-                                    return sizes[node.id] - size_min + 1;
-                                } else {
-                                    return 2;
-                                }
-                            })
-                            .nodeColor(function (node) {
-                                if (visualizationType !== "NODE_SIZE") {
-                                    return colors[node.id];
-                                } else {
-                                    return '#3183ba';
-                                }
-                            })
-                            .onNodeDragEnd(node => {
-                                node.fx = node.x;
-                                node.fy = node.y;
-                                node.fz = node.z;
-                            })
-                            .onNodeRightClick(node => {
-                                //TODO: Seem a bit slow after restoring, check original forces/velocity
-                                node.fx = null;
-                                node.fy = null;
-                                node.fz = null;
-                            })
-                            .linkSource('source')
-                            .onLinkRightClick(link => {
-                                if (link !== rightClickLink) {
-                                    rightClickLink = link;
-                                } else {
-                                    rightClickLink = null;
-                                }
-                                jsonGraph
-                                    .linkColor(jsonGraph.linkColor())
-                                    .linkWidth(jsonGraph.linkWidth())
-                            })
-                            .linkOpacity(0.35)
-                            .linkColor(link => link === rightClickLink ? "rgba(126,234,10,0.85)" : "#dedede")
-                            .linkWidth(link => link === rightClickLink ? 2 : 0)
-                            .linkDirectionalArrowLength(4)
-                            .linkDirectionalArrowRelPos(1)
-                            .linkTarget('target')
-                            .cooldownTicks(200);
-                    }
-
-                    jsonGraph.width($('.forceVisualizationContent').width());
-                    jsonGraph.height($('.forceVisualizationContent').height());
-
-                    //jsonGraph.style.width = document.getElementById('forceVisualizationContent').style.width -106;
-                    //jsonGraph.style.height = document.getElementById('forceVisualizationContent').style.height -6;
-
-                    //jsonGraph.onEngineStop(jsonGraph.zoomToFit(400));
-
-                    //$('.forceVisualizationGraphic').append(jsonGraph);
-                },
-                /* Error handler */
-                function (errorData) {
-                    /*
+            if(typeof jsonGraph === 'undefined' || visualizationTypeChange === true) {
+                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+                    function (response) {
+                        jsonGraph = response;
+                        buildGraph();
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Visualization was not received.");
-                });
+                        showConnectionErrorMessage("Visualization was not received.");
+                    });
+                visualizationTypeChange = false;
+            }
+            else {
+                buildGraph();
+            }
         }
 
         /* Handles the collapsable element for the graph visualization */
         function visualizationCollapsableHandler() {
             $("#visualizationType").change(function () {
+                visualizationTypeChange = true;
                 getVisualization();
                 getJSON();
                 if(displayingForceGraph === false) {
@@ -683,7 +770,7 @@
             if (typeof visualization !== 'undefined') {
                 $('.visualizationGraphic').empty();
             }
-            var visualizationType = "NODE_SIZE";
+            visualizationType = "NODE_SIZE";
             if ($('#visualizationType').val() !== null) {
                 visualizationType = $('#visualizationType').val();
             }
@@ -865,10 +952,21 @@
                                 <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
                             </form>
                         </div>
-                        <div class="btn-group" style="width:81%">
+                        <div class="btn-group" style="width:79%">
                             <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
                             <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
                             <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                        </div>
+                        <div class="toolsDropDown" style="width:2%">
+                            <div class="toolsDropDownDots" onclick="toolsDropDownDots()">
+                                <span class="tool-dot" style="margin-top:4px"></span>
+                                <span class="tool-dot" style="margin-top:3px"></span>
+                                <span class="tool-dot" style="margin-top:3px"></span>
+                            </div>
+                            <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
+                                <input class="saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON" style="width:65%">
+                                <button class="saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
+                            </form>
                         </div>
                     </div>
                     <!-- Container for graph visualization -->

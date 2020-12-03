@@ -426,6 +426,49 @@ td:last-child {
     float: left;
 }
 
+.toolsDropDown {
+    position: relative;
+    margin: 1px 2px 0px 0px;
+    padding: 0;
+    float: right;
+}
+
+.tool-dot {
+    height: 10px;
+    width: 10px;
+    background-color: #828282;
+    border-radius: 50%;
+    float: right;
+    display: inline-block;
+}
+
+.toolsDropDownDots {
+    margin-left: 5px;
+    height: 40px;
+    width: 10px;
+}
+
+/* toolsDropdown on hover & focus */
+.toolsDropDownDots:hover .tool-dot{
+    background-color: #2f2f2f;
+    cursor: pointer;
+}
+.toolsDropDownDots:hover{
+    cursor: pointer;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.toolsFormDropDown {
+    display: none;
+    position: absolute;
+    top: 48px;
+    right: 0px;
+    background-color: #f1f1f1;
+    width: 170px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
 /* Dropdown Content (Hidden by Default) */
 .dataBaseDropDownContent {
     display: none;
