@@ -275,7 +275,7 @@
 
         /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
         document.addEventListener('keyup', (e) => {
-            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0)
+            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0 && document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false && document.getElementById("toolsFormDropDown").classList.contains("show") === false)
             {
                 var elem = document.getElementById('forceVisualizationContent');
 
@@ -952,7 +952,7 @@
                                 <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
                             </form>
                         </div>
-                        <div class="btn-group" style="width:79%">
+                        <div class="btn-group" style="width:78%">
                             <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
                             <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
                             <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
