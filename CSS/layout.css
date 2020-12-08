@@ -357,10 +357,6 @@ td:last-child {
     text-align: center;
 }
 
-.optionRow {
-    margin: auto;
-}
-
 .btn-group button {
     background-color: #6bc15a; /* Green background */
     font-weight: bold;
@@ -388,7 +384,9 @@ td:last-child {
 }
 
 .optionRow {
+    margin: auto;
     margin-bottom: 3px;
+    min-width: 300px; /* most: 958px */
 }
 
 /* Dropdown Button */
@@ -428,7 +426,7 @@ td:last-child {
 
 .toolsDropDown {
     position: relative;
-    margin: 1px 2px 0px 0px;
+    margin: 1px 0.5% 0px 0px;
     padding: 0;
     float: right;
 }
@@ -467,6 +465,15 @@ td:last-child {
     width: 170px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
+}
+
+.saveJsonForm {
+    width: auto;
+    margin: auto;
+}
+
+.saveJsonFormButton {
+    width: auto;
 }
 
 /* Dropdown Content (Hidden by Default) */
