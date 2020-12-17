@@ -155,6 +155,7 @@ function parseEnumName(name) {
     var tmp = name.replace(/_/g, ' ');
     tmp = tmp.toLowerCase();
     tmp = tmp.replace(/(?:^|\s)\S/g, function(firstLetter) { return firstLetter.toUpperCase(); });
+    tmp = tmp.replace(/Xml|[mM]l|Xgmml/g, function(str) { return str.toUpperCase(); });
     return tmp;
 }
 
