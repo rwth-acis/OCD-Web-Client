@@ -63,7 +63,8 @@ $(document).ready(function(){
 function showErrorMessage(message) {
     $("#errorMessage").empty();
     $("#errorMessage").html(writeAlertError("Error!", message));
-    $("#errorMessageWrapper").show();
+    $("#errorMessageWrapper").hide();
+    $("#errorMessageWrapper").fadeIn(100);
 };
 
 /*
@@ -74,7 +75,8 @@ function showErrorMessage(message) {
 function showWarning(message) {
     $("#errorMessage").empty();
     $("#errorMessage").html(writeAlertWarning("Warning!", message));
-    $("#errorMessageWrapper").show();
+    $("#errorMessageWrapper").hide();
+    $("#errorMessageWrapper").fadeIn(100);
 };
 
 /*
@@ -85,7 +87,8 @@ function showWarning(message) {
 function showInfo(message) {
     $("#errorMessage").empty();
     $("#errorMessage").html(writeAlertInfo("Info ", message));
-    $("#errorMessageWrapper").show();
+    $("#errorMessageWrapper").hide();
+    $("#errorMessageWrapper").fadeIn(100);
 };
 
 /*
@@ -96,7 +99,8 @@ function showInfo(message) {
 function showSuccess(message) {
     $("#errorMessage").empty();
     $("#errorMessage").html(writeAlertInfo("Success!", message));
-    $("#errorMessageWrapper").show();
+    $("#errorMessageWrapper").hide();
+    $("#errorMessageWrapper").fadeIn(100);
 };
 
 /*
@@ -107,7 +111,8 @@ function showConnectionErrorMessage(message) {
     $("#errorMessage").empty();
     $("#errorMessage").html(writeAlertWarning("Service Connection Failure!", message
             + "<p>Please refresh the page or reexecute the operation.</p>"));
-    $("#errorMessageWrapper").show();
+    $("#errorMessageWrapper").hide();
+    $("#errorMessageWrapper").fadeIn(100);
 };
 
 /*
@@ -123,7 +128,8 @@ function showXMLErrorMessage(errorXml) {
             '<p>Service Error ' + errName + ' (Id ' + errId + '): '
             + errMessage + '</p>'
     );
-    $("#errorMessageWrapper").show();
+    $("#errorMessageWrapper").hide();
+    $("#errorMessageWrapper").fadeIn(100);
 }
 
 /*
