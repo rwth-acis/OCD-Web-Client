@@ -236,7 +236,12 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
-                                showConnectionErrorMessage("Graph could not be sent.");
+                                try {
+                                    const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
+                                    showConnectionErrorMessage("Graph could not be sent." + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>");
+                                } catch(err) {
+                                    showConnectionErrorMessage("Graph could not be sent.");
+                                }
                         });
             }
             /* Requests a cover import */
@@ -253,7 +258,12 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
-                                showConnectionErrorMessage("Cover could not be sent.");
+                                try {
+                                    const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
+                                    showConnectionErrorMessage("Cover could not be sent." + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>");
+                                } catch(err) {
+                                    showConnectionErrorMessage("Cover could not be sent.");
+                                }
                         });
             }
             /* Requests a centrality import */
@@ -270,7 +280,12 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
-                                showConnectionErrorMessage("Centrality could not be sent.");
+                                try {
+                                    const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
+                                    showConnectionErrorMessage("Centrality could not be sent." + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>");
+                                } catch(err) {
+                                    showConnectionErrorMessage("Centrality could not be sent.");
+                                }
                         });
             }
             /* Requests input format names.
