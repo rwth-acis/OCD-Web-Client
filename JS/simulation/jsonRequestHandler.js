@@ -1,7 +1,7 @@
 /*
  * Extends the Service API to facilitate service communication.
  *
- * requires b64.js
+ * requires base64.js
  * requires moduleHelper.js
  * requires serviceAPI.js
  * requires jquery.session.js
@@ -38,7 +38,7 @@
            };
 
            Login.prototype.getBasicAuthLogin = function() {
-             return B64.encode(this.user + ":" + this.password);
+             return Base64.encode(this.user + ":" + this.password);
            };
 
            Login.prototype.setAccessToken = function(accessToken) {

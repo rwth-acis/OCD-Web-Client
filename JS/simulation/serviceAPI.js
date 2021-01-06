@@ -4,7 +4,7 @@
  *
  * requires moduleHelper.js
  * requires JQuery 2.1.1
- * requires b64.js
+ * requires base64.js
  */
 
 (function() {
@@ -38,7 +38,7 @@
           };
 
           Login.prototype.getBasicAuthLogin = function() {
-            return B64.encode(this.user + ":" + this.password);
+            return Base64.encode(this.user + ":" + this.password);
           };
 
           Login.prototype.setAccessToken = function(accessToken) {

@@ -12,10 +12,10 @@
     "bootstrap": "^4.5.3",
     "bootstrap-select": "^1.13.18",
     "chart.js": "^2.9.4",
-	"jsrsasign": "^10.1.4",
+    "jsrsasign": "^10.1.4",
     "jquery.mousewheel": "^3.1.9",
     "jquery.panzoom": "^3.2.3",
-    "jquery.session": "^1.0.0",   
+    "jquery.session": "^1.0.0",
     "tablesorter": "^2.0.5b"
   }
 }

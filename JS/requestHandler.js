@@ -1,7 +1,7 @@
 /*
  * Extends the Service API to facilitate service communication.
  *
- * requires b64.js
+ * requires base64.js
  * requires moduleHelper.js
  * requires serviceAPI.js
  * requires jquery.session.js
