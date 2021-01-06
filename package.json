@@ -1,0 +1,21 @@
+{
+  "name": "OCD-Web-Client",
+  "repository": "https://github.com/rwth-acis/OCD-Web-Client",
+  "description": "The web client for the webOCD service at https://github.com/rwth-acis/REST-OCD-Services",
+  "license": "See LICENSE file",
+  "dependencies": {
+    "force-graph": "^1.35.1",
+    "3d-force-graph": "^1.67.7",
+    "FileSaver": "^0.10.0",
+    "arangojs": "6.14.1",
+    "base64-js": "^1.5.1",
+    "bootstrap": "^4.5.3",
+    "bootstrap-select": "^1.13.18",
+    "chart.js": "^2.9.4",
+	"jsrsasign": "^10.1.4",
+    "jquery.mousewheel": "^3.1.9",
+    "jquery.panzoom": "^3.2.3",
+    "jquery.session": "^1.0.0",   
+    "tablesorter": "^2.0.5b"
+  }
+}
