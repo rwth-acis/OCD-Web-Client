@@ -2,7 +2,7 @@
   "name": "OCD-Web-Client",
   "repository": "https://github.com/rwth-acis/OCD-Web-Client",
   "description": "The web client for the webOCD service at https://github.com/rwth-acis/REST-OCD-Services",
-  "license": "See LICENSE file",
+  "license": "MIT",
   "dependencies": {
     "force-graph": "^1.35.1",
     "3d-force-graph": "^1.67.7",
