@@ -123,7 +123,7 @@ function deleteCover(coverId, graphId) {
         },
         /* Error handler */
         function(errorData) {
-            showConnectionErrorMessage("Cover could not be deleted.");
+            showConnectionErrorMessage("Cover could not be deleted.", errorData);
     });
 }
 

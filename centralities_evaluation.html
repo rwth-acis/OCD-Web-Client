@@ -5,7 +5,7 @@
         <title>Evaluate Centralities</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
@@ -76,7 +76,7 @@
                         /*
                          * GraphIds request failed
                          */
-                        showConnectionErrorMessage("Centrality map metas were not received.");
+                        showConnectionErrorMessage("Centrality map metas were not received.", errorData);
                 });
                 $('#compare').click(function(){
                     $("#errorMessage").empty();

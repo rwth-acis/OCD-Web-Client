@@ -8,7 +8,7 @@
   <title>Cooperation and Defection</title>
 
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="CSS/layout.css">
 
   <!-- JavaScript -->
@@ -270,7 +270,7 @@
         },
         /* Error handler */
         function(errorData) {
-          showConnectionErrorMessage("Request failed.");
+          showConnectionErrorMessage("Request failed.", errorData);
         }, "");
 
       sendRequest("get", "mapping/simulation/" + seriesId, "",
@@ -287,7 +287,7 @@
           /*
            * GraphIds request failed
            */
-          //showConnectionErrorMessage("Benchmark request failed.");
+          //showConnectionErrorMessage("Benchmark request failed.", errorData);
         }, "");
 
 
@@ -414,7 +414,7 @@
           },
           /* Error handler */
           function(errorData) {
-            showConnectionErrorMessage("Benchmark request failed.");
+            showConnectionErrorMessage("Benchmark request failed.", errorData);
           }, "");
 
 

@@ -7,7 +7,7 @@ Benchmarks
         <title>OCD - Benchmarks</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="CSS/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
@@ -69,7 +69,7 @@ Benchmarks
                             /*
                              * GraphIds request failed
                              */
-                            showConnectionErrorMessage("Benchmark request failed.");
+                            showConnectionErrorMessage("Benchmark request failed.", errorData);
                     });
                 }
                 return false;
@@ -94,7 +94,7 @@ Benchmarks
                             /*
                              * GraphIds request failed
                              */
-                            showConnectionErrorMessage("Benchmark names were not received.");
+                            showConnectionErrorMessage("Benchmark names were not received.", errorData);
                         });
             }
         /*
@@ -117,7 +117,7 @@ Benchmarks
                             /*
                              * GraphIds request failed
                              */
-                            showConnectionErrorMessage("Benchmark parameters were not received.");
+                            showConnectionErrorMessage("Benchmark parameters were not received.", errorData);
                         });
             }
         </script>
