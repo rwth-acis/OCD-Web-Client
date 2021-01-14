@@ -494,7 +494,7 @@
             let fileName = $("#saveJsonForm").val();
 
             if(typeof jsonGraph === 'undefined') {
-                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
                     function (response) {
                         jsonGraph = response;
                         const blob = new Blob([jsonGraph],

@@ -658,7 +658,7 @@
                 let fileName = $("#saveJsonForm").val();
 
                 if(typeof jsonGraph === 'undefined') {
-                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                    sendRequest("get", "visualization/cover/" + coverId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
                         function (response) {
                             jsonGraph = response;
                             const blob = new Blob([jsonGraph],
