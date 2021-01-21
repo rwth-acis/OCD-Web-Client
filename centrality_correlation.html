@@ -54,7 +54,7 @@
                         /*
                         * Centrality map request failed
                         */
-                        showConnectionErrorMessage("Centrality map was not received.");
+                        showConnectionErrorMessage("Centrality map was not received.", errorData);
                     }, "text");
                 }
                 displayMatrix(localStorage.getItem("correlationMatrixXml"));

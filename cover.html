@@ -123,7 +123,7 @@
                         /*
                          * Cover request failed
                          */
-                        showConnectionErrorMessage("Cover was not received.");
+                        showConnectionErrorMessage("Cover was not received.", errorData);
                     }, "text");
                 /*
                  * Submit listener for the run metric form.
@@ -211,7 +211,7 @@
                             /*
                              * Run metric request failed
                              */
-                            showConnectionErrorMessage("Metric request failed.");
+                            showConnectionErrorMessage("Metric request failed.", errorData);
                         });
             }
             /* Requests the execution of a statistical measure */
@@ -229,7 +229,7 @@
                             /*
                              * Run metric request failed
                              */
-                            showConnectionErrorMessage("Metric request failed.");
+                            showConnectionErrorMessage("Metric request failed.", errorData);
                         });
             }
             /* Requests and stores the names of the parameters of a given metric
@@ -247,7 +247,7 @@
                             /*
                              * GraphIds request failed
                              */
-                            showConnectionErrorMessage("Metric parameters were not received.");
+                            showConnectionErrorMessage("Metric parameters were not received.", errorData);
                         });
             }
             /* Requests and stores the names of all metrics (of a certain metric type)
@@ -266,7 +266,7 @@
                             /*
                              * Request failed
                              */
-                            showConnectionErrorMessage("Metric names were not received.");
+                            showConnectionErrorMessage("Metric names were not received.", errorData);
                         });
             }
             /* Requests a potential ground truth covers and adds them to a table */
@@ -306,7 +306,7 @@
                         /*
                          * Ground truth cover request failed
                          */
-                        showConnectionErrorMessage("Ground truth cover metas were not received.");
+                        showConnectionErrorMessage("Ground truth cover metas were not received.", errorData);
                 });
                 /* Listener to show the next page of ground truth covers */
                 $('.pageLeft').click(function(){
@@ -366,7 +366,7 @@
                         /*
                          * GraphIds request failed
                          */
-                        showConnectionErrorMessage("Cover was not received.");
+                        showConnectionErrorMessage("Cover was not received.", errorData);
                     }, "text");
             }
 
@@ -844,7 +844,7 @@
                             /*
                          * GraphIds request failed
                          */
-                            showConnectionErrorMessage("Visualization was not received.");
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
                         });
                 }
                 else {
@@ -893,7 +893,7 @@
                         /*
                          * Visualization request failed
                          */
-                        showConnectionErrorMessage("Visualization was not received.");
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
             }
         </script>

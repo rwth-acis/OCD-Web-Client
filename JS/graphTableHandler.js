@@ -156,7 +156,7 @@ function deleteGraph(id) {
         },
         /* Error handler */
         function(errorData) {
-            showConnectionErrorMessage("Graph could not be deleted.");
+            showConnectionErrorMessage("Graph could not be deleted.", errorData);
     });
 }
 

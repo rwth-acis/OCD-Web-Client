@@ -45,7 +45,7 @@ CooperationTableHandler.prototype.delete = function (simulationId) {
         },
         /* Error handler */
         function(errorData) {
-            showConnectionErrorMessage("Cover could not be deleted.");
+            showConnectionErrorMessage("Cover could not be deleted.", errorData);
     });
 }
 
@@ -62,4 +62,4 @@ CooperationTableHandler.prototype.registerTable = function (tableid) {
         deleteCover(simulationId);
     });
 }
- }
+

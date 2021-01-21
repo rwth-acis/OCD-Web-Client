@@ -106,11 +106,56 @@ function showSuccess(message) {
 /*
  * Displays an error message marking it as a connection failure.
  * @param {type} message A message string.
+ * @param {type} errorData The error code, original request and potential message in a combined string separated by whitespace
  */
-function showConnectionErrorMessage(message) {
+function showConnectionErrorMessage(message, errorData) {
     $("#errorMessage").empty();
-    $("#errorMessage").html(writeAlertWarning("Service Connection Failure!", message
+
+    const code = errorData.substring(0,3);
+    if(code === "401") {
+        var po = document.createElement('script');
+        po.type = 'text/javascript';
+        po.async = true;
+        po.src = 'JS/oidc-signInCallback.js';
+        var s = document.getElementsByTagName('script')[0];
+        var po2 = document.createElement('script');
+        po2.type = 'text/javascript';
+        po2.async = true;
+        po2.src = 'JS/oidc-button.js';
+        s.parentNode.insertBefore(po, s);
+        s.parentNode.insertBefore(po2, s);
+
+        localStorage.setItem("redirect_relogin", window.location.href);
+
+        $("#errorMessage").html(writeAlertWarning("Service Connection Failure!", message
+            + "<p>Log-In expired. Please log into the service again.</p>"
+            + "<button type=\"button\" class=\"btn btn-light\"><form class=\"oidc_button\">\n" +
+            "        <!-- OpenID Connect Information -->\n" +
+            "        <!-- for local host: data-clientid=\"15cdbd81-f6c1-4862-bb7a-7344deed3aaa\" -->\n" +
+            "        <!-- for server host: data-clientid=\"9c04fe4a-2b6b-436b-9896-83383377c497\" -->\n" +
+            "        <!-- for testserver host: data-clientid=\"95bb04f6-122a-475d-8eed-209d7449a048\" -->\n" +
+            "        <!-- for ginkgo host: data-clientid=\"59b76233-35fc-47f1-a54b-101f4fcef4d9\" -->\n" +
+            "        <!-- http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png\" -->\n" +
+            "        <!-- Testserver: data-redirecturi=\"http://ocd-web-client.duckdns.org/login.html\" -->\n" +
+            "        <!-- Server ginkgo from rwth: https://ginkgo.informatik.rwth-aachen.de/OCDWebClient/login.html -->\n" +
+            "        <span class=\"oidc-signin\"\n" +
+            "              data-callback=\"signinCallback\"\n" +
+            "              data-name=\"Learning Layers\"\n" +
+            "              data-logo=\"http://results.learning-layers.eu/images/learning-layers.svg\"\n" +
+            "              data-server=\"https://api.learning-layers.eu/o/oauth2\"\n" +
+            "              data-clientid=\"95bb04f6-122a-475d-8eed-209d7449a048\"\n" +
+            "              data-redirecturi=\"http://ocd-web-client.duckdns.org:8090/OCD-Web-Client/login.html\"\n" +
+            "              data-scope=\"openid email profile\">\n" +
+            "        </span>\n" +
+            "    </form> </button>"));
+    }
+    else
+    {
+        const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
+        $("#errorMessage").html(writeAlertWarning("Service Connection Failure!", message
+            + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>"
             + "<p>Please refresh the page or reexecute the operation.</p>"));
+    }
     $("#errorMessageWrapper").hide();
     $("#errorMessageWrapper").fadeIn(100);
 };

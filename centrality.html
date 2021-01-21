@@ -99,7 +99,7 @@
                     /*
                      * Centrality map request failed
                      */
-                    showConnectionErrorMessage("Centrality map was not received.");
+                    showConnectionErrorMessage("Centrality map was not received.", errorData);
                 }, "text");
 
             $('#showAllButton').click(function () {
@@ -199,7 +199,7 @@
                     /*
                      * Centrality map request failed
                      */
-                    showConnectionErrorMessage("Centrality map was not received.");
+                    showConnectionErrorMessage("Centrality map was not received.", errorData);
                 }, "text");
         }
 
@@ -712,7 +712,7 @@
                         /*
                      * GraphIds request failed
                      */
-                        showConnectionErrorMessage("Visualization was not received.");
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
                     });
                 visualizationTypeChange = false;
             }
@@ -784,7 +784,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Visualization was not received.");
+                    showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
         }
 
@@ -802,7 +802,7 @@
                     /*
                      * Visualization type name request failed
                      */
-                    showConnectionErrorMessage("Visualization type names were not received.");
+                    showConnectionErrorMessage("Visualization type names were not received.", errorData);
                 });
         }
     </script>

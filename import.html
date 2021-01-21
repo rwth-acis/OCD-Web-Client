@@ -235,12 +235,7 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
-                                try {
-                                    const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
-                                    showConnectionErrorMessage("Graph could not be sent." + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>");
-                                } catch(err) {
-                                    showConnectionErrorMessage("Graph could not be sent.");
-                                }
+                                showConnectionErrorMessage("Graph could not be sent.", errorData);
                         });
             }
             /* Requests a cover import */
@@ -257,12 +252,7 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
-                                try {
-                                    const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
-                                    showConnectionErrorMessage("Cover could not be sent." + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>");
-                                } catch(err) {
-                                    showConnectionErrorMessage("Cover could not be sent.");
-                                }
+                                showConnectionErrorMessage("Cover could not be sent.", errorData);
                         });
             }
             /* Requests a centrality import */
@@ -279,12 +269,7 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
-                                try {
-                                    const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
-                                    showConnectionErrorMessage("Centrality could not be sent." + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>");
-                                } catch(err) {
-                                    showConnectionErrorMessage("Centrality could not be sent.");
-                                }
+                                showConnectionErrorMessage("Centrality could not be sent.", errorData);
                         });
             }
             /* Requests input format names.
@@ -303,7 +288,7 @@ Facilitates import / upload of new graphs and covers.
                             /*
                              * Request failed
                              */
-                            showConnectionErrorMessage("Input format names were not received.");
+                            showConnectionErrorMessage("Input format names were not received.", errorData);
                         });
             }
             /* Requests creator type names.
@@ -325,11 +310,11 @@ Facilitates import / upload of new graphs and covers.
                             var errString;
                             if($("#objectType").val() === "graph") {
                                 errString = "Graph creation methods were not received.";
-                                showConnectionErrorMessage(errString);
+                                showConnectionErrorMessage(errString, errorData);
                             }
                             else if($("#objectType").val() === "cover") {
                                 errString = "Cover creation methods were not received.";
-                                showConnectionErrorMessage(errString);
+                                showConnectionErrorMessage(errString, errorData);
                             }
                             else {
                                 // Should not happen.
@@ -375,7 +360,7 @@ Facilitates import / upload of new graphs and covers.
                         /*
                          * GraphIds request failed
                          */
-                        showConnectionErrorMessage("Graphs metas were not received.");
+                        showConnectionErrorMessage("Graphs metas were not received.", errorData);
                 });
                 /* Listeners for table page control */
                 $('.pageLeft').click(function(){

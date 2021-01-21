@@ -116,7 +116,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Graph was not received.");
+                    showConnectionErrorMessage("Graph was not received.", errorData);
                 }, "text");
             /*
             * Run algorithm form listener.
@@ -146,7 +146,7 @@
                             /*
                              * Run algorithm request failed
                              */
-                            showConnectionErrorMessage("Algorithm request failed.");
+                            showConnectionErrorMessage("Algorithm request failed.", errorData);
                         });
                 }
                 return false;
@@ -174,7 +174,7 @@
                                 showErrorMessage(errorSplit[errorSplit.length - 1]);
                                 window.scrollTo(0, 0);
                             } else {
-                                showConnectionErrorMessage("Centrality calculation request failed.");
+                                showConnectionErrorMessage("Centrality calculation request failed.", errorData);
                             }
                         });
                 } else {
@@ -212,7 +212,7 @@
                                     showErrorMessage(errorSplit[errorSplit.length - 1]);
                                     window.scrollTo(0, 0);
                                 } else {
-                                    showConnectionErrorMessage("Centrality simulation request failed.");
+                                    showConnectionErrorMessage("Centrality simulation request failed.", errorData);
                                 }
                             });
                     }
@@ -259,7 +259,7 @@
                     /*
                      * OCD algorithm request failed
                      */
-                    showConnectionErrorMessage("Algorithm names were not received.");
+                    showConnectionErrorMessage("Algorithm names were not received.", errorData);
                 });
         }
 
@@ -279,7 +279,7 @@
                     /*
                      * Centrality measure name request failed
                      */
-                    showConnectionErrorMessage("Centrality measure names were not received.");
+                    showConnectionErrorMessage("Centrality measure names were not received.", errorData);
                 });
         }
 
@@ -299,7 +299,7 @@
                     /*
                      * Centrality simulation name request failed
                      */
-                    showConnectionErrorMessage("Simulation names were not received.");
+                    showConnectionErrorMessage("Simulation names were not received.", errorData);
                 });
         }
 
@@ -318,7 +318,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Algorithm parameters were not received.");
+                    showConnectionErrorMessage("Algorithm parameters were not received.", errorData);
                 });
         }
 
@@ -346,7 +346,7 @@
                     /*
                      * Centrality measure parameter request failed
                      */
-                    showConnectionErrorMessage("Centrality measure parameters were not received.");
+                    showConnectionErrorMessage("Centrality measure parameters were not received.", errorData);
                 });
         }
 
@@ -365,7 +365,7 @@
                     /*
                      * Centrality simulation parameter request failed
                      */
-                    showConnectionErrorMessage("Centrality simulation parameters were not received.");
+                    showConnectionErrorMessage("Centrality simulation parameters were not received.", errorData);
                 });
         }
 
@@ -458,7 +458,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Graph Properties was not received.");
+                    showConnectionErrorMessage("Graph Properties was not received.", errorData);
                 }, "text");
         }
 
@@ -478,7 +478,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Graph was not received.");
+                    showConnectionErrorMessage("Graph was not received.", errorData);
                 }, "text");
         }
 
@@ -1072,7 +1072,7 @@
                         /*
                         * GraphIds request failed
                         */
-                        showConnectionErrorMessage("Visualization was not received.");
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
                     });
             }
             else {
@@ -1124,7 +1124,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Visualization was not received.");
+                    showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
         }
 
@@ -1139,7 +1139,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage(errorData);
+                    showConnectionErrorMessage("Graph deletion failed.", errorData);
                 });
         }
 

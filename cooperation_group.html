@@ -232,7 +232,7 @@
             /*
              * GraphIds request failed
              */
-            showConnectionErrorMessage("Simulation request failed.");
+            showConnectionErrorMessage("Simulation request failed.", errorData);
           }, "");
 
       };
@@ -286,7 +286,7 @@
         },
         /* Error handler */
         function(errorData) {
-          showConnectionErrorMessage("Request failed.");
+          showConnectionErrorMessage("Request failed.", errorData);
         }, "");
 
       });

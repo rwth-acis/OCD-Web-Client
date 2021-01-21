@@ -88,7 +88,7 @@
                         /*
                          * Cover metas request failed
                          */
-                        showConnectionErrorMessage("Cover metas were not received.");
+                        showConnectionErrorMessage("Cover metas were not received.", errorData);
                 });
             }
             /* Handles collapsable element for covers with metrics in execution */
@@ -154,7 +154,7 @@
                     },
                     /* Error handler */
                     function(errorData) {
-                        showConnectionErrorMessage("Cover could not be deleted.");
+                        showConnectionErrorMessage("Cover could not be deleted.", errorData);
                 });
             }
             /* Requests the cover information of covers with running metrics */
@@ -175,7 +175,7 @@
                         /*
                          * Cover metas request failed
                          */
-                        showConnectionErrorMessage("Cover metas were not received.");
+                        showConnectionErrorMessage("Cover metas were not received.", errorData);
                 });
             }
             /* Requests the cooperation simulation information of simulations with running metrics */
@@ -195,7 +195,7 @@
                 //         /*
                 //          * Cover metas request failed
                 //          */
-                //         showConnectionErrorMessage("Cover metas were not received.");
+                //         showConnectionErrorMessage("Cover metas were not received.", errorData);
                 // });
             }
             /* Handles collapsable element for cooperation simulations in creation */
@@ -262,7 +262,7 @@
                         /*
                          * Centrality map metas request failed
                          */
-                        showConnectionErrorMessage("Centrality map metas were not received.");
+                        showConnectionErrorMessage("Centrality map metas were not received.", errorData);
                 });
             }
         </script>

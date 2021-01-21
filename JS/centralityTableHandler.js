@@ -108,7 +108,7 @@ function deleteCentralityMap(mapId, graphId) {
         },
         /* Error handler */
         function(errorData) {
-            showConnectionErrorMessage("Centrality map could not be deleted.");
+            showConnectionErrorMessage("Centrality map could not be deleted.", errorData);
     });
 }
 
@@ -125,7 +125,7 @@ function deleteCentralityMapWithCallback(mapId, graphId, callback) {
         },
         /* Error handler */
         function(errorData) {
-            showConnectionErrorMessage("Centrality map could not be deleted.");
+            showConnectionErrorMessage("Centrality map could not be deleted.", errorData);
     });
 }
 

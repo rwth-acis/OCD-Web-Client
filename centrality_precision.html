@@ -55,7 +55,7 @@
                         /*
                         * Centrality map request failed
                         */
-                        showConnectionErrorMessage("Centrality map was not received.");
+                        showConnectionErrorMessage("Centrality map was not received.", errorData);
                     }, "text");
                 }
                 /* Request ground truth map information */
@@ -64,7 +64,7 @@
                     $('#groundTruthReference').html('Precision at ' + localStorage.getItem("k") + ' in relation to <a href="centrality.html?mapId='+ groundTruthMapId + '&graphId=' + graphId + '">' + $(mapMetaXml).find('Name').text() + '</a>:');
                 },
                 function(errorData) {
-                    showConnectionErrorMessage("Centrality map was not received.");
+                    showConnectionErrorMessage("Centrality map was not received.", errorData);
                 }, "text");
                 displayPrecisionTable(localStorage.getItem("precisionResult"));
             });
