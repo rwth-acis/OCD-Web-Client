@@ -143,8 +143,8 @@ function showConnectionErrorMessage(message, errorData) {
             "              data-name=\"Learning Layers\"\n" +
             "              data-logo=\"http://results.learning-layers.eu/images/learning-layers.svg\"\n" +
             "              data-server=\"https://api.learning-layers.eu/o/oauth2\"\n" +
-            "              data-clientid=\"95bb04f6-122a-475d-8eed-209d7449a048\"\n" +
-            "              data-redirecturi=\"http://ocd-web-client.duckdns.org:8090/OCD-Web-Client/login.html\"\n" +
+            "              data-clientid=\"59b76233-35fc-47f1-a54b-101f4fcef4d9\"\n" +
+            "              data-redirecturi=\"http://localhost:8081/OCD-Web-Client/login.html\"\n" +
             "              data-scope=\"openid email profile\">\n" +
             "        </span>\n" +
             "    </form> </button>"));
