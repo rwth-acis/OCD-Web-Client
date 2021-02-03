@@ -67,7 +67,7 @@
             var metricNames;
             $(document).ready(function() {
                 /* Identifiers for meta information to be displayed */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "G", "R"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", "S"];
                 /* Requests cover meta information */
                 sendRequest("get", "covers/" + coverId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
                     /* Response handler */
@@ -934,11 +934,11 @@
                                     Communities
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
-                                <th width="20" title="Show Graph">
-                                    G
-                                </th>
                                 <th width="20" title="Remove Cover">
                                     R
+                                </th>
+                                <th width="20" title="Save Cover">
+                                    S
                                 </th>
                             </tr>
                             </thead>

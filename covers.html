@@ -19,6 +19,7 @@
         <script src="JS/requestHandler.js"></script>
         <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
         <script src="JS/coverTableHandler.js"></script>
+        <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
         <script type="text/javascript">
             /*
              * Defines current page and page size.
@@ -38,7 +39,7 @@
                 /* Index of the first cover to be displayed */
                 var firstIndex = COVERS_PER_PAGE * pageNumber;
                 /* Identifiers for the cover information to display */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", "S"];
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -144,6 +145,9 @@
                                     </th>
                                     <th width="20" title="Remove Cover">
                                         R
+                                    </th>
+                                    <th width="20" title="Save Cover">
+                                        S
                                     </th>
                                 </tr>
                             </thead>

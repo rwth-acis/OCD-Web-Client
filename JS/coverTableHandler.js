@@ -15,6 +15,9 @@ function appendCoverRow(table, coverElt, cells) {
     /* Cover Id */
     var coverId = $(coverElt).find('CoverId').text();
     row += createCoverIdCell(coverId);
+    /* Cover Id */
+    var coverName = $(coverElt).children('Name').text();
+    row += createCoverNameCellHidden(coverName);
     /* Graph Id */
     var graphId = $(coverElt).find('GraphId').text();
     row += createCoverGraphIdCell(graphId);
@@ -47,6 +50,10 @@ function appendCoverRow(table, coverElt, cells) {
     if($.inArray("R", cells) > -1) {
         row += createDeleteCoverCell();
     }
+    /* Save cover */
+    if($.inArray("S", cells) > -1) {
+        row += createSaveCoverCell();
+    }
     /* Select cover */
     if($.inArray("Select", cells) > -1) {
         row += createSelectCoverCell(coverId);
@@ -75,7 +82,12 @@ function createGraphNameCell(name, graphId) {
 function createCoverIdCell(value) {
     return '<td class="hidden coverId">' + value + '</td>';
 }
-
+/*
+ * Creates cover name cell (hidden
+ */
+function createCoverNameCellHidden(value) {
+    return '<td class="hidden coverNameHidden">' + value + '</td>';
+}
 /* Creates graph id cell */
 function createCoverGraphIdCell(value) {
     return '<td class="hidden graphId">' + value + '</td>';
@@ -95,6 +107,13 @@ function createDeleteCoverCell() {
         + '</td>';
 }
 
+/* Creates save cover cell */
+function createSaveCoverCell() {
+    return '<td>'
+        + '<img class="icon iconBtn saveCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
+        + '</td>';
+}
+
 /* Creates show cover cell */
 function createShowCoverCell() {
     return '<td>'
@@ -110,7 +129,7 @@ function createShowCoverGraphCell() {
 }
 
 /*
- * Deletes a graph.
+ * Deletes a cover.
  */
 function deleteCover(coverId, graphId) {
     /* Delete request */
@@ -125,6 +144,24 @@ function deleteCover(coverId, graphId) {
         function(errorData) {
             showConnectionErrorMessage("Cover could not be deleted.", errorData);
     });
+}
+
+/*
+ * Saves a cover.
+ */
+function saveCover(coverId, graphId, coverName) {
+    /* Save request */
+    sendRequest("get", "covers/" + coverId.text() + "/graphs/" + graphId.text() + "?outputFormat=LABELED_MEMBERSHIP_MATRIX", "",
+        /* Response handler */
+        function(response) {
+            const blob = new Blob([response],
+                { type: "text/plain;charset=utf-8" });
+            saveAs(blob, coverName.text() + ".txt");
+        },
+        /* Error handler */
+        function(errorData) {
+            showConnectionErrorMessage("Membership Matrix was not received.");
+        }, "text");
 }
 
 /*
@@ -153,6 +190,13 @@ function registerCoverTable(tableid) {
         var coverId = $(this).parent().siblings().filter('.coverId');
         var graphId = $(this).parent().siblings().filter('.graphId');
         deleteCover(coverId, graphId);
+    });
+    /* Save button handler */
+    $(tableid).find('.saveCover').click(function(){
+        var coverId = $(this).parent().siblings().filter('.coverId');
+        var coverName = $(this).parent().siblings().filter('.coverNameHidden');
+        var graphId = $(this).parent().siblings().filter('.graphId');
+        saveCover(coverId, graphId, coverName);
     });
     /* Show cover button handler */
     $(tableid).find('.showCover').click(function(){
