@@ -7,12 +7,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script src="node_modules/jquery.session/jquery.session.js"></script>
         <script src="JS/contentHandler.js"></script>
         <script type="text/javascript">
             /* Clear session scope */
-            $.session.clear();
+            sessionStorage.clear();
             //
+            localStorage.removeItem("redirect_relogin");
             localStorage.removeItem("access_token");
             localStorage.removeItem("arangoUser@WebOCD");
             localStorage.removeItem("arangoPass@WebOCD");

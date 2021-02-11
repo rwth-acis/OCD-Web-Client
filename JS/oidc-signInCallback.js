@@ -1,11 +1,10 @@
 function signinCallback(result) {
     if(result === "success"){
-        $.session.set('accessToken', window.localStorage["access_token"]);
         sendRequest("get", "validate", "",
             /* Response handler. Login succeeded */
             function (data) {
                 /* Login Succeeded */
-                $.session.set('isLoggedIn', new Boolean(true));
+                sessionStorage.setitem("isLoggedIn", "true");
                 if(localStorage.getItem("redirect_relogin") !== null)
                 {
                     window.location.replace(localStorage.getItem("redirect_relogin"));
@@ -20,7 +19,7 @@ function signinCallback(result) {
             });
     } else {
         /* DEBUG */
-        /*$.session.set('isLoggedIn', new Boolean(true));
+        /*sessionStorage.setitem("isLoggedIn", "true");
         window.location.replace("index.html");*/
         /* DEBUG */
         // if sign in was not successful, log the cause of the error on the console
