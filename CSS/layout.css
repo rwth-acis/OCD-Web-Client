@@ -467,6 +467,22 @@ td:last-child {
     z-index: 1;
 }
 
+.nodeNameDisplayButton {
+    font-weight: bold;
+    border: 0px solid;
+    color: #444444; /* Black text */
+    width: inherit;
+    cursor: pointer; /* Pointer/hand icon */
+    margin-bottom: 5px;
+    background-color: #d73b2d;
+    text-align: center;
+    z-index:2;
+}
+
+.nodeNameDisplayButton:hover {
+    cursor: pointer;
+}
+
 .saveJsonForm {
     width: auto;
     margin: auto;
