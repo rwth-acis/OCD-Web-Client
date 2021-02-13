@@ -2,7 +2,6 @@
  * Loads general content (e.g. header, menu) and provides common functionalities.
  *
  * requires jQuery 2.1.1
- * requires jquery.session.js
  * requires jquery.tablesorter.js
  * loads navbar.css
  */
@@ -11,10 +10,12 @@
  * Redirect to login page if not logged in.
  * Else initialize request sender.
  */
-
 var path = window.location.pathname.split('/');
 if(path[path.length - 1] !== "login.html") {
-    if($.session.get('isLoggedIn') !== 'true') {
+    if(path[path.length - 1] !== "logout.html") {
+        localStorage.setItem("redirect_relogin", window.location.href);
+    }
+    if(sessionStorage.getItem('isLoggedIn') !== 'true') {
           window.location.replace("login.html");
     }
 }
@@ -25,7 +26,6 @@ if(path[path.length - 1] !== "login.html") {
  * Menu
  */
 $(document).ready(function(){
-
      /*
      * Menu definition.
      */

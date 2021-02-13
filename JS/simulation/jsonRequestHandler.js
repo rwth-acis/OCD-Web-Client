@@ -4,7 +4,6 @@
  * requires base64.js
  * requires moduleHelper.js
  * requires serviceAPI.js
- * requires jquery.session.js
  * requires contentHandler.js
  */
  (function() {
@@ -225,7 +224,7 @@ function sendJsonRequest(method, url, content, callback, errorcallback, mimeType
 
     /* Login */
     var login = new apiJson.Login(api.LoginTypes.OIDC);
-    login.setAccessToken($.session.get('accessToken'));
+    login.setAccessToken(localStorage.getItem('access_token'));
 
     /* Request sender */
     var requestSender = new apiJson.RequestSender(BaseUrl, login);
