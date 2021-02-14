@@ -4,7 +4,7 @@ function signinCallback(result) {
             /* Response handler. Login succeeded */
             function (data) {
                 /* Login Succeeded */
-                sessionStorage.setitem("isLoggedIn", "true");
+                sessionStorage.setItem("isLoggedIn", "true");
                 if(localStorage.getItem("redirect_relogin") !== null)
                 {
                     window.location.replace(localStorage.getItem("redirect_relogin"));
@@ -19,7 +19,7 @@ function signinCallback(result) {
             });
     } else {
         /* DEBUG */
-        /*sessionStorage.setitem("isLoggedIn", "true");
+        /*sessionStorage.setItem("isLoggedIn", "true");
         window.location.replace("index.html");*/
         /* DEBUG */
         // if sign in was not successful, log the cause of the error on the console
