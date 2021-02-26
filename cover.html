@@ -66,7 +66,7 @@
             var metricNames;
             $(document).ready(function() {
                 /* Identifiers for meta information to be displayed */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", "S"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", ".xml", ".txt"];
                 /* Requests cover meta information */
                 sendRequest("get", "covers/" + coverId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
                     /* Response handler */
@@ -936,8 +936,11 @@
                                 <th width="20" title="Remove Cover">
                                     R
                                 </th>
-                                <th width="20" title="Save Cover">
-                                    S
+                                <th width="50" title="Save Cover XML">
+                                    .xml
+                                </th>
+                                <th width="30" title="Save Cover Matrix">
+                                    .txt
                                 </th>
                             </tr>
                             </thead>

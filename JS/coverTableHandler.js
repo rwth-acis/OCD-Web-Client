@@ -50,9 +50,13 @@ function appendCoverRow(table, coverElt, cells) {
     if($.inArray("R", cells) > -1) {
         row += createDeleteCoverCell();
     }
-    /* Save cover */
-    if($.inArray("S", cells) > -1) {
-        row += createSaveCoverCell();
+    /* Save cover XML*/
+    if($.inArray(".xml", cells) > -1) {
+        row += createSaveXMLCoverCell();
+    }
+    /* Save cover Membership Matrix*/
+    if($.inArray(".txt", cells) > -1) {
+        row += createSaveMatrixCoverCell();
     }
     /* Select cover */
     if($.inArray("Select", cells) > -1) {
@@ -107,10 +111,17 @@ function createDeleteCoverCell() {
         + '</td>';
 }
 
-/* Creates save cover cell */
-function createSaveCoverCell() {
+/* Creates save XML cover cell */
+function createSaveXMLCoverCell() {
     return '<td>'
-        + '<img class="icon iconBtn saveCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
+        + '<img class="icon iconBtn saveXMLCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
+        + '</td>';
+}
+
+/* Creates save Matrix cover cell */
+function createSaveMatrixCoverCell() {
+    return '<td>'
+        + '<img class="icon iconBtn saveMatrixCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
         + '</td>';
 }
 
@@ -149,14 +160,20 @@ function deleteCover(coverId, graphId) {
 /*
  * Saves a cover.
  */
-function saveCover(coverId, graphId, coverName) {
+function saveCover(coverId, graphId, coverName, type) {
     /* Save request */
-    sendRequest("get", "covers/" + coverId.text() + "/graphs/" + graphId.text() + "?outputFormat=LABELED_MEMBERSHIP_MATRIX", "",
+    sendRequest("get", "covers/" + coverId.text() + "/graphs/" + graphId.text() + "?outputFormat=" + type, "",
         /* Response handler */
         function(response) {
-            const blob = new Blob([response],
-                { type: "text/plain;charset=utf-8" });
-            saveAs(blob, coverName.text() + ".txt");
+            if(type === "DEFAULT_XML") {
+                const blob = new Blob([response],
+                    {type: "text/xml"});
+                saveAs(blob, coverName.text() + ".xml");
+            } else if(type === "LABELED_MEMBERSHIP_MATRIX") {
+                const blob = new Blob([response],
+                    { type: "text/plain;charset=utf-8" });
+                saveAs(blob, coverName.text() + ".txt");
+            }
         },
         /* Error handler */
         function(errorData) {
@@ -191,12 +208,19 @@ function registerCoverTable(tableid) {
         var graphId = $(this).parent().siblings().filter('.graphId');
         deleteCover(coverId, graphId);
     });
-    /* Save button handler */
-    $(tableid).find('.saveCover').click(function(){
+    /* Save XML button handler */
+    $(tableid).find('.saveXMLCover').click(function(){
         var coverId = $(this).parent().siblings().filter('.coverId');
         var coverName = $(this).parent().siblings().filter('.coverNameHidden');
         var graphId = $(this).parent().siblings().filter('.graphId');
-        saveCover(coverId, graphId, coverName);
+        saveCover(coverId, graphId, coverName, "DEFAULT_XML");
+    });
+    /* Save Membership Matrix button handler */
+    $(tableid).find('.saveMatrixCover').click(function(){
+        var coverId = $(this).parent().siblings().filter('.coverId');
+        var coverName = $(this).parent().siblings().filter('.coverNameHidden');
+        var graphId = $(this).parent().siblings().filter('.graphId');
+        saveCover(coverId, graphId, coverName, "LABELED_MEMBERSHIP_MATRIX");
     });
     /* Show cover button handler */
     $(tableid).find('.showCover').click(function(){

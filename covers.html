@@ -38,7 +38,7 @@
                 /* Index of the first cover to be displayed */
                 var firstIndex = COVERS_PER_PAGE * pageNumber;
                 /* Identifiers for the cover information to display */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", "S"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", ".xml", ".txt"];
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -145,8 +145,11 @@
                                     <th width="20" title="Remove Cover">
                                         R
                                     </th>
-                                    <th width="20" title="Save Cover">
-                                        S
+                                    <th width="30" title="Save Cover XML">
+                                        .xml
+                                    </th>
+                                    <th width="30" title="Save Cover Matrix">
+                                        .txt
                                     </th>
                                 </tr>
                             </thead>
