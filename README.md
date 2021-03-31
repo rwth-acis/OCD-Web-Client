@@ -4,7 +4,7 @@ This repository contains the code of the web client for the OCD service.
 # Quick Set-Up Guide
 ### Client Configuration at Learning Layers
 To set up the Learning layers OIDC login, either use an existing Learning Layers client or register your own at https://api.learning-layers.eu/o/oauth2/.
-At login, Learning Layers has to be able to refer back to your client with the following configurations:
+The client at learning Layers has to have the following configurations:
 * The web clients login page has to be mentioned as a _Redirect URI_
 * The _Grant Type_ must be implicit and the _Scope_ has to include openid, email and profile
 * The _Response Type_ has to only be a token
