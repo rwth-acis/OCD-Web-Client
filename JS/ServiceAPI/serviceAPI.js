@@ -93,6 +93,7 @@
                   return xhr.setRequestHeader("Authorization", "Basic " + login.getBasicAuthLogin());
                 }
                 else if (login.loginType === LoginTypes.OIDC) {
+                  xhr.setRequestHeader("Authorization", "Basic " + login.getBasicAuthLogin());
                   return xhr.setRequestHeader("access_token", login.getAccessToken());
                 }
               }

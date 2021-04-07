@@ -91,7 +91,8 @@
                    return xhr.setRequestHeader("Authorization", "Basic " + login.getBasicAuthLogin());
                  }
                  else if (login.loginType === LoginTypes.OIDC) {
-                   return xhr.setRequestHeader("access_token", login.getAccessToken());
+                   xhr.setRequestHeader("Authorization", "Basic " + login.getBasicAuthLogin());
+                   return xhr.setRequestHeader("access-token", login.getAccessToken());
                  }
                }
              };
@@ -225,6 +226,7 @@ function sendJsonRequest(method, url, content, callback, errorcallback, mimeType
     /* Login */
     var login = new apiJson.Login(api.LoginTypes.OIDC);
     login.setAccessToken(localStorage.getItem('access_token'));
+    login.setUserAndPassword(localStorage.getItem("user"), localStorage.getItem("pass"));
 
     /* Request sender */
     var requestSender = new apiJson.RequestSender(BaseUrl, login);
