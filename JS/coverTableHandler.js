@@ -12,15 +12,12 @@
  */
 function appendCoverRow(table, coverElt, cells) {
     var row = "<tr>";
+	/* Graph Id */
+    var graphId = $(coverElt).find('GraphId').text();
+    row += createCoverGraphIdCell(graphId);
     /* Cover Id */
     var coverId = $(coverElt).find('CoverId').text();
     row += createCoverIdCell(coverId);
-    /* Cover Id */
-    var coverName = $(coverElt).children('Name').text();
-    row += createCoverNameCellHidden(coverName);
-    /* Graph Id */
-    var graphId = $(coverElt).find('GraphId').text();
-    row += createCoverGraphIdCell(graphId);
     /* Cover name */
     if($.inArray("Name", cells) > -1) {
         row += createCoverNameCell($(coverElt).children('Name').text(), coverId, graphId);
@@ -37,14 +34,6 @@ function appendCoverRow(table, coverElt, cells) {
     /* Community count */
     if($.inArray("Communities", cells) > -1) {
         row += createCoverTableCell($(coverElt).find('CommunityCount').text());
-    }
-    /* Show cover */
-    if($.inArray("C", cells) > -1) {
-        row += createShowCoverCell();
-    }
-    /* Show graph */
-    if($.inArray("G", cells) > -1) {
-        row += createShowCoverGraphCell();
     }
     /* Delete cover */
     if($.inArray("R", cells) > -1) {
@@ -73,7 +62,7 @@ function createCoverTableCell(value) {
 }
 
 function createCoverNameCell(name, coverId, graphId) {
-    return '<td><a href="#" class="showCover"> '+ name + '</a> </td>';
+    return '<td class="coverName"><a href="#" class="showCover"> ' + name + '</a> </td>';
 }
 
 function createGraphNameCell(name, graphId) {
@@ -85,12 +74,6 @@ function createGraphNameCell(name, graphId) {
  */
 function createCoverIdCell(value) {
     return '<td class="hidden coverId">' + value + '</td>';
-}
-/*
- * Creates cover name cell (hidden
- */
-function createCoverNameCellHidden(value) {
-    return '<td class="hidden coverNameHidden">' + value + '</td>';
 }
 /* Creates graph id cell */
 function createCoverGraphIdCell(value) {
@@ -165,14 +148,15 @@ function saveCover(coverId, graphId, coverName, type) {
     sendRequest("get", "covers/" + coverId.text() + "/graphs/" + graphId.text() + "?outputFormat=" + type, "",
         /* Response handler */
         function(response) {
+			const trimmedName = coverName.text().trim() == "" ? "cover" : coverName.text().trim();
             if(type === "DEFAULT_XML") {
                 const blob = new Blob([response],
                     {type: "text/xml"});
-                saveAs(blob, coverName.text() + ".xml");
+                saveAs(blob, trimmedName + ".xml");
             } else if(type === "LABELED_MEMBERSHIP_MATRIX") {
                 const blob = new Blob([response],
                     { type: "text/plain;charset=utf-8" });
-                saveAs(blob, coverName.text() + ".txt");
+                saveAs(blob, trimmedName + ".txt");
             }
         },
         /* Error handler */
@@ -211,14 +195,14 @@ function registerCoverTable(tableid) {
     /* Save XML button handler */
     $(tableid).find('.saveXMLCover').click(function(){
         var coverId = $(this).parent().siblings().filter('.coverId');
-        var coverName = $(this).parent().siblings().filter('.coverNameHidden');
+        var coverName = $(this).parent().siblings().filter('.coverName');
         var graphId = $(this).parent().siblings().filter('.graphId');
         saveCover(coverId, graphId, coverName, "DEFAULT_XML");
     });
     /* Save Membership Matrix button handler */
     $(tableid).find('.saveMatrixCover').click(function(){
         var coverId = $(this).parent().siblings().filter('.coverId');
-        var coverName = $(this).parent().siblings().filter('.coverNameHidden');
+        var coverName = $(this).parent().siblings().filter('.coverName');
         var graphId = $(this).parent().siblings().filter('.graphId');
         saveCover(coverId, graphId, coverName, "LABELED_MEMBERSHIP_MATRIX");
     });
