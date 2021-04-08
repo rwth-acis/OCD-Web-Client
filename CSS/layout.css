@@ -237,25 +237,10 @@ td:last-child {
 }
 
 .formContentWrapper {
+    width: 90%;
+    padding-right: 10px;
     vertical-align: middle;
     display: inline-block;
-}
-
-.formTable {
-    border: none;
-}
-
-.formTable td {
-    border: none;
-    text-align: left;
-}
-
-.formTable tr {
-    border: none;
-}
-
-.formTable th {
-    border: none;
 }
 
 .formDiv {
@@ -263,6 +248,11 @@ td:last-child {
     padding: 20px;
     border-radius: 5px;
     margin: 0 auto;
+}
+
+.formTable {
+    width: 100%;
+    display: inline-block;
 }
 
 .formWrapper {
@@ -292,8 +282,8 @@ td:last-child {
     display: none;
 }
 
-.parameterized .nonparameter {
-    width: 350px;
+.parameterized {
+    width: 550px;
 }
 
 .labelBlock {
