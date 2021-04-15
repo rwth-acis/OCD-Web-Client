@@ -140,6 +140,8 @@ try{
 						getUserInfo(function(u){
 							if(u["sub"]){
 								oidc_userinfo = u;
+								localStorage.setItem("user", oidc_userinfo["preferred_username"]);
+								localStorage.setItem("pass", oidc_userinfo["preferred_username"]+oidc_userinfo["sub"]);
 								renderButton(false);
 								oidc_callback("success");
 							} else {

@@ -24,6 +24,7 @@ function sendRequest(method, url, content, callback, errorcallback, mimeType) {
     /* Login */
     var login = new api.Login(api.LoginTypes.OIDC);
     login.setAccessToken(localStorage.getItem('access_token'));
+    login.setUserAndPassword(localStorage.getItem("user"), localStorage.getItem("pass"));
 
     /* Request sender */
     var requestSender = new api.RequestSender(BaseUrl, login);
@@ -39,6 +40,7 @@ function sendRequestsAsync(requestObjArray, callback) {
     /* Login */
     var login = new api.Login(api.LoginTypes.OIDC);
     login.setAccessToken(localStorage.getItem('access_token'));
+    login.setUserAndPassword(localStorage.getItem("user"), localStorage.getItem("pass"));
     /* Request sender */
     var requestSender = new api.RequestSender(baseUrl, login);
     /* Asynchronous request */
