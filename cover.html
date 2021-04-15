@@ -110,7 +110,7 @@
                         /*
                          * Register events/components
                          */
-                        registerCoverTable();
+                        registerCoverTable("#coverMetaTable");						
                         //registerCollapsable("#metricsCollapsable", metricsCollapsableHandler);
                         registerCollapsable("#metricsCollapsable");
                         registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
@@ -191,6 +191,7 @@
                         else {
                             $("#objectCreatorRow").css("display", "none");
                         }
+						$("#metricParameterRow").empty();
                     });
                 });
             });
@@ -299,6 +300,7 @@
                                 $("#coverTable").tablesorter({sortList: [[0,0]],
                                     headers: { 6: {sorter: false}, 7: {sorter: false}}});
                             } catch(err) { /* table empty */ }
+						registerCoverTable("#coverTable");
                     },
                     /* Error handler */
                     function(errorData) {
@@ -991,47 +993,26 @@
                                 <div class="formDiv">
                                     <form id="runMetricForm" class="parameterized" action="javascript:void(0); return false;">
                                         <div class="formContentWrapper">
-                                            <table class="formTable">
-                                                <tr>
-                                                    <td>
-                                                        Metric Type:
-                                                    </td>
-                                                    <td>
-                                                        <select id="metricType" class="nonparameter">
-                                                        </select>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        Metric:
-                                                    </td>
-                                                    <td>
-                                                        <select id="metric" class="nonparameter">
-                                                        </select>
-                                                    </td>
-                                                </tr>
-                                                <tr id="metricParameterRow" class="hidden">
-                                                    <td>
-                                                        Parameters:
-                                                    </td>
-                                                    <td>
-                                                        <div class="tableWrapper">
-                                                            <table id="metricParams">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th title="Parameter Name">Name</th>
-                                                                        <th title="Default Value">Default</th>
-                                                                        <th title="Use Non-Default Parameter">Value</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody></tbody>
-                                                            </table>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                            <div class="formTable">
+												<div class="form-group row">
+													<label for="metricType" class="col-sm-3 col-form-label">Metric Type</label>
+													<div class="col-sm-9">
+														<select id="metricType" class="form-control custom-select">
+														</select>
+													</div>
+												</div>
+												<div class="form-group row">
+													<label for="metric" class="col-sm-3 col-form-label">Metric</label>
+													<div class="col-sm-9">
+														<select id="metric" class="form-control custom-select">
+														</select>
+													</div>
+												</div>
+                                                <div class="form-group row ml-2" id="metricParameterRow" >
+												</div>
+                                            </div>
                                         </div>
-                                        <div class="submitWrapper">
+										<div class="submitWrapper">
                                             <input name="submit" id="runMetricBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
                                         </div>
                                         <div class="selectorWrapper hidden">
@@ -1054,7 +1035,7 @@
                                             </div>
                                             <!-- Table for potential ground truth covers -->
                                             <div class="tableWrapper">
-                                                <table id="coverTable">
+                                                <table id="coverTable" style="border-collapse: separate;border-spacing: 1em 0;">
                                                     <thead>
                                                     <tr>
                                                         <th class="hidden" title="CoverId"></th>
@@ -1075,10 +1056,7 @@
                                                             Communities
                                                             <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                                         </th>
-                                                        <th width="20" title="Show Cover">
-                                                            C
-                                                        </th>
-                                                        <th width="20" title="Select Graph">
+                                                        <th width="25" title="Select Graph">
                                                             Select
                                                         </th>
                                                     </tr>
