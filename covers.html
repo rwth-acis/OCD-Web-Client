@@ -54,10 +54,19 @@
                         /*
                          * CoverMetas request succeeded
                          */
-                        if($(coverMetasXml).find("Id").length === 0 && pageNumber > 0) {
-                            pageNumber--;
-                            var newUrl = "covers.html?page=" + pageNumber;
-                            window.location.href = newUrl;
+                        if(!graphIdQueryExtension || graphIdQueryExtension == "") {
+                            if ($(coverMetasXml).find("Id").length === 0 && pageNumber > 0) {
+                                pageNumber--;
+                                var newUrl = "covers.html?page=" + pageNumber;
+                                window.location.href = newUrl;
+                            }
+                        }
+                        else {
+                            if ($(coverMetasXml).find("Id").length === 0 && pageNumber > 0) {
+                                pageNumber--;
+                                var newUrl = "covers.html?page=" + pageNumber + "&graphId=" + graphIdQueryExtension;
+                                window.location.href = newUrl;
+                            }
                         }
                         $(coverMetasXml).find("Cover").each(function() {
                             appendCoverRow($('#coverTable'), $(this), cells);
@@ -86,12 +95,28 @@
                     if(pageNumber > 0) {
                         pageNumber--;
                         var newUrl = "covers.html?page=" + pageNumber;
+                        var graphIdQueryExtension = getUrlVar("graphId");
+                        if(!graphIdQueryExtension) {
+                            graphIdQueryExtension = "";
+                        }
+                        else {
+                            graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
+                        }
+                        newUrl += graphIdQueryExtension;
                         window.location.href = newUrl;
                     }
                 });
                 $('.pageRight').click(function(){
                     pageNumber++;
                     var newUrl = "covers.html?page=" + pageNumber;
+                    var graphIdQueryExtension = getUrlVar("graphId");
+                    if(!graphIdQueryExtension) {
+                        graphIdQueryExtension = "";
+                    }
+                    else {
+                        graphIdQueryExtension = "&graphId=" + graphIdQueryExtension;
+                    }
+                    newUrl += graphIdQueryExtension;
                     window.location.href = newUrl;
                 });
             });
