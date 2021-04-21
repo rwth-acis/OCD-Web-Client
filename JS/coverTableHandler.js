@@ -33,7 +33,11 @@ function appendCoverRow(table, coverElt, cells) {
     }
     /* Community count */
     if($.inArray("Communities", cells) > -1) {
-        row += createCoverTableCell($(coverElt).find('CommunityCount').text());
+        if($(coverElt).find('Status').first().text() !== "COMPLETED") { //There are two Statuses: the first one is for the cover, the second would be for a metric
+            row += createCoverTableCell("PENDING");
+        } else {
+            row += createCoverTableCell($(coverElt).find('CommunityCount').text());
+        }
     }
     /* Delete cover */
     if($.inArray("R", cells) > -1) {
