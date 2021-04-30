@@ -136,18 +136,26 @@ try{
 						}
 						// TODO: parse
 
+						//Get nonce
+						const receivedNonce = Base64.decode(JSON.parse(oidc_idtoken["payloadS"])["nonce"]);
+
 						// then use access token and retrieve user info
 						getUserInfo(function(u){
-							if(u !== undefined && u["sub"]){
+							if(u !== undefined && u["sub"] && (localStorage.getItem("nonce") === null || (localStorage.getItem("nonce") !== null && receivedNonce === localStorage.getItem("nonce")))){
 								oidc_userinfo = u;
+								if (localStorage.getItem("nonce") === null) {
+									localStorage.setItem("nonce", uuidv4());
+								}
 								localStorage.setItem("user", oidc_userinfo["preferred_username"]);
 								localStorage.setItem("pass", oidc_userinfo["preferred_username"]+oidc_userinfo["sub"]);
 								renderButton(false);
 								oidc_callback("success");
 							} else {
 								renderButton(true);
-								if(u !== undefined) {
+								if(u !== undefined && u.error_description !== undefined) {
 									oidc_callback("Error: could not retrieve user info! Cause: " + u.error_description);
+								} else if (localStorage.getItem("nonce") !== undefined && receivedNonce !== localStorage.getItem("nonce")) {
+									oidc_callback("Error: could not retrieve user info! Nonce does not match!");
 								} else {
 									oidc_callback("Error: could not retrieve user info!");
 								}
@@ -193,7 +201,7 @@ function renderButton(signin){
 		};
 		$(".oidc-signin").html("<img style='margin-right:5px' src='" + oidc_logo + "' height='" + size + "px'/> Sign in with <i>" + oidc_name + "</i>");
 		$(".oidc-signin").click(function (e){
-			var url = oidc_provider_config.authorization_endpoint + "?response_type=id_token%20token&client_id=" + oidc_clientid + "&scope=" + oidc_scope +"&redirect_uri=" + oidc_redirect_uri + "&nonce=" + uuidv4();
+			var url = oidc_provider_config.authorization_endpoint + "?response_type=id_token%20token&client_id=" + oidc_clientid + "&scope=" + oidc_scope +"&redirect_uri=" + oidc_redirect_uri + "&nonce=" + Base64.encode(localStorage.getItem("nonce"));;
 			window.location.href = url;
 		});
 	} else {
