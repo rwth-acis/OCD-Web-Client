@@ -39,7 +39,7 @@ Facilitates import / upload of new graphs and covers.
                         selectOptionStr
                         + '<option value="graph">Graph</option>'
                         + '<option value="cover">Cover</option>'
-                        + '<option value="centralitie">Centrality</option>'
+                        + '<option value="centrality">Centrality</option>'
                 );
                 /*
                 * Import form listener.
@@ -77,7 +77,7 @@ Facilitates import / upload of new graphs and covers.
                             return;
                         }
 
-                    	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
+                    	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE'){
                     		if($("#startDate").val() === ""){
                                 showErrorMessage('Please enter Start Date.');
                                 return;
@@ -89,7 +89,7 @@ Facilitates import / upload of new graphs and covers.
                     	}
 
                     }
-                    else if($("#objectType").val() === "centralitie") {
+                    else if($("#objectType").val() === "centrality") {
                         if($("#objectCreator").val() === selectOptionVal) {
                             showErrorMessage('Please select a Creation Method');
                             return;
@@ -123,7 +123,7 @@ Facilitates import / upload of new graphs and covers.
                                     /* Requests cover import */
                                     postCover(content);
                                 }
-                                else if($("#objectType").val() === "centralitie") {
+                                else if($("#objectType").val() === "centrality") {
                                     /* Requests centrality import */
                                     postCentrality(content);
                                 }
@@ -132,6 +132,12 @@ Facilitates import / upload of new graphs and covers.
                                 }
                             };
                             reader.readAsText(file);
+                        }
+                        else if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
+                            if($("#objectType").val() === "graph") {
+                                /* Requests graph import */
+                                postGraph("");
+                            }
                         }
                         else {
                            showErrorMessage('File could not be loaded.');
@@ -164,7 +170,7 @@ Facilitates import / upload of new graphs and covers.
                                 });
                             });
                             /* Loads and displays graph table to select a corresponding graph */
-                            if($(this).val() === "cover" || $(this).val() === "centralitie") {
+                            if($(this).val() === "cover" || $(this).val() === "centrality") {
                                 loadGraphTable();
                                 $(".selectorWrapper").css("display", "block");
                             }
@@ -192,9 +198,15 @@ Facilitates import / upload of new graphs and covers.
                     });
                 });
                 $("#objectFormat").change(function() {
-                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST') {
+                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE') {
                 		$("#startDatetr").removeClass('hidden');
                 		$("#endDatetr").removeClass('hidden');
+                        $("#objectFileDiv").removeClass('hidden');
+                		if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
+                            $("#showUserNamestr").removeClass('hidden');
+                            $("#involvedUserURIstr").removeClass('hidden');
+                            $("#objectFileDiv").addClass('hidden');
+                        }
                 	}
                     // !!This Code can only be used when webOCD supports edge types!!
                 	// } else if($("#objectFormat").val() === 'XGMML') {
@@ -207,6 +219,9 @@ Facilitates import / upload of new graphs and covers.
                     else {
                 		$("#startDatetr").addClass('hidden');
                 		$("#endDatetr").addClass('hidden');
+                        $("#showUserNamestr").addClass('hidden');
+                        $("#involvedUserURIstr").addClass('hidden');
+                        $("#objectFileDiv").removeClass('hidden');
                 	}
                 });
             });
@@ -217,8 +232,16 @@ Facilitates import / upload of new graphs and covers.
                 "&creationType=" + $("#objectCreator").val()
                 + "&inputFormat=" + $("#objectFormat").val()
                 + "&doMakeUndirected=" + doMakeUndirected;
-                if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST'){
+                if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE'){
                 	restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
+                    if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
+                        if($("#showUserNames").val() !== "") {
+                            restUrl = restUrl + "&showUserNames=" + $("#showUserNames").val();
+                        }
+                        if($("#involvedUserURIs").val() !== "") {
+                            restUrl = restUrl + "&involvedUserURIs=" + $("#involvedUserURIs").val();
+                        }
+                    }
                 }
                 // !!This Code can only be used when webOCD supports edge types!!
                 // if($("#objectFormat").val() === 'XGMML') {
@@ -407,7 +430,7 @@ Facilitates import / upload of new graphs and covers.
                                   <select id="objectFormat" class="form-control custom-select"></select>
                                 </div>
                                 <!-- Input file -->
-                                <div class="form-group">
+                                <div id="objectFileDiv" class="form-group">
                                   <label for="objectFile" class="form-label">File</label>
                                   <input id="objectFile" type="file" class="form-control-file">
                                 </div>
@@ -421,6 +444,14 @@ Facilitates import / upload of new graphs and covers.
                                     <label for="endDate" class="col-form-label">End Date:</label>
                                     <input id="endDate" type="text" placeholder="YYYY-MM-DD">
                                   </div>
+                                <div id="showUserNamestr" class="hidden">
+                                    <label for="showUserNames" class="col-form-label">Show Usernames:</label>
+                                    <input id="showUserNames" type="text" placeholder="false">
+                                </div>
+                                <div id="involvedUserURIstr" class="hidden">
+                                    <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
+                                    <input id="involvedUserURIs" type="text" style="width:240px" placeholder="Comma separated uri list">
+                                </div>
                                   <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
                                   <div id="keytr" class="hidden">
                                       <label for="key" class="col-form-label">Key:</label>
