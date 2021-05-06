@@ -239,7 +239,7 @@ Facilitates import / upload of new graphs and covers.
                             restUrl = restUrl + "&showUserNames=" + $("#showUserNames").val();
                         }
                         if($("#involvedUserURIs").val() !== "") {
-                            restUrl = restUrl + "&showUserNames=" + "&involvedUserURIs=" + $("#involvedUserURIs").val();
+                            restUrl = restUrl + "&involvedUserURIs=" + $("#involvedUserURIs").val();
                         }
                     }
                 }
@@ -450,7 +450,7 @@ Facilitates import / upload of new graphs and covers.
                                 </div>
                                 <div id="involvedUserURIstr" class="hidden">
                                     <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
-                                    <input id="involvedUserURIs" type="text" placeholder="Comma separated list of uris, leave empty if unsure">
+                                    <input id="involvedUserURIs" type="text" style="width:240px" placeholder="Comma separated uri list">
                                 </div>
                                   <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
                                   <div id="keytr" class="hidden">
