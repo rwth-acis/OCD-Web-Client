@@ -457,6 +457,15 @@ td:last-child {
     z-index: 1;
 }
 
+.nodeNameDisplayButton {
+    width: inherit;
+    margin-bottom: 5px;
+}
+
+.nodeNameDisplayButton:hover {
+    cursor: pointer;
+}
+
 .saveJsonForm {
     width: auto;
     margin: auto;
@@ -682,4 +691,12 @@ input:checked + .slider:before {
 .separate-row{
     background-color: #2d73b2;
     color: #fafafa;
+}
+
+.node-label {
+    font-size: 12px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background-color: rgba(0,0,0,0.5);
+    user-select: none;
 }

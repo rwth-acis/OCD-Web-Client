@@ -20,8 +20,10 @@
     <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
     <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
     <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+    <script src="node_modules/three/build/three.min.js"></script>
     <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
     <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+    <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
     <script src="node_modules/arangojs/lib/web.js"></script>
     <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
     <script type="text/javascript">
@@ -39,6 +41,7 @@
         var visualizationType = "NODE_SIZE";
         var visualizationTypeChange = true;
         var have3D;
+        var haveNodeNames = false;
         var nodeName = "";
         var keysPressed = new Map();
         var rightClickLink = null;
@@ -421,7 +424,7 @@
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function(event) {
             if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
-                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm')){
+                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.nodeNameDisplayButton')){
 
                 var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
                 var i;
@@ -516,6 +519,15 @@
             }
         }
 
+        function NodeNameDisplayHandler () {
+            haveNodeNames = !haveNodeNames;
+            if(have3D === true) {
+                forceGraph
+                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
+                    .nodeThreeObject(forceGraph.nodeThreeObject())
+            }
+        }
+
         /* Builds a force graph from json data */
         function buildGraph() {
             let graph = JSON.parse(jsonGraph);
@@ -535,10 +547,11 @@
             if (have3D === false) {
                 forceGraph = ForceGraph()
                 (document.getElementById('forceVisualizationGraphic'))
+                    .nodeCanvasObjectMode( () => 'after')
                     .backgroundColor("#fafafa")
                     .graphData(graph)
                     .nodeId('id')
-                    .nodeLabel('name')
+                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
                     .onNodeHover(node => {
                         if (node != null) {
                             nodeName = node.name;
@@ -579,6 +592,18 @@
                             return colors[node.id];
                         } else {
                             return '#3183ba';
+                        }
+                    })
+                    .nodeCanvasObject((node, ctx, globalScale) => {
+                        if(haveNodeNames === true) {
+                            const label = node.name;
+                            const fontSize = 12/globalScale;
+                            ctx.font = `${fontSize}px Sans-Serif`;
+
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                            ctx.fillText(label, node.x, node.y);
                         }
                     })
                     .onNodeDragEnd(node => {
@@ -605,11 +630,13 @@
                     .linkTarget('target')
                     .cooldownTicks(200);
             } else {
-                forceGraph = ForceGraph3D()
+                forceGraph = ForceGraph3D({
+                    extraRenderers: [new THREE.CSS2DRenderer()]
+                })
                 (document.getElementById('forceVisualizationGraphic'))
                     .graphData(graph)
                     .nodeId('id')
-                    .nodeLabel('name')
+                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
                     .onNodeHover(node => {
                         if (node != null) {
                             nodeName = node.name;
@@ -645,6 +672,16 @@
                             return 2;
                         }
                     })
+                    .nodeThreeObject(node => {
+                        if(haveNodeNames === true) {
+                            const nodeEl = document.createElement('div');
+                            nodeEl.textContent = node.name;
+                            nodeEl.style.color = "#ffffff";//node.color;
+                            nodeEl.className = 'node-label';
+                            return new THREE.CSS2DObject(nodeEl);
+                        }
+                    })
+                    .nodeThreeObjectExtend(true)
                     .nodeColor(function (node) {
                         if (visualizationType !== "NODE_SIZE") {
                             return colors[node.id];
@@ -652,7 +689,7 @@
                             return '#3183ba';
                         }
                     })
-                    .nodeOpacity(1)
+                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
                     .onNodeDragEnd(node => {
                         node.fx = node.x;
                         node.fy = node.y;
@@ -962,6 +999,7 @@
                                 <span class="tool-dot" style="margin-top:3px"></span>
                             </div>
                             <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
+                                <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 nodeNameDisplayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
                                 <input class="saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON" style="width:65%">
                                 <button class="saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
                             </form>
