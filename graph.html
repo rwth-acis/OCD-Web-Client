@@ -24,9 +24,9 @@
     <script src="JS/simulation/jsonRequestHandler.js"></script>
     <script src="JS/simulation/simulationForm.js"></script>
     <script src="node_modules/three/build/three.min.js"></script>
-    <script src="node_modules/three-spritetext/dist/three-spritetext.min.js"></script>
     <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
     <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+    <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
     <script src="node_modules/arangojs/lib/web.js"></script>
     <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
     <script type="text/javascript">
@@ -845,7 +845,6 @@
 
         function NodeNameDisplayHandler () {
             haveNodeNames = !haveNodeNames;
-            document.getElementById("nodeNameDisplayButton").style.backgroundColor = (haveNodeNames === true ? "#42b827" : "#d73b2d");
             if(have3D === true) {
                 forceGraph
                     .nodeOpacity(haveNodeNames === true ? .5 : 1)
@@ -977,7 +976,9 @@
                     .linkTarget('target')
                     .cooldownTicks(200);
             } else {
-                forceGraph = ForceGraph3D()
+                forceGraph = ForceGraph3D({
+                    extraRenderers: [new THREE.CSS2DRenderer()]
+                })
                 (document.getElementById('forceVisualizationGraphic'))
                     .graphData(graph)
                     .nodeId('id')
@@ -1045,13 +1046,11 @@
                     })
                     .nodeThreeObject(node => {
                         if(haveNodeNames === true) {
-                            const sprite = new SpriteText(node.name);
-                            //sprite.position.z = 5;
-                            sprite.textAlign = 'center';
-                            sprite.material.depthWrite = false; // make sprite background transparent
-                            sprite.color = "rgb(255,255,255)";
-                            sprite.textHeight = 10;
-                            return sprite;
+                            const nodeEl = document.createElement('div');
+                            nodeEl.textContent = node.name;
+                            nodeEl.style.color = "#ffffff";//node.color;
+                            nodeEl.className = 'node-label';
+                            return new THREE.CSS2DObject(nodeEl);
                         }
                     })
                     .nodeThreeObjectExtend(true)
@@ -1499,7 +1498,7 @@
                                         <span class="tool-dot" style="margin-top:3px"></span>
                                     </div>
                                     <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
-                                        <button id="nodeNameDisplayButton" class="nodeNameDisplayButton" onclick="NodeNameDisplayHandler()">Show Node Names</button>
+                                        <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 nodeNameDisplayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
                                         <input class="saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON" style="width:65%">
                                         <button class="saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
                                     </form>
