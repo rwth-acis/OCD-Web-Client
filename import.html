@@ -297,7 +297,8 @@ Facilitates import / upload of new graphs and covers.
             /* Requests input format names.
              * Then executes a callback function. */
             function getInputFormats(callback) {
-                sendRequest("get", $("#objectType").val() + "s/formats/input", "",
+                const typeSpecifier = $("#objectType").val() !== "centrality" ? $("#objectType").val() + "s" : "centralities";
+                sendRequest("get", typeSpecifier + "/formats/input", "",
                         /* Response handler */
                         function(response) {
                             inputFormatNames = response;
@@ -316,7 +317,8 @@ Facilitates import / upload of new graphs and covers.
             /* Requests creator type names.
              * Then executes a callback function. */
             function getCreatorTypes(callback) {
-                sendRequest("get", $("#objectType").val() + "s/creationtypes", "",
+                const typeSpecifier = $("#objectType").val() !== "centrality" ? $("#objectType").val() + "s" : "centralities";
+                sendRequest("get", typeSpecifier + "/creationtypes", "",
                         /* Response handler */
                         function(response) {
                             creatorTypes = response;
