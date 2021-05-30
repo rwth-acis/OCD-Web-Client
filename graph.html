@@ -324,6 +324,25 @@
                 });
         }
 
+        /* Requests all compatible graph types for a given algorithm.
+         * Then executes a calllback function */
+        function getAlgorithmCompatibleGraphTypes(algorithmName, callback) {
+            sendRequest("get", "algorithms/" + algorithmName + "/graphTypes", "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphTypes request failed
+                     */
+                    showConnectionErrorMessage("Algorithms compatible graph types were not received.", errorData);
+                });
+        }
+
         /* Requests all parameter names for a given centrality measure.
          * Then executes a calllback function */
         function getCentralityMeasureParameters(centralityMeasureName, callback) {
@@ -384,6 +403,8 @@
                         }
                     });
                 });
+                /* Registers the graph type component for the contentHandler */
+                registerGraphTypes("#algorithm", "#algorithmGraphTypeDiv", getAlgorithmCompatibleGraphTypes);
                 /* Registers the parameter component for the contentHandler */
                 registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
             }
@@ -1317,6 +1338,8 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <!-- Algorithm Graph Types -->
+                                    <div class="col-sm-10" id="algorithmGraphTypeDiv"></div>
                                     <!-- Algorithm Parameters -->
                                     <div class="col-sm-10" id="algorithmParameterDiv"></div>
 
