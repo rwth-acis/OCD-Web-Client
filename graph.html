@@ -390,6 +390,44 @@
                 });
         }
 
+        /* Requests all compatible graph types for a given algorithm.
+         * Then executes a calllback function */
+        function getCentralityMeasureCompatibleGraphTypes(centralityName, callback) {
+            sendRequest("get", "centralities/" + centralityName + "/graphTypes", "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphTypes request failed
+                     */
+                    showConnectionErrorMessage("Centrality's compatible graph types were not received.", errorData);
+                });
+        }
+
+        /* Requests all compatible graph types for a given algorithm.
+         * Then executes a calllback function */
+        function getCentralitySimulationCompatibleGraphTypes(centralitySimulationName, callback) {
+            sendRequest("get", "centralitysimulations/" + centralitySimulationName + "/graphTypes", "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphTypes request failed
+                     */
+                    showConnectionErrorMessage("Centrality simulation's compatible graph types were not received.", errorData);
+                });
+        }
+
         /* Handles the collapsable element for the algorithm execution. */
         function runAlgorithmCollapsableHandler() {
             if (typeof algorithmNames === 'undefined') {
@@ -435,10 +473,12 @@
                         if ($(this).text() !== 'Undefined') {
                             $("#centralityMeasure").append(
                                 '<option value="' + $(this).text()
-                                + '">' + $(this).text() + '</option>');
+                                + '">' + parseEnumName($(this).text()) + '</option>');
                         }
                     });
                 });
+                /* Registers the graph type component for the contentHandler */
+                registerGraphTypes("#centralityMeasure", "#centralityMeasureGraphTypeDiv", getCentralityMeasureCompatibleGraphTypes);
                 /* Registers the parameter component for the contentHandler */
                 registerParameterSelect("#centralityMeasure", "#centralityMeasureParameterDiv", getCentralityMeasureParameters);
             }
@@ -453,13 +493,15 @@
                         if ($(this).text() !== 'Undefined') {
                             $("#centralitySimulation").append(
                                 '<option value="' + $(this).text()
-                                + '">' + $(this).text() + '</option>');
+                                + '">' + parseEnumName($(this).text()) + '</option>');
                         }
                     });
                 });
                 $('#multipleRuns').change(function () {
                     $('#runsInput').toggleClass("hidden");
                 });
+                /* Registers the graph type component for the contentHandler */
+                registerGraphTypes("#centralitySimulation", "#centralitySimulationGraphTypeDiv", getCentralitySimulationCompatibleGraphTypes);
                 /* Registers the parameter component for the contentHandler */
                 registerParameterSelect("#centralitySimulation", "#centralitySimulationParameterDiv", getCentralitySimulationParameters);
             }
@@ -1412,8 +1454,10 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group col-sm-12"
-                                     id="centralityMeasureParameterDiv"></div>
+                                <!-- Centrality Measure Graph Types -->
+                                <div class="col-sm-12" id="centralityMeasureGraphTypeDiv"></div>
+                                <!-- Centrality Measure Parameters -->
+                                <div class="form-group col-sm-12" id="centralityMeasureParameterDiv"></div>
 
                                 <div id="annotationDiv" class="row justify-content-end hidden">
                                     <div id="annotationText" class="col-12"></div>
@@ -1458,10 +1502,11 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="form-group col-sm-12"
-                                     id="centralitySimulationParameterDiv"></div>
-                                <div class="form-group row col-sm-12"
-                                     id="centralitySimulationRunsDiv">
+                                <!-- Centrality Simulation Graph Types -->
+                                <div class="col-sm-12" id="centralitySimulationGraphTypeDiv"></div>
+                                <!-- Centrality Simulation Parameters -->
+                                <div class="form-group col-sm-12" id="centralitySimulationParameterDiv"></div>
+                                <div class="form-group row col-sm-12" id="centralitySimulationRunsDiv">
                                     <label><input type="checkbox" id="multipleRuns">
                                         Multiple Runs</label> <input type="text" class="form-control hidden"
                                                                      value="2" id="runsInput">
