@@ -335,6 +335,50 @@ function writeAlertError(strong, string) {
     return '<div class="alert alert-danger"><strong>'+ strong +'</strong> ' + string + '</div>';
 }
 
+function buttonSubmitStart(buttonId) {
+    let submitButton = document.getElementById(buttonId)
+    submitButton.disabled = true;
+
+    if(submitButton.querySelector(".submitIcon") !== null) {
+        submitButton.querySelector(".submitIcon").outerHTML =
+            "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\" height=\"100%\" style=\"margin-bottom:90%\"></span>";
+    } else {
+        let submitText = "";
+        if (submitButton.querySelector(".submitText").textContent === "Simulate") {
+            submitText = "Simulating";
+        } else if (submitButton.querySelector(".submitText").textContent === "Submit") {
+            submitText = "Submitting";
+        } else {
+            submitText = "Running";
+        }
+
+        submitButton.querySelector(".submitText").textContent = submitText;
+        submitButton.querySelector(".submitSpinner").hidden = false;
+    }
+}
+
+function buttonSubmitEnd(buttonId) {
+    let submitButton = document.getElementById(buttonId)
+    submitButton.disabled = false;
+
+    if(submitButton.querySelector(".submitIcon") !== null) {
+        submitButton.querySelector(".submitIcon").outerHTML =
+            "<img class=\"submitIcon\" src=\"IMG/open-iconic/svg/media-play.svg\" alt=\"Run\" height=\"100%\" style=\"margin-bottom:90%;margin-left: 15%\">";
+    } else {
+        let submitText = "";
+        if (submitButton.querySelector(".submitText").textContent === "Simulating") {
+            submitText = "Simulate";
+        } else if (submitButton.querySelector(".submitText").textContent === "Submitting") {
+            submitText = "Submit";
+        } else {
+            submitText = "Run";
+        }
+
+        submitButton.querySelector(".submitText").textContent = submitText;
+        submitButton.querySelector(".submitSpinner").hidden = true;
+    }
+}
+
 /*getHeadLine */
 function getHeadLine(header, description) {
 return '<div class="jumbotron">\

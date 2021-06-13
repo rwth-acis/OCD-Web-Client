@@ -19,18 +19,21 @@ $(document).ready(function(){
 
              var content = JSON.stringify($('form').serializeObject());
 
+                buttonSubmitStart("runSimulationBtn");
+
                 sendRequest("post", "simulation", content,
                 /* Response handler */
                 function(response) {
-              //window.location.href = 'index.html';
+                window.location.href = 'index.html';
               },
                 /* Error handler */
               function(errorData) {
-                 //window.location.href = 'index.html';
+                 window.location.href = 'index.html';
                 /*
                 * GraphIds request failed
                 */
-                //showConnectionErrorMessage("Benchmark request failed.");
+                buttonSubmitEnd("runSimulationBtn");
+                showConnectionErrorMessage("Simulation request failed.");
               }, "application/json");
     });
 
@@ -112,7 +115,10 @@ function writeSimulationForm() {
        <input type="number" min="1" max="200" class="form-control" name="iterations" id="inputIterations" placeholder="1">\
     </div>\
     <div class="form-group">\
-       <button type="submit" class="btn btn-default">Simulate</button>\
+       <button id="runSimulationBtn"  type="submit" class="btn btn-default">\
+       <span class="submitText">Simulate</span>\
+       <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>\
+       </button>\
     </div>\
     </form>\
 ';

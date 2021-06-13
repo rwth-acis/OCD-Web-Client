@@ -110,6 +110,9 @@ Facilitates import / upload of new graphs and covers.
                      */
                     if (window.File && window.FileReader && window.FileList && window.Blob) {
                         var file = $("#objectFile").get(0).files[0];
+
+                        buttonSubmitStart("submitButton");
+
                         if(file) {
                             /* Reads input file */
                             var reader = new FileReader();
@@ -140,6 +143,7 @@ Facilitates import / upload of new graphs and covers.
                             }
                         }
                         else {
+                           buttonSubmitEnd("submitButton");
                            showErrorMessage('File could not be loaded.');
                         }
                     /*
@@ -490,7 +494,10 @@ Facilitates import / upload of new graphs and covers.
                                 </div>
                                 <!-- Form submit -->
                                 <div class="submitWrapper form-group">
-                                  <button type="submit" name="submit" class="btn btn-primary">Submit</button>
+                                  <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
+                                      <span class="submitText">Submit</span>
+                                      <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                  </button>
                                 </div>
 
                               </div>
