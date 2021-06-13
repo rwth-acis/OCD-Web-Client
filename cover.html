@@ -147,13 +147,11 @@
                         }
                         /* Request knowledge driven measure execution */
                         else {
-                            buttonSubmitStart("runMetricBtn");
                             runKnowledgeDrivenMeasure();
                         }
                     }
                     else if($("#metricType").val() === "statistical") {
                         /* Request statistical measure execution */
-                        buttonSubmitStart("runMetricBtn");
                         runStatisticalMeasure();
                     }
                     else {
@@ -205,6 +203,9 @@
             function runKnowledgeDrivenMeasure() {
                 var groundTruthId = $("input[name='coverSelect']:checked").val();
                 var params = getParameterXml("#metricParams");
+
+                buttonSubmitStart("runMetricBtn");
+
                 sendRequest("post", "covers/" + coverId + "/graphs/" + graphId +
                         "/metrics/knowledgedriven/groundtruth/"
                         + groundTruthId + "?metricType=" + $('#metric').val(), params,
@@ -217,12 +218,16 @@
                             /*
                              * Run metric request failed
                              */
+                            buttonSubmitEnd("runMetricBtn");
                             showConnectionErrorMessage("Metric request failed.", errorData);
                         });
             }
             /* Requests the execution of a statistical measure */
             function runStatisticalMeasure() {
                 var params = getParameterXml("#metricParams");
+
+                buttonSubmitStart("runMetricBtn");
+
                 sendRequest("post", "covers/" + coverId + "/graphs/" + graphId
                         + "/metrics/statistical?metricType=" + $('#metric').val()
                         , params,
@@ -235,6 +240,7 @@
                             /*
                              * Run metric request failed
                              */
+                            buttonSubmitEnd("runMetricBtn");
                             showConnectionErrorMessage("Metric request failed.", errorData);
                         });
             }
