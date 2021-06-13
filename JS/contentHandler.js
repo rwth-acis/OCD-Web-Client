@@ -335,6 +335,40 @@ function writeAlertError(strong, string) {
     return '<div class="alert alert-danger"><strong>'+ strong +'</strong> ' + string + '</div>';
 }
 
+function buttonSubmitStart(buttonId) {
+    let submitButton = document.getElementById(buttonId)
+    submitButton.disabled = true;
+
+    let submitText = "";
+    if(submitButton.querySelector(".submitText").textContent === "Simulate") {
+        submitText = "Simulating";
+    } else if(submitButton.querySelector(".submitText").textContent === "Submit") {
+        submitText = "Submitting";
+    } else {
+        submitText = "Running";
+    }
+
+    submitButton.querySelector(".submitText").textContent = submitText;
+    submitButton.querySelector(".submitSpinner").hidden = false;
+}
+
+function buttonSubmitEnd(buttonId) {
+    let submitButton = document.getElementById(buttonId)
+
+    let submitText = "";
+    if(submitButton.querySelector(".submitText").textContent === "Simulating") {
+        submitText = "Simulate";
+    } else if(submitButton.querySelector(".submitText").textContent === "Submitting") {
+        submitText = "Submit";
+    } else {
+        submitText = "Run";
+    }
+
+    submitButton.disabled = false;
+    submitButton.querySelector(".submitText").textContent = submitText;
+    submitButton.querySelector(".submitSpinner").hidden = true;
+}
+
 /*getHeadLine */
 function getHeadLine(header, description) {
 return '<div class="jumbotron">\

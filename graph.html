@@ -134,6 +134,9 @@
                         window.scrollTo(0, 0);
                         return;
                     }
+
+                    buttonSubmitStart("runAlgorithmBtn");
+
                     /* Requests an algorithm execution  */
                     //console.log("post" + " " + "covers/graphs/" + graphId
                     //    + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting + " " + params);
@@ -148,6 +151,7 @@
                             /*
                              * Run algorithm request failed
                              */
+                            buttonSubmitEnd("runAlgorithmBtn");
                             showConnectionErrorMessage("Algorithm request failed.", errorData);
                         });
                 }
@@ -160,6 +164,9 @@
                 var c_algo = $('#centralityMeasure').val();
                 if (c_algo !== getSelectOptionVal()) {
                     var params = getParameterXml("#centralityMeasureParameterDiv");
+
+                    buttonSubmitStart("runCentralityCalculationBtn");
+
                     sendRequest("post", "centrality/graphs/" + graphId
                         + "/algorithms?algorithm=" + c_algo, params,
                         /* Response handler */
@@ -176,6 +183,7 @@
                                 showErrorMessage(errorSplit[errorSplit.length - 1]);
                                 window.scrollTo(0, 0);
                             } else {
+                                buttonSubmitEnd("runCentralityCalculationBtn");
                                 showConnectionErrorMessage("Centrality calculation request failed.", errorData);
                             }
                         });
@@ -196,6 +204,9 @@
                     if ($('#multipleRuns').prop("checked")) {
                         runs = $('#runsInput').val();
                     }
+
+                    buttonSubmitStart("runCentralitySimulationBtn");
+
                     var counter;
                     for (counter = 0; counter < runs; counter++) {
                         sendRequest("post", "centrality/simulation/graphs/" + graphId
@@ -214,6 +225,7 @@
                                     showErrorMessage(errorSplit[errorSplit.length - 1]);
                                     window.scrollTo(0, 0);
                                 } else {
+                                    buttonSubmitEnd("runCentralitySimulationBtn");
                                     showConnectionErrorMessage("Centrality simulation request failed.", errorData);
                                 }
                             });
@@ -1331,8 +1343,9 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <button type="submit" name="submit" id="runAlgorithmBtn"
-                                                class="btn btn-primary">Run
+                                        <button type="submit" name="submit" id="runAlgorithmBtn" class="btn btn-primary">
+                                            <span class="submitText">Run</span>
+                                            <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
                                         </button>
                                     </div>
                                 </form>
@@ -1397,8 +1410,9 @@
                                 </div>
 
                                 <div class="form-group row col-sm-12">
-                                    <button type="submit" id="runCentralityCalculationBtn"
-                                            class="btn btn-primary">Run
+                                    <button type="submit" id="runCentralityCalculationBtn" class="btn btn-primary">
+                                        <span class="submitText">Run</span>
+                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
                                     </button>
                                 </div>
                             </form>
@@ -1445,8 +1459,9 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <button type="submit" id="runCentralitySimulationBtn"
-                                            class="btn btn-primary">Run
+                                    <button type="submit" id="runCentralitySimulationBtn" class="btn btn-primary">
+                                        <span class="submitText">Run</span>
+                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
                                     </button>
                                 </div>
                             </form>

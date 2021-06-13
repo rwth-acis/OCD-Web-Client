@@ -29,18 +29,18 @@ $(document).ready(function(){
              console.log(content);
               showInfo("simulation in progress");
 
+                buttonSubmitStart("runSimulationBtn");
+
                 sendJsonRequest("post", "simulation", content,
                 /* Response handler */
                 function(response) {
-
-             showSuccess("simulation done");
-             console.log("test");
+                    showSuccess("simulation done");
+                    //console.log("test");
               },
                 /* Error handler */
               function(errorData) {
-
-              showWarning(errorData);
-
+                  buttonSubmitEnd("runSimulationBtn");
+                  showWarning(errorData);
               }, "application/json");
     });
 
@@ -163,7 +163,9 @@ function writeSimulationForm(submit) {
     <div class="col-sm-10" id="breakParamRows">\
     </div>\
     <div class="form-group">\
-       <button type="submit" class="btn btn-primary">'+ submit +'</button>\
+       <button id="runSimulationBtn" type="submit" class="btn btn-primary">\
+       <span class="submitText">' + submit + '</span>\
+      <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>\
     </div>\
     </form>';
   }
