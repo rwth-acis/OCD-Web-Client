@@ -110,6 +110,12 @@ Facilitates import / upload of new graphs and covers.
                      */
                     if (window.File && window.FileReader && window.FileList && window.Blob) {
                         var file = $("#objectFile").get(0).files[0];
+
+                        let submitButton = document.getElementById("submitButton");
+                        submitButton.disabled = true;
+                        submitButton.querySelector("#submitText").textContent = "Uploading";
+                        submitButton.querySelector("#submitSpinner").hidden = false;
+
                         if(file) {
                             /* Reads input file */
                             var reader = new FileReader();
@@ -140,6 +146,9 @@ Facilitates import / upload of new graphs and covers.
                             }
                         }
                         else {
+                            submitButton.disabled = false;
+                            submitButton.querySelector("#submitText").textContent = "Submit";
+                            submitButton.querySelector("#submitSpinner").hidden = true;
                            showErrorMessage('File could not be loaded.');
                         }
                     /*
@@ -490,7 +499,10 @@ Facilitates import / upload of new graphs and covers.
                                 </div>
                                 <!-- Form submit -->
                                 <div class="submitWrapper form-group">
-                                  <button type="submit" name="submit" class="btn btn-primary">Submit</button>
+                                  <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
+                                      <span id="submitText">Submit</span>
+                                      <span id="submitSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                  </button>
                                 </div>
 
                               </div>
