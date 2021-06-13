@@ -147,15 +147,18 @@
                         }
                         /* Request knowledge driven measure execution */
                         else {
+                            buttonSubmitStart("runMetricBtn");
                             runKnowledgeDrivenMeasure();
                         }
                     }
                     else if($("#metricType").val() === "statistical") {
                         /* Request statistical measure execution */
+                        buttonSubmitStart("runMetricBtn");
                         runStatisticalMeasure();
                     }
                     else {
                         /* Should not happen */
+                        buttonSubmitEnd("runMetricBtn");
                         showErrorMessage('Client Error.');
                         return;
                     }
@@ -1050,7 +1053,9 @@
                                             </div>
                                         </div>
 										<div class="submitWrapper">
-                                            <input name="submit" id="runMetricBtn" class="submit icon" type="image" src="IMG/open-iconic/svg/media-play.svg" alt="Run">
+                                            <button name="submit" id="runMetricBtn" class="submit icon">
+                                                <img class="submitIcon" src="IMG/open-iconic/svg/media-play.svg" alt="Run" height="100%" style="margin-bottom:90%;margin-left: 15%">
+                                            </button>
                                         </div>
                                         <div class="selectorWrapper hidden">
                                         <div class="selectorTitle">
