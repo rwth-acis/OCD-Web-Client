@@ -335,13 +335,14 @@ function writeAlertError(strong, string) {
     return '<div class="alert alert-danger"><strong>'+ strong +'</strong> ' + string + '</div>';
 }
 
+/* Disable submit button and add loading spinner */
 function buttonSubmitStart(buttonId) {
     let submitButton = document.getElementById(buttonId)
     submitButton.disabled = true;
 
     if(submitButton.querySelector(".submitIcon") !== null) {
         submitButton.querySelector(".submitIcon").outerHTML =
-            "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\" height=\"100%\" style=\"margin-bottom:90%\"></span>";
+            "<span class=\"submitIcon submitSpinner spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\" height=\"100%\" style=\"margin-bottom:90%\"></span>";
     } else {
         let submitText = "";
         if (submitButton.querySelector(".submitText").textContent === "Simulate") {
@@ -357,6 +358,7 @@ function buttonSubmitStart(buttonId) {
     }
 }
 
+/* Enable submit button and remove loading spinner */
 function buttonSubmitEnd(buttonId) {
     let submitButton = document.getElementById(buttonId)
     submitButton.disabled = false;
