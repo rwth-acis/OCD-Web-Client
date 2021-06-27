@@ -28,8 +28,8 @@ function appendCoverRow(table, coverElt, cells) {
     }
     /* Creation method */
     if($.inArray("CreationMethod", cells) > -1) {
-        var type = $(coverElt).find('CreationMethod').find('Type').text();
-        row += createCoverTableCell(parseEnumName(type));
+        var type = $(coverElt).find('CreationMethod').find('Type').attr("displayName");
+        row += createCoverTableCell(type);
     }
     /* Community count */
     if($.inArray("Communities", cells) > -1) {

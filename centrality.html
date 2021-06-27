@@ -772,7 +772,7 @@
                     $(visualizationTypeNames).find('Name').each(function () {
                         $("#visualizationType").append(
                             '<option value="' + $(this).text()
-                            + '">' + parseEnumName($(this).text()) + '</option>');
+                            + '">' + $(this).attr("displayName") + '</option>');
                     });
                 });
             }

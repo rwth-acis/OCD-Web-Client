@@ -228,6 +228,8 @@
                 $('#annotationDiv').hide();
             });
             $('#centralityInfo').click(function () {
+                console.log($('#centralityMeasure').val())
+                console.log($('#centralityMeasure').val().replace(/ /g, "_"))
                 var measureName = $('#centralityMeasure').val();
                 if (measureName == getSelectOptionVal()) {
                     window.location.href = "centralities_info.html";
@@ -437,7 +439,7 @@
                         if ($(this).text() !== 'UNDEFINED' && $(this).text() !== 'GROUND_TRUTH') {
                             $("#algorithm").append(
                                 '<option value="' + $(this).text()
-                                + '">' + parseEnumName($(this).text()) + '</option>');
+                                + '">' + $(this).attr("displayName") + '</option>');
                         }
                     });
                 });
@@ -457,7 +459,7 @@
                         if ($(this).text() !== 'UNDEFINED' && $(this).text() !== 'GROUND_TRUTH') {
                             $("#algorithm").append(
                                 '<option value="' + $(this).text()
-                                + '">' + parseEnumName($(this).text()) + '</option>');
+                                + '">' + $(this).attr("displayName") + '</option>');
                         }
                     });
                 });
@@ -470,10 +472,10 @@
                 /* Adds all centrality measure names to the form */
                 getCentralityMeasureNames(function () {
                     $(centralityMeasureNames).find('Name').each(function () {
-                        if ($(this).text() !== 'Undefined') {
+                        if ($(this).text() !== 'UNDEFINED') {
                             $("#centralityMeasure").append(
                                 '<option value="' + $(this).text()
-                                + '">' + parseEnumName($(this).text()) + '</option>');
+                                + '">' + $(this).attr("displayName") + '</option>');
                         }
                     });
                 });
@@ -490,10 +492,10 @@
                 /* Adds all centrality simulation names to the form */
                 getCentralitySimulationNames(function () {
                     $(centralitySimulationNames).find('Name').each(function () {
-                        if ($(this).text() !== 'Undefined') {
+                        if ($(this).text() !== 'UNDEFINED') {
                             $("#centralitySimulation").append(
                                 '<option value="' + $(this).text()
-                                + '">' + parseEnumName($(this).text()) + '</option>');
+                                + '">' + $(this).attr("displayName") + '</option>');
                         }
                     });
                 });
@@ -554,7 +556,7 @@
                 getProperties(function () {
                     /* Adds properties information to a table */
                     var properties = $(graphProperties).children();
-                    for (i = 0; i < properties.length; i++) {
+                    for (let i = 0; i < properties.length; i++) {
                         var name = $(properties)[i].nodeName;
                         var value = $(graphProperties).find($(properties)[i].nodeName).text();
                         if (name !== 'ID' && name !== 'NAME') {

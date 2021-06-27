@@ -30,7 +30,7 @@ Benchmarks
                     if($(this).text() !== 'UNDEFINED' &&  $(this).text() !== 'REAL_WORLD')
                     $("#benchmark").append(
                         '<option value="' + $(this).text()
-                        + '">' + parseEnumName($(this).text()) + '</option>');
+                        + '">' + $(this).attr("displayName") + '</option>');
                 });
             });
             /* Registers parameter select */

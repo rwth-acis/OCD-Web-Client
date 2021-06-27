@@ -31,91 +31,88 @@
              * Executed after page loading.
              */
             $(document).ready(function() {
-                if(measureName != undefined) {
-                    measureName = measureName.replace(/_/g," ");
-                }
-                if(measureName == "Degree Centrality" || measureName == "In-degree" || measureName == "Out-degree") {
+                if(measureName == "DEGREE_CENTRALITY" || measureName == "IN_DEGREE" || measureName == "OUT_DEGREE") {
                     $('#degree').show();
                 }
-                else if(measureName == "LocalRank") {
+                else if(measureName == "LOCAL_RANK") {
                     $('#localrank').show();
                 }
-                else if(measureName == "ClusterRank") {
+                else if(measureName == "CLUSTER_RANK") {
                     $('#clusterrank').show();
                 }
-                else if(measureName == "Coreness") {
+                else if(measureName == "CORENESS") {
                     $('#coreness').show();
                 }
-                else if(measureName == "Neighborhood Coreness") {
+                else if(measureName == "NEIGHBORHOOD_CORENESS") {
                     $('#neighborhoodCoreness').show();
                 }
-                else if(measureName == "H-index") {
+                else if(measureName == "H_INDEX") {
                     $('#hIndex').show();
                 }
-                else if(measureName == "Laplacian Centrality") {
+                else if(measureName == "LAPLACIAN_CENTRALITY") {
                     $('#laplacian').show();
                 }
-                else if(measureName == "Eccentricity") {
+                else if(measureName == "ECCENTRICITY") {
                     $('#eccentricity').show();
                 }
-                else if(measureName == "Closeness Centrality") {
+                else if(measureName == "CLOSENESS_CENTRALITY") {
                     $('#closeness').show();
                 }
-                else if(measureName == "Harmonic Centrality" || measureName == "Harmonic In-Closeness") {
+                else if(measureName == "HARMONIC_CENTRALITY" || measureName == "HARMONIC_IN_CLOSENESS") {
                     $('#harmonic').show();
                 }
-                else if(measureName == "Current-Flow Closeness") {
+                else if(measureName == "CURRENT_FLOW_CLOSENESS") {
                     $('#currentFlowCloseness').show();
                 }
-                else if(measureName == "Integration" || measureName == "Radiality") {
+                else if(measureName == "INTEGRATION" || measureName == "RADIALITY") {
                     $('#integrationRadiality').show();
                 }
-                else if(measureName == "Residual Closeness") {
+                else if(measureName == "RESIDUAL_ClOSENESS") {
                     $('#residualCloseness').show();
                 }
-                else if(measureName == "Centroid Value") {
+                else if(measureName == "CENTROID_VALUE") {
                     $('#centroidValue').show();
                 }
-                else if(measureName == "Stress Centrality") {
+                else if(measureName == "STRESS_CENTRALITY") {
                     $('#stress').show();
                 }
-                else if(measureName == "Betweenness Centrality") {
+                else if(measureName == "BETWEENNESS_CENTRALITY") {
                     $('#betweenness').show();
                 }
-                else if(measureName == "Current-Flow Betweenness") {
+                else if(measureName == "CURRENT_FLOW_BETWEENNESS") {
                     $('#currentFlowBetweenness').show();
                 }
-                else if(measureName == "Flow Betweenness") {
+                else if(measureName == "FLOW_BETWEENNESS") {
                     $('#flowBetweenness').show();
                 }
-                else if(measureName == "Bridging Centrality") {
+                else if(measureName == "BRIDGING_CENTRALITY") {
                     $('#bridgingCentrality').show();
                 }
-                else if(measureName == "Katz Centrality") {
+                else if(measureName == "KATZ_CENTRALITY") {
                     $('#katz').show();
                 }
-                else if(measureName == "Subgraph Centrality") {
+                else if(measureName == "SUBGRAPH_CENTRALITY") {
                     $('#subgraph').show();
                 }
-                else if(measureName == "Eigenvector Centrality") {
+                else if(measureName == "EIGENVECTOR_CENTRALITY") {
                     $('#eigenvector').show();
                 }
-                else if(measureName == "Alpha Centrality") {
+                else if(measureName == "ALPHA_CENTRALITY") {
                     $('#alpha').show();
                 }
-                else if(measureName == "Bargaining Centrality") {
+                else if(measureName == "BARGAINING_CENTRALITY") {
                     $('#bargaining').show();
                 }
-                else if(measureName == "PageRank") {
+                else if(measureName == "PAGERANK") {
                     $('#pagerank').show();
                 }
-                else if(measureName == "LeaderRank") {
+                else if(measureName == "LEADERRANK") {
                     $('#leaderrank').show();
                 }
-                else if(measureName == "HITS" || measureName == "HITS (Hub Score)" || measureName == "HITS (Authority Score)") {
+                else if(measureName == "HITS" || measureName == "HITS_HUB_SCORE" || measureName == "HITS_AUTHORITY_SCORE") {
                     $('#hits').show();
                 }
-                else if(measureName == "SALSA" || measureName == "SALSA (Hub Score)" || measureName == "SALSA (Authority Score)") {
+                else if(measureName == "SALSA" || measureName == "SALSA_HUB_SCORE" || measureName == "SALSA_AUTHORITY_SCORE") {
                     $('#salsa').show();
                 }
                 else {
@@ -130,32 +127,32 @@
                 <div id="content">
                     <div id="measureSelection" class="info-section">
                         <p>Please select a centrality measure you would like to know more about:</p>
-                        <a href="centralities_info.html?measureName=Degree_Centrality">Degree Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=LocalRank">LocalRank</a><br/>
-                        <a href="centralities_info.html?measureName=ClusterRank">ClusterRank</a><br/>
-                        <a href="centralities_info.html?measureName=Coreness">Coreness</a><br/>
-                        <a href="centralities_info.html?measureName=Neighborhood_Coreness">Neighborhood Coreness</a><br/>
-                        <a href="centralities_info.html?measureName=H-index">H-index</a><br/>
-                        <a href="centralities_info.html?measureName=Laplacian_Centrality">Laplacian Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Eccentricity">Eccentricity</a><br/>
-                        <a href="centralities_info.html?measureName=Closeness_Centrality">Closeness Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Harmonic_Centrality">Harmonic Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Current-Flow_Closeness">Current-Flow Closeness</a><br/>
-                        <a href="centralities_info.html?measureName=Integration">Integration/Radiality</a><br/>
-                        <a href="centralities_info.html?measureName=Residual_Closeness">Residual Closeness</a><br/>
-                        <a href="centralities_info.html?measureName=Centroid_Value">Centroid Value</a><br/>
-                        <a href="centralities_info.html?measureName=Stress_Centrality">Stress Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Betweenness_Centrality">Betweenness Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Current-Flow_Betweenness">Current-Flow Betweenness</a><br/>
-                        <a href="centralities_info.html?measureName=Flow_Betweenness">Flow Betweenness</a><br/>
-                        <a href="centralities_info.html?measureName=Bridging_Centrality">Bridging Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Katz_Centrality">Katz Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Subgraph_Centrality">Subgraph Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Eigenvector_Centrality">Eigenvector Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Alpha_Centrality">Alpha Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=Bargaining_Centrality">Bargaining Centrality</a><br/>
-                        <a href="centralities_info.html?measureName=PageRank">PageRank</a><br/>
-                        <a href="centralities_info.html?measureName=LeaderRank">LeaderRank</a><br/>
+                        <a href="centralities_info.html?measureName=DEGREE_CENTRALITY">Degree Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=LOCAL_RANK">LocalRank</a><br/>
+                        <a href="centralities_info.html?measureName=CLUSTER_RANK">ClusterRank</a><br/>
+                        <a href="centralities_info.html?measureName=CORENESS">Coreness</a><br/>
+                        <a href="centralities_info.html?measureName=NEIGHBORHOOD_CORENESS">Neighborhood Coreness</a><br/>
+                        <a href="centralities_info.html?measureName=H_INDEX">H-index</a><br/>
+                        <a href="centralities_info.html?measureName=LAPLACIAN_CENTRALITY">Laplacian Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=ECCENTRICITY">Eccentricity</a><br/>
+                        <a href="centralities_info.html?measureName=CLOSENESS_CENTRALITY">Closeness Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=HARMONIC_CENTRALITY">Harmonic Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=CURRENT_FLOW_CLOSENESS">Current-Flow Closeness</a><br/>
+                        <a href="centralities_info.html?measureName=INTEGRATION">Integration/Radiality</a><br/>
+                        <a href="centralities_info.html?measureName=RESIDUAL_ClOSENESS">Residual Closeness</a><br/>
+                        <a href="centralities_info.html?measureName=CENTROID_VALUE">Centroid Value</a><br/>
+                        <a href="centralities_info.html?measureName=STRESS_CENTRALITY">Stress Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=BETWEENNESS_CENTRALITY">Betweenness Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=CURRENT_FLOW_BETWEENNESS">Current-Flow Betweenness</a><br/>
+                        <a href="centralities_info.html?measureName=FLOW_BETWEENNESS">Flow Betweenness</a><br/>
+                        <a href="centralities_info.html?measureName=BRIDGING_CENTRALITY">Bridging Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=KATZ_CENTRALITY">Katz Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=SUBGRAPH_CENTRALITY">Subgraph Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=EIGENVECTOR_CENTRALITY">Eigenvector Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=ALPHA_CENTRALITY">Alpha Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=BARGAINING_CENTRALITY">Bargaining Centrality</a><br/>
+                        <a href="centralities_info.html?measureName=PAGERANK">PageRank</a><br/>
+                        <a href="centralities_info.html?measureName=LEADERRANK">LeaderRank</a><br/>
                         <a href="centralities_info.html?measureName=HITS">HITS</a><br/>
                         <a href="centralities_info.html?measureName=SALSA">SALSA</a><br/>
                     </div>

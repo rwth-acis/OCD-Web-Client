@@ -33,7 +33,7 @@ function appendCentralityMapRow(table, mapElt, cells) {
         row += createGraphNameCell(graphName, graphId);
     }
     if($.inArray("Creation Method", cells) > -1) {
-        row += createCentralityTableCell(parseEnumName($(mapElt).find('CreationMethod').find('Type').text()));
+        row += createCentralityTableCell($(mapElt).find('CreationMethod').find('Type').attr("displayName"));
     }
     if($.inArray("Execution Time", cells) > -1) {
         row += createCentralityTableCell($(mapElt).find('ExecutionTime').text());

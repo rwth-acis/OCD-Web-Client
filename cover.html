@@ -92,7 +92,7 @@
                         */
                        $(coverMetaXml).find("Metric").each(function() {
                            var name = $(this).find('Type');
-                           name = parseEnumName(name.text());
+                           name = name.attr("displayName");
                            var status = $(this).find('Status').text();
                            if(status === 'COMPLETED') {
                                status = '<img class="icon" src="IMG/open-iconic/svg/check.svg" alt="y">';
@@ -176,7 +176,7 @@
                                 $(metricNames).find('Name').each(function() {
                                     $("#metric").append(
                                         '<option value="' + $(this).text()
-                                        + '">' + parseEnumName($(this).text()) + '</option>');
+                                        + '">' + $(this).attr("displayName") + '</option>');
                                 });
                             });
                             if($(this).val() === "knowledgedriven") {
@@ -333,7 +333,7 @@
 //                             */
 //                            $(coverDefaultXml).find("Metric").each(function() {
 //                                var name = $(this).find('Type');
-//                                name = parseEnumName(name.text());
+//                                name = name.attr("displayName");
 //                                var status = $(this).find('Status').text();
 //                                if(status === 'COMPLETED') {
 //                                    status = '<img class="icon" src="IMG/open-iconic/svg/check.svg" alt="y">';

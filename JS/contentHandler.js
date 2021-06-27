@@ -268,7 +268,7 @@ function registerGraphTypes(selectId, graphTypeDivId, getOptions) {
                         /* Adds the graph types to the form */
                         $(response).find("Name").each(function() {
                             var graphType = '<span class="badge badge-info mr-1">'
-                                + parseEnumName($(this).text())
+                                + $(this).attr("displayName")
                                 + '</span>'
 
                             graphTypeString += graphType;

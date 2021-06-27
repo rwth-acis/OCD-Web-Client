@@ -290,10 +290,10 @@
                 $(visualizationTypeNames).find('Name').each(function() {
                     $("#visualizationType1").append(
                         '<option value="' + $(this).text()
-                        + '">' + parseEnumName($(this).text()) + '</option>');
+                        + '">' + $(this).attr("displayName") + '</option>');
                     $("#visualizationType2").append(
                         '<option value="' + $(this).text()
-                        + '">' + parseEnumName($(this).text()) + '</option>');
+                        + '">' + $(this).attr("displayName") + '</option>');
                     });
                 });
             }

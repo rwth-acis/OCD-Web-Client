@@ -166,7 +166,7 @@ Facilitates import / upload of new graphs and covers.
                                 $(inputFormatNames).find('Name').each(function() {
                                     $("#objectFormat").append(
                                         '<option value="' + $(this).text()
-                                        + '">' + parseEnumName($(this).text()) + '</option>');
+                                        + '">' + $(this).attr("displayName") + '</option>');
                                 });
                             });
                             /* Loads and displays graph table to select a corresponding graph */
@@ -187,7 +187,7 @@ Facilitates import / upload of new graphs and covers.
                                 $(creatorTypes).find('Name').each(function() {
                                     $("#objectCreator").append(
                                         '<option value="' + $(this).text()
-                                        + '">' + parseEnumName($(this).text()) + '</option>');
+                                        + '">' + $(this).attr("displayName") + '</option>');
                                 });
                             });
                             $("#objectCreatorRow").css("display", "block");
