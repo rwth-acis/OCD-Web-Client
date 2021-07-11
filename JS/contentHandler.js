@@ -243,6 +243,48 @@ function registerCollapsable(collapsable, displayCallback) {
     });
 }
 
+/* Initializes a graph types row bound to a select element and provides the corresponding event handlers */
+function registerGraphTypes(selectId, graphTypeDivId, getOptions) {
+    /* Change listener on the select element */
+    $(selectId).change(function() {
+        $(graphTypeDivId).html("");
+        $(selectId + " option:selected").each(function() {
+            if($(this).val() !== getSelectOptionVal()) {
+                var selected = $(this).val();
+                /* Requests the parameter names for the currently selected option */
+                getOptions(selected, function(response) {
+                    /* Check if the option has graph types */
+                    var graphTypeString = ''//'<div class="col-sm-4 col-form-label">'
+
+                    graphTypeString += '<div class="row mb-4 border-bottom">'
+                        + '<label class = "col-sm-4" > ' + 'Compatible Graph Types' +' </label>'
+                        + '<span class="graphTypes col">';
+
+                    graphTypeString += '<span class="badge badge-info mr-1">'
+                        + 'Undirected'
+                        + '</span>';
+
+                    if($(response).find("Name").size() > 0) {
+                        /* Adds the graph types to the form */
+                        $(response).find("Name").each(function() {
+                            var graphType = '<span class="badge badge-info mr-1">'
+                                + $(this).attr("displayName")
+                                + '</span>'
+
+                            graphTypeString += graphType;
+                        });
+                    }
+
+                    graphTypeString += '</span></div>'
+
+                    /* Write the graph type string into the graph type div */
+                    $(graphTypeDivId).html(graphTypeString);
+                });
+            }
+        });
+    });
+}
+
 /* Initializes a parameters table bound to a select element and provides the corresponding event handlers */
 function registerParameterSelect(selectId, paramDivId, getOptions) {
     /* Initialization */
