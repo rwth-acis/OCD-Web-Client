@@ -28,7 +28,7 @@ function appendCoverRow(table, coverElt, cells) {
     }
     /* Creation method */
     if($.inArray("CreationMethod", cells) > -1) {
-        var type = $(coverElt).find('CreationMethod').find('Type').attr("displayName");
+        var type = $(coverElt).find('CreationMethod').attr("displayName");
         row += createCoverTableCell(type);
     }
     /* Community count */
