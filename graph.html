@@ -158,6 +158,19 @@
                 return false;
             });
             /*
+             * Open covers_info page and show algorithm information
+             */
+            $('#algorithmInfo').click(function () {
+                console.log($('#algorithm').val())
+                console.log($('#algorithm').val().replace(/ /g, "_"))
+                var algorithmName = $('#algorithm').val();
+                if (algorithmName == getSelectOptionVal()) {
+                    window.location.href = "covers_info.html";
+                } else {
+                    window.location.href = "covers_info.html?algorithmName=" + algorithmName.replace(/ /g, "_");
+                }
+            });
+            /*
              * Run centrality calculation form listener.
              */
             $('#runCentralityCalculationForm').submit(function () {
@@ -239,6 +252,9 @@
             $('#centralityMeasure').change(function () {
                 $('#annotationDiv').hide();
             });
+            /*
+             * Open centrality_info page and show centrality information
+             */
             $('#centralityInfo').click(function () {
                 console.log($('#centralityMeasure').val())
                 console.log($('#centralityMeasure').val().replace(/ /g, "_"))
@@ -1389,9 +1405,15 @@
                                     <!-- Algorithm -->
                                     <div class="form-group row">
                                         <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
-                                        <div class="col-sm-10">
+                                        <div class="col-sm-7">
                                             <select id="algorithm" class="form-control custom-select">
                                             </select>
+                                        </div>
+                                        <div class="col-sm-1">
+                                            <button id="algorithmInfo" class="btn btn-default in-line"
+                                                    type="button">
+                                                <img src="IMG/open-iconic/svg/info.svg" width="20"/>
+                                            </button>
                                         </div>
                                     </div>
                                     <!-- Algorithm Graph Types -->

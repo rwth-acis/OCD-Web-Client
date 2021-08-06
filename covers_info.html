@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays information about all the OCD algorithms. -->
+    <head>
+        <title>OCD Algorithm Information</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+        });
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="node_modules/js-base64/base64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+        <script type="text/javascript">
+            /* The name of the OCD algorithm to show information about */
+            var algorithmName = getUrlVar("algorithmName");
+            /*
+             * Executed after page loading.
+             */
+            $(document).ready(function() {
+                if(algorithmName == "NISE_ALGORITHM") {
+                    $('#nise').show();
+                }
+                else {
+                    $('#measureSelection').show();
+                }
+            });
+        </script>
+        <style>
+            table {
+              font-family: arial, sans-serif;
+              border-collapse: collapse;
+              width: 100%;
+            }
+            
+            td, th {
+              border: 1px solid #dddddd;
+              text-align: left;
+              padding: 8px;
+            }
+            
+            tr:nth-child(even) {
+              background-color: #dddddd;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <div id="content">
+                    <div id="measureSelection" class="info-section">
+                        <p>Please select an OCD Algorithm you would like to know more about:</p>
+                        <a href="covers_info.html?algorithmName=NISE_ALGORITHM">NISE Algorithm</a><br/>
+                    </div>
+                    <div id="nise" class="info-section">
+                        <a href="javascript:history.back()"><< Back</a>
+                        <h4>Neighbourhood-Inflated Seed Expansion Algorithm (NISE)</h4>
+                        <h5>Variables</h5>
+                        <p><table>
+                            <tr>
+                                <th>Name</th>
+                                <th>Standard value</th>
+                                <th>Explanation</th>
+                            </tr>
+                            <tr>
+                                <td>seedCount</td>
+                                <td>10</td>
+                                <td>The number of seed which will be determined by the seed strategy.</td>
+                            </tr>
+                            <tr>
+                                <td>probability</td>
+                                <td>0.99</td>
+                                <td>Is required in step 3 (Expansion) and must be between 0 and 1.</td>
+                            </tr>
+                            <tr>
+                                <td>accuracy</td>
+                                <td>0.00000001</td>
+                                <td>Controls the size of the resulting communities: If it is large (e.g. $10^{-2}$) the resulting communities are small. If it is small (e.g. $10^{-8}$) the resulting communities are large.</td>
+                            </tr>
+                          </table></p>
+                          <h5>Functionality</h5>
+                        <p>The Neighbourhood-Inflated Seed Expansion Algorithm (NISE) <cite>[WGDh16]</cite> is an overlapping community detection algorithm, which works on the method of seed expansion and therefore relies on finding good seeds efficiently. The four phases of the algorithm are: filtering, seeding, seed expansion and propagation.</p>
+                        <ol>
+                            <li>Filtering: Given a graph $G$, the filtering phase creates a subgraph $G'$, which has the property of remaining connected after removing any edge. The maximal subgraph with this property is called the "biconnected core".</li>
+                            <li>Seeding: The seeding strategy implemented here is called SpreadHubs. It greedily chooses an  independent set of $k$ ($k$ is being set by the user in the variable "seedCount") nodes in the graph by looking at the degree of the nodes. In the beginning all nodes are unmarked and until $k$ nodes are found, the highest degree unmarked node is selected as a seed and its neighbours are being marked. If there is more than one node with a maximal degree, the algorithm takes an independent set of the unmarked nodes.</li>
+                            <li>Seed expansion: Now the seed communities need to be expanded. This is being done by a personalized Page Rank vector (also: random-walk with restart). With probability $p$ it takes a step of the random walk and with probability $1-p$ it jumps back to the a randomly chosen seed node. Therefore nodes, which are close to a seed node, are visited more often. </li>
+                            <li>Propagation: During the last phase, the nodes which have been detached in the filtering phase earlier are being reattached. Those whiskers are connected to $G$ by only one edge. Therefore they are being added to the communities which the node on the other side of that edge has.</li>
+                          </ol> 
+                        <h5>References</h5>
+                        [WGDh16] Joyce Jiyoung Whang, David F. Gleich, and Inderjit S. Dhillon. Overlapping community detection using neighborhood-inflated seed expansion.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
