@@ -9,7 +9,7 @@ The client at learning Layers has to have the following configurations:
 * The _Access Type_ should be public
 
 ### Adjusting the Files
-You will then have to change the _data-clientid_ field to your client id from Learning Layers and the _data-redirecturi_ field to your web clients address. This has to be done in both
+You will then have to change the _data-clientid_ field to your client id from Learning Layers and the _data-redirecturi_ field to your web clients address. This has to be done in both.
 * login.html
 * JS/contentHandler.js
 
