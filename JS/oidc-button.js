@@ -147,7 +147,7 @@ try{
 									localStorage.setItem("nonce", uuidv4());
 								}
 								localStorage.setItem("user", oidc_userinfo["preferred_username"]);
-								localStorage.setItem("pass", oidc_userinfo["preferred_username"]+oidc_userinfo["sub"]);
+								localStorage.setItem("pass", oidc_userinfo["sub"]);
 								renderButton(false);
 								oidc_callback("success");
 							} else {
