@@ -1011,8 +1011,14 @@
                     .nodeCanvasObject((node, ctx, globalScale) => {
                         if(haveNodeNames === true) {
                             const label = node.name;
-                            const fontSize = 12/globalScale;
+                            const fontSize = 17/globalScale;
                             ctx.font = `${fontSize}px Sans-Serif`;
+
+                            const textWidth = ctx.measureText(label).width;
+                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.1); // some padding
+
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - (bckgDimensions[1] + bckgDimensions[1]/8) / 2, ...bckgDimensions);
 
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
@@ -1045,8 +1051,8 @@
                             return [5, 5]
                         }
                     })
-                    .linkWidth(link => highlightLinks.has(link) ? 2.5 : 1.5)
-                    .linkColor(link => highlightLinks.has(link) ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
+                    .linkWidth(link => highlightLinks.has(link) ? 3 : 2)
+                    .linkColor(link => highlightLinks.has(link) ? "rgb(145,217,65)" : "rgb(197,197,197)")
                     .linkDirectionalArrowLength(5)
                     .linkDirectionalArrowRelPos(1)
                     .linkTarget('target')
