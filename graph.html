@@ -151,8 +151,8 @@
                             /*
                              * Run algorithm request failed
                              */
-                            buttonSubmitEnd("runAlgorithmBtn");
                             showConnectionErrorMessage("Algorithm request failed.", errorData);
+                            buttonSubmitEnd("runAlgorithmBtn");
                         });
                 }
                 return false;
@@ -181,10 +181,11 @@
                             if (errorData.includes("Show Error")) {
                                 var errorSplit = errorData.split(":");
                                 showErrorMessage(errorSplit[errorSplit.length - 1]);
+                                buttonSubmitEnd("runCentralityCalculationBtn");
                                 window.scrollTo(0, 0);
                             } else {
-                                buttonSubmitEnd("runCentralityCalculationBtn");
                                 showConnectionErrorMessage("Centrality calculation request failed.", errorData);
+                                buttonSubmitEnd("runCentralityCalculationBtn");
                             }
                         });
                 } else {
@@ -223,10 +224,11 @@
                                 if (errorData.includes("Show Error")) {
                                     var errorSplit = errorData.split(":");
                                     showErrorMessage(errorSplit[errorSplit.length - 1]);
+                                    buttonSubmitEnd("runCentralitySimulationBtn");
                                     window.scrollTo(0, 0);
                                 } else {
-                                    buttonSubmitEnd("runCentralitySimulationBtn");
                                     showConnectionErrorMessage("Centrality simulation request failed.", errorData);
+                                    buttonSubmitEnd("runCentralitySimulationBtn");
                                 }
                             });
                     }
