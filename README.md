@@ -14,7 +14,7 @@ You will then have to change the _data-clientid_ field to your client id from Le
 * login.html
 * JS/contentHandler.js
 
-Finally, change the values of _baseUrl_ to the services address in the following files so that requests are addressed to it:
+Finally, change the values of _baseUrl_ to the [services](https://github.com/rwth-acis/REST-OCD-Services) address in the following files so that requests are addressed to it:
 * JS/requestHandler.js
 * JS/simulation/requestHandler.js
 * JS/simulation/jsonRequestHandler.js
