@@ -19,6 +19,6 @@ Finally, change the values of _baseUrl_ to the [services](https://github.com/rwt
 * JS/simulation/requestHandler.js
 * JS/simulation/jsonRequestHandler.js
 
-Finally, dont forget to run npm install to get all the needed packages.
+Finally, dont forget to run ``npm install`` to get all the needed packages.
 
 Now, the web client should be able to communicate with the OCD service.
