@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays basic / meta information on multiple graphs -->
+    <head>
+        <title>OCD - Edit Graph</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="node_modules/js-base64/base64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/graphTableHandler.js"></script>
+        <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+        <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
+        <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+        <script src="JS/simulation/jsonRequestHandler.js"></script>
+        <script src="JS/simulation/simulationForm.js"></script>
+        <script src="node_modules/three/build/three.min.js"></script>
+        <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
+        <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+        <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+        <script src="node_modules/arangojs/lib/web.js"></script>
+        <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+        <script type="text/javascript">
+
+            var visualization;
+            var forceGraph;
+            var graphId;
+
+            $(document).ready(function() {
+                console.log("hi");
+                graphId = getUrlVar("graphId");
+                var graphIdQueryExtension = "";
+                if(graphId) {
+                    graphIdQueryExtension = "&graphId=" + graphId;
+                }
+
+                console.log("moin");
+
+                function getVisualization() {
+                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+                        /* Request handler */
+                        function (response) {
+                            console.log(response);
+                            visualization = response;
+                            $('.visualizationGraphic').append(visualization);
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            /*
+                            * GraphIds request failed
+                            */
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
+                        }
+                                
+                    )
+                }
+                
+
+                function getForceVis(jsonGraph) {
+                    console.log(jsonGraph);
+                    var fGraph = graph = JSON.parse(jsonGraph);
+                    const elem = document.getElementById("forceVisualizationGraphic");
+
+                    const forceGraph = ForceGraph()(elem)
+                        .onNodeClick(removeNode)
+                        .backgroundColor("#fafafa")
+                        .graphData(fGraph);
+
+                    forceGraph.width($('.forceVisualizationContent').width());
+                    forceGraph.height($('.forceVisualizationContent').height());
+                    
+                    function removeNode(node) {
+
+                            let {nodes, links} = forceGraph.graphData();
+                            links = links.filter(l => l.source !== node && l.target !== node);
+                            nodes.splice(node.id,1);
+                            nodes.forEach((n,idx) => {n.id = idx; });
+                            forceGraph.graphData({ nodes, links });  
+                        
+                    }
+                }
+                function getJson() {
+                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                        function (response) {
+                            jsonGraph = response;
+                            getForceVis(jsonGraph);
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            /*
+                            * GraphIds request failed
+                            */
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
+                        });
+                }
+                
+                getJson();
+                // getForceVis();
+            });
+
+
+            
+
+        </script>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <h1>Edit your Graph</h1>
+                <div class="float-left">
+                <div id="content">
+                    <div class="visualization">
+                        <div id="visualizationContent" class="visualizationContent">
+                            <div class="visualizationGraphic"></div>
+                        </div>
+                        <div id="forceVisualizationContent" class="forceVisualizationContent">
+                            <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </body>
+</html>

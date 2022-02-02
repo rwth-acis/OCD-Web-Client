@@ -666,7 +666,9 @@ input:checked + .slider:before {
 .deleteColor {
     background-color: #ffcccc;
 }
-
+.editColor {
+    background-color: aqua;
+}
 /* side-nav */
 
 .side-nav ul li {
@@ -700,3 +702,5 @@ input:checked + .slider:before {
     background-color: rgba(0,0,0,0.5);
     user-select: none;
 }
+
+

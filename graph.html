@@ -103,6 +103,7 @@
                     $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId=' + graphId + '">Simulations</a>');
                     $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId + '">Centralities</a>');
                     $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
+                    $('#graphEdit').html('<a href="graphEdit.html?graphId=' + graphId + '">Edit</a>')
 
                     /* Registers components and event handlers */
                     registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
@@ -1300,6 +1301,9 @@
                         </div>
                         <div class="p-2 deleteColor col-md-3 col-sm-6">
                             <li id="graphDelete" class="nav-item deleteColor"></li>
+                        </div>
+                        <div class="p-2 editColor col-md-12 col-sm-12">
+                            <li id="graphEdit" class="nav-item editColor"></li>
                         </div>
                     </ul>
                 </div>
