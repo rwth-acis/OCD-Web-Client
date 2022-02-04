@@ -40,6 +40,17 @@ body {
     margin: 0 auto;
     max-width: 1000px;
 }
+#editContent {
+    /*     height: 100%; */
+        position: relative;
+        overflow: auto;
+        padding: 5px 0px;
+        color: #444;
+        margin: 0 auto;
+        max-width: 800px;
+        max-height: 750px;
+    }
+    
 
 #headerWrapper {
    display: table-row;
@@ -613,6 +624,14 @@ input:checked + .slider:before {
     vertical-align: middle;
 }
 
+.editVisualizationContent {
+
+    display: block;
+    margin: auto;
+    vertical-align: middle;
+
+}
+
 .visualizationGraphic {
 }
 
@@ -623,6 +642,14 @@ input:checked + .slider:before {
     vertical-align: middle;
 }
 
+.editForceVisualizationContent {
+    position: relative;
+    margin: auto;
+    margin-top: 2px;
+    display: block;
+    vertical-align: middle;
+    max-height: 700px;
+}
 .forceVisualizationGraphic {
 }
 
