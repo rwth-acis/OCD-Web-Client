@@ -51,158 +51,188 @@
 
             var visualization;
             var forceGraph;
+            var initialGraph;
+
             var graphId;
-            var nodeMode = true;
-            var nodeSelected = false;
+
             var lastNode;
             var lastId;
 
+            var undirectedChecked;
+            var nodeMode = true;
+            var nodeSelected = false;
 
-
+            var test;
+            
             $(document).ready(function() {
 
-                coordinates = d3.pointer(this);
-                console.log(coordinates);
-
-                console.log("hi");
                 graphId = getUrlVar("graphId");
                 var graphIdQueryExtension = "";
                 if(graphId) {
                     graphIdQueryExtension = "&graphId=" + graphId;
                 }
+                initialize();
+                console.log(test);
+            });
+            // discardChanges();
+            function getForceVis() {
 
-                console.log("moin");
+                var nodes = initialGraph.nodes;
+                var links = initialGraph.links;
 
-                function getVisualization() {
-                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
-                        /* Request handler */
-                        function (response) {
-                            console.log(response);
-                            visualization = response;
-                            $('.editVisualizationGraphic').append(visualization);
-                        },
-                        /* Error handler */
-                        function (errorData) {
-                            /*
-                            * GraphIds request failed
-                            */
-                            showConnectionErrorMessage("Visualization was not received.", errorData);
-                        }
-                                
-                    )
-                }
+                const elem = document.getElementById("editForceVisualizationGraphic");
 
-                function getForceVis(jsonGraph) {
-                    console.log(jsonGraph);
-                    var fGraph = JSON.parse(jsonGraph);
-                    nodes = fGraph.nodes;
-                    links = fGraph.links;
+                // First initialization of the Visualiuation
+                // Setup of the general desing
+                forceGraph = ForceGraph()(elem)
+                    .onNodeClick(editNode)
+                    .onBackgroundRightClick(addNode)
+                    .backgroundColor("#fafafa")
+                    .centerAt(0,0)
+                    .graphData(initialGraph)
+                    .linkWidth(3)
+                    .linkDirectionalArrowLength(3)
+                    .linkDirectionalArrowRelPos(1)
+                    .d3Force("center", d3.forceCenter().strength(1))
+                    .d3Force("charge", d3.forceManyBody()
+                                            .strength(-10)
+                                            .distanceMin(0.5)
+                                            .distanceMax(50)
+                                            )
+                // Set Dimensions and Parameters for the force engine   
+                forceGraph.d3Force("collide", d3.forceCollide(forceGraph.nodeRelSize()))
+                    .d3Force("link",d3.forceLink(forceGraph.links).distance(20))
 
-                    const elem = document.getElementById("editForceVisualizationGraphic");
-
-                    const forceGraph = ForceGraph()(elem)
-                        .onNodeClick(removeNode1)
-                        .onBackgroundClick(addNode)
-                        .backgroundColor("#fafafa")
-                        .graphData(fGraph)
-                        .linkWidth(3)
-                        .linkDirectionalArrowLength(3)
-                        .linkDirectionalArrowRelPos(1)
-                        .d3Force("center", d3.forceCenter().strength(1))
-                        .d3Force("charge", d3.forceManyBody()
-                                                .strength(-10)
-                                                .distanceMin(0.5)
-                                                .distanceMax(50)
-                                                )
-                        
-                        // .d3Force("charge",null)
-                        
-                    forceGraph.d3Force("collide", d3.forceCollide(forceGraph.nodeRelSize()))
-                        .d3Force("link",d3.forceLink(forceGraph.links).distance(20))
-
-                    forceGraph.width($('.editForceVisualizationContent').width());
-                    forceGraph.height($('.editForceVisualizationContent').height());
-
-
-                    function addNode() {
+                forceGraph.width($('.editForceVisualizationContent').width());
+                forceGraph.height($('.editForceVisualizationContent').height());
+                
+                // Functions that are executed by events, e.g. left click on a button
+                function addNode(event) {
+                    var e = event;
+                    let px = e.pageX;
+                    let py = e.pageY;
+                    let coords = forceGraph.screen2GraphCoords(px,py);
+                    let cx = coords.x;
+                    let cy = coords.y;
+                    console.log("px: " + px + " py: " + py);
+                    console.log("cx: " + cx + " cy: " + cy);
+                    if(nodeMode){
                         const { nodes, links } = forceGraph.graphData();
                         const id = nodes.length;
                         forceGraph.graphData({
-                            nodes: [...nodes, {"color":"rgba(204.0,204.0,255.0,1.0)","size":20.0,"name":id,"id":id,"label":""}],
+                            nodes: [...nodes, {"color":"rgba(204.0,204.0,255.0,1.0)","size":20.0,"name":id,"id":id,"label":"","x":cx,"y":cy}],
                             links: links
-                        });
-                        console.log(nodes);
-
+                    });
                     }
-                    function removeNode1(node) {
-                        if(nodeMode){
-                            let {nodes, links} = forceGraph.graphData();
-                            links = links.filter(l => l.source !== node && l.target !== node);
-                            nodes.splice(node.id,1);
-                            nodes.forEach((n,idx) => {n.id = idx; });
-                            forceGraph.graphData({ nodes, links });  
-                            console.log(links);
-                        }else {
-                            
-                            if(!nodeSelected){
-                                lastNode = node;
-                                lastId = node.id;
-                                node.color = "orange";
-                                console.log(lastId);
-                            } else {
-                                const{ nodes, links } = forceGraph.graphData();
-                                lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
-                                forceGraph.graphData({
-                                    nodes: nodes,
-                                    links: [...links, {"style":0,"source":lastId,"target":node.id}]
-                                })
-                                console.log(links);
-                            }                            
-                            nodeSelected = !nodeSelected;
-                        }                        
-                        
+                }
+                function showCoords(node) {
+                    if(typeof node !== 'undefined'){
+                        console.log(node.x + "  " + node.y)
                     }
-                    // TODO: mach mal
-                    // document.addEventListener('keydown', function(e) {
-                    //     const key = e.key;
-                    //     if(key === "Delete" && nodeSelected){
-                    //         removeNode(lastNode);
-                    //         nodeSelected = false;
-                    //         console.log("pressed delete");
                     
-                    //      }
-                    //  })
+                }
 
-                    //  function removeNode(node){
-                    //     let {nodes, links} = forceGraph.graphData();
-                    //     links = links.filter(l => l.source !== node && l.target !== node);
-                    //     nodes.splice(node.id,1);
-                    //     nodes.forEach((n,idx) => {n.id = idx; });
-                    //     forceGraph.graphData({ nodes, links });  
-                    //     console.log(links);
-                    // }
+                function editNode(node) {
+                    if(nodeMode){
+                        let {nodes, links} = forceGraph.graphData();
+                        links = links.filter(l => l.source !== node && l.target !== node);
+                        nodes.splice(node.id,1);
+                        nodes.forEach((n,idx) => {n.id = idx; });
+                        forceGraph.graphData({ nodes, links });  
+                        console.log(links);
+
+                    // Select node or connect 2 selected nodes
+                    // Connect 2 nodes in both directions if undirected box is checked
+                    }else {
+                        // If no node is selected
+                        if(!nodeSelected){
+                            lastNode = node;
+                            lastId = node.id;
+                            node.color = "orange";
+                            console.log(lastId);
+
+                        // if the selected node is clicked again, unselect it
+                        } else if(lastNode == node){
+                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+
+                        // Connect two selected nodes with directed edge
+                        } else if(!undirectedChecked) {
+                            const{ nodes, links } = forceGraph.graphData();
+                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+                            forceGraph.graphData({
+                                nodes: nodes,
+                                links: [...links, {"style":0,"source":lastId,"target":node.id}]
+                            })
+
+                        // Connect two selected nodes with undirected edge
+                        } else if(undirectedChecked){
+                            const{ nodes, links } = forceGraph.graphData();
+                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+                            forceGraph.graphData({
+                                nodes: nodes,
+                                links: [...links, {"style":0,"source":lastId,"target":node.id},{"style":0,"source":node.id,"target":lastId}]
+                            })
+                        }                            
+                        nodeSelected = !nodeSelected;
+                    }                    
+                }
+            }
+
+            // GET the graph and execute the visualization function on that graph
+            function initialize() {
+                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                    function (response) {
+                        initialGraph = JSON.parse(response);
+                        getForceVis();
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                        * GraphIds request failed
+                        */
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
+                    });
+            }
+                
+            // remove the node
+            function removeNode(node){
+                let {nodes, links} = forceGraph.graphData();
+                links = links.filter(l => l.source !== node && l.target !== node);
+                nodes.splice(node.id,1);
+                nodes.forEach((n,idx) => {n.id = idx; });
+                forceGraph.graphData({ nodes, links });  
+                console.log(links);
+            }
+
+            // Button and Checkbox functionalities
+            function updateCheckbox(){
+                undirectedChecked = $("#editUndirected").is(":checked");
+                if(undirectedChecked){
+                    forceGraph.linkDirectionalArrowLength(0);
+                }else{
+                    forceGraph.linkDirectionalArrowLength(3);
+                }
+            }
+            function reloadGraph(){
+                if (confirm("Reload: Unsaved changes will be lost!") == true) {
+                    initialize();
+                }
+            }
+            function deleteGraph(){
+                if (confirm("Are you sure you want to delete your graph?") == true){
+                    let { nodes , links } = forceGraph.graphData();
+                    forceGraph.graphData({
+                        nodes: [],
+                        links: []
+                    })
                 }
                 
-                
-                
-                function getJson() {
-                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
-                        function (response) {
-                            jsonGraph = response;
-                            getForceVis(jsonGraph);
-                        },
-                        /* Error handler */
-                        function (errorData) {
-                            /*
-                            * GraphIds request failed
-                            */
-                            showConnectionErrorMessage("Visualization was not received.", errorData);
-                        });
-                }
-                
-                getJson();
-                // getForceVis();
-            });
+            }
+
+            function saveGraph(){
+                console.log("to be implemented");
+                initialize();
+            }
 
             function switchMode() {
                 nodeMode = !nodeMode;  
@@ -212,14 +242,26 @@
                     $("#modeBtn").html("Node Mode");
                 }
             }
+
+            // Shortcuts for the Buttons:
+            // Switch modes by pressing N
+            document.addEventListener('keydown', function(e) {
+                const key = e.code;
+                if(key === "KeyN"){
+                    switchMode();
+                }
+            })
+            // Delete selected key by pressing DELETE
             document.addEventListener('keydown', function(e) {
                 const key = e.key;
                 if(key === "Delete" && nodeSelected){
                     removeNode(lastNode);
+                    nodeSelected = false;
                     console.log("pressed delete");
-                }
+                    }
             })
-            
+
+
 
         </script>
     </head>
@@ -242,17 +284,22 @@
             <div class="float-left">
                 <div class="btnContainer">
                     <div class="editButton">
-                        <button id="modeBtn" onclick="switchMode()">Node Mode</button>
+                        <button class="btn btn-primary" id="modeBtn" onclick="switchMode()">Node Mode</button>
                     </div>
                     <div class="editButton">
-                        <button>1</button>
+                        <button class="btn btn-primary" id="editReload" onClick="reloadGraph()"><span>Reload Graph</span></button>
                     </div>
                     <div class="editButton">
-                        <button>2</button>
+                        <button class="btn btn-primary" id="editDelete" onClick="deleteGraph()"><span>Delete Graph</span></button>
+                    </div>
+                    <div class="editButton">
+                        <button class="btn btn-primary" id="editSave" onClick="saveGraph()"><span>Save</span></button>
                     </div> 
-                </div>
-                
-            </div>
+                    <div class="editCheckBox">
+                        <input type="checkbox" id="editUndirected" onClick="updateCheckbox()">
+                        Show as undirected Graph
+                    </div>
+                </div>  
             </div>
         </div>
     </body>

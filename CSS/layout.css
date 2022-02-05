@@ -730,4 +730,10 @@ input:checked + .slider:before {
     user-select: none;
 }
 
+.editButton {
+    padding: 5px;
+}
+.btnContainer {
+    margin-top: 50px;
+}
 
