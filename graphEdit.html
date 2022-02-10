@@ -149,7 +149,6 @@
                             lastNode = node;
                             lastId = node.id;
                             node.color = "orange";
-                            console.log(lastId);
 
                         // if the selected node is clicked again, unselect it
                         } else if(lastNode == node){
@@ -229,9 +228,18 @@
                 
             }
 
-            function saveGraph(){
-                console.log("to be implemented");
-                initialize();
+            function saveGraph() {
+                var content = jsonToXml();
+                console.log(content);
+                console.log(graphId);
+
+                sendRequest("put","update/" + graphId, content,
+                function(response) {
+                    showSuccess(response);
+                },
+                function (errorData) {
+                    showConnectionErrorMessage("Graph update failed");
+                });
             }
 
             function switchMode() {
@@ -260,6 +268,24 @@
                     console.log("pressed delete");
                     }
             })
+
+            // Translate JSON graph format to XML String
+            function jsonToXml(){
+                var xmlString = '<?xml version="1.0" encoding="UTF-8"?>\n<graphml xmlns="http://graphml.graphdrawing.org/xmlns">\n<key attr.name="number" attr.type="integer" for="node" id="number"/>\n<key attr.name="label" attr.type="string" for="edge" id="label"/>\n<graph edgedefault="directed">'
+                let { nodes, links } = forceGraph.graphData();
+                console.log(links);
+                for(var key in nodes){
+                    xmlString += '\n<node id="' + nodes[key].id + '">';
+                    xmlString += '\n</node>'
+                }
+                for(var key in links){
+                    xmlString += '\n<edge source="' + links[key].source.id + '" target="' + links[key].target.id + '">';
+                    xmlString += '\n</edge>'
+                }
+                xmlString += '\n</graph>';
+                xmlString += '\n</graphml>';
+                return xmlString
+            }
 
 
 
