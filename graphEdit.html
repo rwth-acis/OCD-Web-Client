@@ -74,7 +74,22 @@
                 initialize();
                 console.log(test);
             });
-            // discardChanges();
+            // GET the graph and execute the visualization function on that graph
+            function initialize() {
+                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                    function (response) {
+                        initialGraph = JSON.parse(response);
+                        getForceVis();
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                        * GraphIds request failed
+                        */
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
+                    });
+            }
+                
             function getForceVis() {
 
                 var nodes = initialGraph.nodes;
@@ -87,6 +102,7 @@
                 forceGraph = ForceGraph()(elem)
                     .onNodeClick(editNode)
                     .onBackgroundRightClick(addNode)
+                    .onLinkClick(removeLink)
                     .backgroundColor("#fafafa")
                     .centerAt(0,0)
                     .graphData(initialGraph)
@@ -116,14 +132,12 @@
                     let cy = coords.y;
                     console.log("px: " + px + " py: " + py);
                     console.log("cx: " + cx + " cy: " + cy);
-                    if(nodeMode){
                         const { nodes, links } = forceGraph.graphData();
                         const id = nodes.length;
                         forceGraph.graphData({
                             nodes: [...nodes, {"color":"rgba(204.0,204.0,255.0,1.0)","size":20.0,"name":id,"id":id,"label":"","x":cx,"y":cy}],
                             links: links
                     });
-                    }
                 }
                 function showCoords(node) {
                     if(typeof node !== 'undefined'){
@@ -131,7 +145,7 @@
                     }
                     
                 }
-
+                //TODO check if links exist before adding them
                 function editNode(node) {
                     if(nodeMode){
                         let {nodes, links} = forceGraph.graphData();
@@ -177,30 +191,35 @@
                 }
             }
 
-            // GET the graph and execute the visualization function on that graph
-            function initialize() {
-                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
-                    function (response) {
-                        initialGraph = JSON.parse(response);
-                        getForceVis();
-                    },
-                    /* Error handler */
-                    function (errorData) {
-                        /*
-                        * GraphIds request failed
-                        */
-                        showConnectionErrorMessage("Visualization was not received.", errorData);
-                    });
-            }
+            function removeLink(link){
+                if(!nodeMode){
+                    let { nodes, links } = forceGraph.graphData();
+                    for(key in links){
+                        if(link.source.id == links[key].source.id && link.target.id == links[key].target.id){
+                            links.splice(key,1);
+                            if(undirectedChecked){
+                                for(key2 in links){
+                                    if(link.source.id == links[key2].target.id && link.target.id == links[key2].source.id){
+                                        links.splice(key2,1);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                    forceGraph.graphData({ nodes, links });
+                }
+
                 
+            }
+
             // remove the node
             function removeNode(node){
                 let {nodes, links} = forceGraph.graphData();
                 links = links.filter(l => l.source !== node && l.target !== node);
                 nodes.splice(node.id,1);
-                nodes.forEach((n,idx) => {n.id = idx; });
+                nodes.forEach((n,idx) => {n.id = idx;});
                 forceGraph.graphData({ nodes, links });  
-                console.log(links);
             }
 
             // Button and Checkbox functionalities
