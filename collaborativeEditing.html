@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays basic / meta information on multiple graphs -->
+    <head>
+        <title>OCD - Edit Graph</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="node_modules/js-base64/base64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/graphTableHandler.js"></script>
+        <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+        <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
+        <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+        <script src="JS/simulation/jsonRequestHandler.js"></script>
+        <script src="JS/simulation/simulationForm.js"></script>
+        <script src="node_modules/three/build/three.min.js"></script>
+        <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
+        <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+        <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+        <script src="node_modules/arangojs/lib/web.js"></script>
+        <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+        <script src="node_modules/codemirror/lib/codemirror.js"></script>
+        <script src="node_modules/codemirror/addon/mode/simple.js"></script>
+        <script src="node_modules/codemirror/mode/xml/xml.js"></script>
+        <script src="node_modules/codemirror/addon/edit/closetag.js"></script>
+        <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
+        <script src="node_modules/codemirror/addon/fold/xml-fold.js"></script>
+        <script type="text/javascript">
+            var graphId;
+            var editor;
+            var graph;
+
+            $(document).ready(function() {
+                graphId = getUrlVar("graphId");
+                var graphIdQueryExtension = "";
+                if(graphId) {
+                    graphIdQueryExtension = "&graphId=" + graphId;
+                }
+                graph = getGraphXml();
+              
+            });
+            console.log(graph);
+            function initCodemirror() {
+                var code = $('.codemirror-textarea')[0];
+                // var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
+                    editor = CodeMirror.fromTextArea(code, {
+                    value : "test",
+                    lineNumbers : true,
+                    autoCloseBrackets : true,
+                    autoCloseTags : true,
+                    mode : 'xml'
+                });
+                // foldFunc(editor,9);
+                // foldFunc(editor,20);
+                editor.setSize("1900","900");
+                editor.getDoc().setValue(graph);
+
+                editor.setOption("scrollPastEnd", true);
+            }
+            function getGraphXml(){
+                sendRequest("get", "graphs/" + graphId, "",
+                    function (response) {
+                        var graph = response;
+                        test(graph);
+                        // console.log(graph);
+                        initCodemirror();
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                        * GraphIds request failed
+                        */
+                        showConnectionErrorMessage("Graph not received", errorData);
+                    });
+            }
+
+            function test(xml){
+                graph = xml;
+            }
+            
+
+        </script>
+    <bod>
+        <div class="wrapper">
+            <textarea class="codemirror-textarea"></textarea>
+        </div>
+    </body>
+</html>

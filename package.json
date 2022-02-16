@@ -9,6 +9,7 @@
     "bootstrap": "^4.5.3",
     "bootstrap-select": "^1.13.18",
     "chart.js": "^2.9.4",
+    "codemirror": "^5.65.1",
     "d3-force": "^3.0.0",
     "file-saver": "^2.0.5",
     "force-graph": "^1.35.1",
@@ -19,6 +20,8 @@
     "tablesorter": "^2.0.5b",
     "three": "^0.125.2",
     "three-spritetext": "^1.5.4",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "y-webrtc": "^10.2.2",
+    "yjs": "^13.5.27"
   }
 }

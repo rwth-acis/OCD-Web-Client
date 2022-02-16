@@ -7,6 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
@@ -47,6 +48,8 @@
         <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
         <script src="node_modules/arangojs/lib/web.js"></script>
         <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+        <script src="node_modules/codemirror/lib/codemirror.js"></script>
+        <script src="node_modules/codemirror/mode/xml/xml.js"></script>
         <script type="text/javascript">
 
             var visualization;
@@ -62,17 +65,16 @@
             var nodeMode = true;
             var nodeSelected = false;
 
-            var test;
+            var edgeFormat;
             
             $(document).ready(function() {
-
                 graphId = getUrlVar("graphId");
+                $('#collab').html('<a href="collaborativeEditing.html?graphId=' + graphId + '">Collaborative</a>');
                 var graphIdQueryExtension = "";
                 if(graphId) {
                     graphIdQueryExtension = "&graphId=" + graphId;
                 }
                 initialize();
-                console.log(test);
             });
             // GET the graph and execute the visualization function on that graph
             function initialize() {
@@ -94,7 +96,7 @@
 
                 var nodes = initialGraph.nodes;
                 var links = initialGraph.links;
-
+                edgeFormat = JSON.parse(JSON.stringify(links[0]));
                 const elem = document.getElementById("editForceVisualizationGraphic");
 
                 // First initialization of the Visualiuation
@@ -145,7 +147,6 @@
                     }
                     
                 }
-                //TODO check if links exist before adding them
                 function editNode(node) {
                     if(nodeMode){
                         let {nodes, links} = forceGraph.graphData();
@@ -163,34 +164,79 @@
                             lastNode = node;
                             lastId = node.id;
                             node.color = "orange";
-
-                        // if the selected node is clicked again, unselect it
+                        // if the selected nod e is clicked again, unselect it
                         } else if(lastNode == node){
-                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
-
+                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";  
                         // Connect two selected nodes with directed edge
                         } else if(!undirectedChecked) {
                             const{ nodes, links } = forceGraph.graphData();
-                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
-                            forceGraph.graphData({
-                                nodes: nodes,
-                                links: [...links, {"style":0,"source":lastId,"target":node.id}]
-                            })
-
+                            var containsEdge = false;
+                            var edge = JSON.parse(JSON.stringify(edgeFormat));
+                            edge.target = node;
+                            edge.source = lastNode;
+                            console.log(edge);
+                            for(key in links){
+                                if(links[key].source.id == edge.source.id && links[key].target.id == edge.target.id){
+                                    containsEdge = true;
+                                    break;
+                                }
+                            }
+                            if(!containsEdge){
+                                console.log("ho");
+                                forceGraph.graphData({
+                                    nodes: nodes,
+                                    links: [...links, edge]
+                                })
+                                lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+                            } else {
+                                lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+                                alert("Edge already exists!");
+                            }
+                              
                         // Connect two selected nodes with undirected edge
                         } else if(undirectedChecked){
                             const{ nodes, links } = forceGraph.graphData();
-                            lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
-                            forceGraph.graphData({
-                                nodes: nodes,
-                                links: [...links, {"style":0,"source":lastId,"target":node.id},{"style":0,"source":node.id,"target":lastId}]
-                            })
-                        }                            
+                            var containsEdge = false;
+                            var secondEdge = JSON.parse(JSON.stringify(edgeFormat));
+                            var edge = JSON.parse(JSON.stringify(edgeFormat));
+                            edge.target = node;
+                            edge.source = lastNode;
+                            secondEdge.source = node;
+                            secondEdge.target = lastNode;
+
+                            console.log(edge);
+                            // console.log("secEdge: " + secondEdge.source.id);
+                            for(key in links){
+                                if((links[key].source.id == edge.source.id && links[key].target.id == edge.target.id)){
+                                    containsEdge = true;
+                                    break;
+                                }
+                            }
+                            for(key in links){
+                                if((links[key].source.id == secondEdge.source.id && links[key].target.id == secondEdge.target.id)){
+                                    containsEdge = true;
+                                    break;
+                                }
+                            }
+                            if(!containsEdge){
+                                    forceGraph.graphData({
+                                    nodes: nodes,
+                                    links: [...links, edge, secondEdge]
+                                 })
+                                 lastNode.color = "rgba(204.0,204.0,255.0,1.0)"; 
+                            } else {
+                                lastNode.color = "rgba(204.0,204.0,255.0,1.0)"; 
+                                alert("Edge already exists!");
+                            }
+
+                             
+                        }              
+                                    
                         nodeSelected = !nodeSelected;
                     }                    
                 }
             }
-
+            // remove edge
             function removeLink(link){
                 if(!nodeMode){
                     let { nodes, links } = forceGraph.graphData();
@@ -201,6 +247,7 @@
                                 for(key2 in links){
                                     if(link.source.id == links[key2].target.id && link.target.id == links[key2].source.id){
                                         links.splice(key2,1);
+                                        break;
                                     }
                                 }
                             }
@@ -208,9 +255,7 @@
 
                     }
                     forceGraph.graphData({ nodes, links });
-                }
-
-                
+                }                
             }
 
             // remove the node
@@ -246,7 +291,6 @@
                 }
                 
             }
-
             function saveGraph() {
                 var content = jsonToXml();
                 console.log(content);
@@ -255,12 +299,12 @@
                 sendRequest("put","update/" + graphId, content,
                 function(response) {
                     showSuccess(response);
+                    alert("Graph saved");
                 },
                 function (errorData) {
                     showConnectionErrorMessage("Graph update failed");
                 });
             }
-
             function switchMode() {
                 nodeMode = !nodeMode;  
                 if (!nodeMode) {
@@ -269,7 +313,6 @@
                     $("#modeBtn").html("Node Mode");
                 }
             }
-
             // Shortcuts for the Buttons:
             // Switch modes by pressing N
             document.addEventListener('keydown', function(e) {
@@ -278,7 +321,7 @@
                     switchMode();
                 }
             })
-            // Delete selected key by pressing DELETE
+            // Delete selected node by pressing DELETE
             document.addEventListener('keydown', function(e) {
                 const key = e.key;
                 if(key === "Delete" && nodeSelected){
@@ -305,9 +348,6 @@
                 xmlString += '\n</graphml>';
                 return xmlString
             }
-
-
-
         </script>
     </head>
     <body>
@@ -344,6 +384,11 @@
                         <input type="checkbox" id="editUndirected" onClick="updateCheckbox()">
                         Show as undirected Graph
                     </div>
+                    <ul class="nav" style="width:100%;">
+                        <div class="p-2 editColor col-md-7 col-sm-7">
+                            <li id="collab" class="nav-item editColor"></li>
+                        </div>
+                    </ul>
                 </div>  
             </div>
         </div>
