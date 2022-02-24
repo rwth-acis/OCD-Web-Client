@@ -729,11 +729,7 @@ input:checked + .slider:before {
     background-color: rgba(0,0,0,0.5);
     user-select: none;
 }
-
-.editButton {
-    padding: 5px;
-}
 .btnContainer {
-    margin-top: 50px;
+    margin-left: 2%;
 }
 

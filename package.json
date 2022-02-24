@@ -4,24 +4,45 @@
   "description": "The web client for the webOCD service at https://github.com/rwth-acis/REST-OCD-Services",
   "license": "MIT",
   "dependencies": {
-    "3d-force-graph": "^1.67.7",
+    "3d-force-graph": "^1.70.9",
     "arangojs": "^6.14.1",
     "bootstrap": "^4.5.3",
     "bootstrap-select": "^1.13.18",
     "chart.js": "^2.9.4",
-    "codemirror": "^5.65.1",
+    "codemirror": "^5.65.2",
     "d3-force": "^3.0.0",
     "file-saver": "^2.0.5",
-    "force-graph": "^1.35.1",
+    "force-graph": "^1.42.7",
     "jquery.mousewheel": "^3.1.9",
     "jquery.panzoom": "^3.2.3",
     "js-base64": "^3.6.0",
-    "jsrsasign": "^10.1.4",
+    "jsrsasign": "^10.5.7",
     "tablesorter": "^2.0.5b",
     "three": "^0.125.2",
-    "three-spritetext": "^1.5.4",
+    "three-spritetext": "^1.6.5",
     "uuid": "^8.3.2",
+    "y-codemirror": "^3.0.1",
     "y-webrtc": "^10.2.2",
     "yjs": "^13.5.27"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@babel/core": "^7.17.5",
+    "@babel/preset-env": "^7.16.11",
+    "babel-core": "^6.26.3",
+    "babelify": "^10.0.0",
+    "browserify": "^17.0.0",
+    "esmify": "^2.1.1",
+    "gulp": "^4.0.2",
+    "gulp-rename": "^2.0.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-uglify": "^3.0.2",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ]
   }
 }
