@@ -17,8 +17,9 @@ var roomNr;
 
 var lastGraph;
 
-var change;
-var beforeChange;
+var autoSave = true;
+var timeoutHandle;
+
 // Visualization variables
 var forceGraph;
 var initialGraph;
@@ -53,8 +54,14 @@ $("#editDelete").on('click', function(){
 $("#editSave").on('click', function(){
     saveGraph();
 })
+$("#download").on('click', function(){
+    downloadString(jsonToXml(), "txt", "graph");
+})
 $("#editUndirected").on('click', function(){
     updateCheckbox();
+})
+$("#autoApply").on('click', function(){
+    autoSave = $("#autoApply").is(":checked");
 })
 // hide buttons that only the host of the session should see
 function hideButtons(){
@@ -75,10 +82,15 @@ const editor = CodeMirror(editorContainer, {
     autoCloseTags : true,
     lineNumbers: true,
   })
-// const editorContainer = $('<div id="editor"/>');
-// editor.on('beforeChange', function(e){
-//     console.log(e.getValue());
-// })
+
+editor.on('change', function(cm){
+    if(autoSave){
+        window.clearTimeout(timeoutHandle);
+        timeoutHandle = window.setTimeout(function(){
+            applyChanges(false);
+        }, 0)
+    }
+})
 
 window.addEventListener('load', () => {
     graphId = getUrlVar("graphId");
@@ -142,7 +154,6 @@ function loadXml(force){
     editor.setValue("");
     editor.clearHistory();
     let xml = jsonToXmlL(forceGraph.graphData(), force)
-    console.log(xml);
     ytext.insert(0, xml);
 }
 // Get the Graph visualization and set up visualozation
@@ -160,25 +171,48 @@ function initialize() {
             showConnectionErrorMessage("Visualization was not received.", errorData);
         });
 }
-function applyChanges(){
-    lastGraph = JSON.parse(JSON.stringify(forceGraph.graphData()));
-    let lastNodes = lastGraph.nodes;
-    let lastLinks = lastGraph.links;
-    let updated = xmlToJson(ytext.toString());
-    let nodes = updated.nodes;
-    let links = updated.links;
-    console.log("ln: " + JSON.stringify(lastNodes));
-    console.log("n: " + JSON.stringify(nodes));
-    forceGraph.graphData({
-        nodes: nodes,
-        links: links
-    });
-    loadXml(false);
+function applyChanges(edgeUpdate=true){
+    // const { nodes, links } = forceGraph.graphData();
+
+    // let updated = xmlToJson(ytext.toString());
+    // let uNodes = updated.nodes;
+    // let uLinks = updated.links;
+    // for(var key in nodes){
+    //     check: {
+    //         for(var key2 in uNodes){
+    //             console.log("n: " + nodes[key].id + ", uN: " + uNodes[key2].id);
+    //             if(nodes[key].id == uNodes[key2].id){
+    //                 uNodes.splice(key2, 1);
+    //                 break check;
+    //             } 
+    //             if(key2 == uNodes.length - 1){
+    //                 console.log("hi");
+    //                 nodes.splice(key, 1);
+    //             }
+    //         }
+    //     }
+
+
+    // }
+    // console.log(nodes);
+    // console.log(uNodes);
+    // if(uNodes.length != 0){
+
+    //     forceGraph.graphData({
+    //         nodes: [...nodes,...uNodes],
+    //         links: links
+    //     });
+    // }
+
+    // if(edgeUpdate){
+    //     loadXml(false);
+    // }
+    
     
 
-    if(!host){
-        edgeFormat = JSON.parse(JSON.stringify(links[0]));
-    }
+    // if(!host){
+    //     edgeFormat = JSON.parse(JSON.stringify(links[0]));
+    // }
 }
 
 // Translation functions to synchronize text and vis. graph editor
@@ -188,8 +222,6 @@ function jsonToXmlL(json, force){
     var xmlString = '';
     let nodes = json.nodes;
     let links = json.links;
-    console.log(nodes);
-    console.log(links);
     for(var key in nodes){
         xmlString += '<node id="' + nodes[key].id + '"/>\n';
     }
@@ -242,7 +274,6 @@ function xmlToJson(xml){
     for(var key in links){
         let src = links[key]._attributes.source;
         let trg = links[key]._attributes.target;
-        console.log(nodeIds.some(e => e == src));
 
         // Filter out edges of nodes that no longer exist
         if((nodeIds.some(e => e == src)) && (nodeIds.some(e => e == trg))){
@@ -251,6 +282,19 @@ function xmlToJson(xml){
     }
     return visualization;
 }
+
+function downloadString(text, fileType, fileName) {
+    var blob = new Blob([text], { type: fileType });
+    var a = document.createElement('a');
+    a.download = fileName;
+    a.href = URL.createObjectURL(blob);
+    a.dataset.downloadurl = [fileType, a.download, a.href].join(':');
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(a.href); }, 1500);
+  }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////// VISUALIZATION /////////////////////////////////////////////////////////////////
@@ -286,16 +330,22 @@ function getForceVis() {
                                 .distanceMax(50)
                                 )
     // Set Dimensions and Parameters for the force engine   
+
     forceGraph.d3Force("collide", d3.forceCollide(forceGraph.nodeRelSize()))
         .d3Force("link",d3.forceLink(forceGraph.links).distance(20))
 
     forceGraph.width($('.editForceVisualizationContent').width());
     forceGraph.height($('.editForceVisualizationContent').height());
+    const { nodes } = forceGraph.graphData();
+    for(var n in nodes){
+        nodes[n].name = nodes[n].id.toString();
+    }
 }
 // Functions that are executed by events, e.g. left click on a button
 function addNode() {
     const { nodes, links } = forceGraph.graphData();
     const id = nodes.length;
+    console.log(nodes[1].x);
     forceGraph.graphData({
         nodes: [...nodes, {"color":"rgba(204.0,204.0,255.0,1.0)","name":id,"id":id,"label":""}],
         links: links
@@ -331,8 +381,11 @@ function editNode(node) {
         let {nodes, links} = forceGraph.graphData();
         links = links.filter(l => l.source !== node && l.target !== node);
         nodes.splice(node.id,1);
-        // nodes.forEach((n,idx) => {n.id = idx; });
+        nodes.forEach((n,idx) => {n.id = idx; });
         forceGraph.graphData({ nodes, links });  
+        for(var n in nodes){
+            nodes[n].name = nodes[n].id.toString();
+        }
         loadXml(true); 
     // Select node or connect 2 selected nodes
     // Connect 2 nodes in both directions if undirected box is checked
@@ -459,7 +512,6 @@ document.addEventListener('keydown', e => {
         // Prevent the Save dialog to open
         e.preventDefault();
         // Place your code here
-        console.log('CTRL + S');
         applyChanges();
         editor.setCursor({line: cursorPos.line, ch: cursorPos.ch});
     }
