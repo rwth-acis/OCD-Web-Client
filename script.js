@@ -72,6 +72,7 @@ const ydoc = new Y.Doc();
 const provider = new WebrtcProvider(roomNr , ydoc);
 const ytext = ydoc.getText('codemirror');
 const editorContainer = document.createElement('div');
+
 //initialize code editor
 const editor = CodeMirror(editorContainer, {
     mode: 'xml',
@@ -90,6 +91,7 @@ editor.on('change', function(cm){
         }, 500)
     }
 })
+
 window.addEventListener('load', () => {
     graphId = getUrlVar("graphId");
 
@@ -451,7 +453,7 @@ function editNode(node) {
         if(!nodeSelected){
             lastNode = node;
             node.color = "orange";
-            
+
         // if the selected nod e is clicked again, unselect it
         } else if(lastNode == node){
             lastNode.color = "rgba(204.0,204.0,255.0,1.0)"; 
@@ -489,7 +491,6 @@ function reloadGraph(){
 }
 function deleteGraph(){
     if (confirm("Are you sure you want to delete your graph?") == true){
-        let { nodes , links } = forceGraph.graphData();
         forceGraph.graphData({
             nodes: [],
             links: []
