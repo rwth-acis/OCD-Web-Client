@@ -17,6 +17,7 @@
     "jquery.panzoom": "^3.2.3",
     "js-base64": "^3.6.0",
     "jsrsasign": "^10.5.7",
+    "sweetalert2": "^11.4.6",
     "tablesorter": "^2.0.5b",
     "three": "^0.125.2",
     "three-spritetext": "^1.6.5",

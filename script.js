@@ -9,6 +9,7 @@ import convert from 'xml-js'
 import 'codemirror/mode/xml/xml.js'
 import 'codemirror/addon/edit/closetag.js'
 import 'codemirror/addon/edit/closebrackets.js'
+import Swal from 'sweetalert2'
 
 // initial parameters
 var graphId;
@@ -16,20 +17,24 @@ var initialGraph;
 var roomNr;
 var tutorial;
 
-var autoSave = true;
-var timeoutHandle;
+var autoTranslate = true;
+var timeoutHandleTR;
 
+var autoSave = false;
+var timeoutHandleSV;
+
+// Time after last change before visualization is updated
+var translateDelay = 250; 
 // Visualization variables
 var forceGraph;
 var initialGraph;
 var lastNode;
-// Is the current client the one that "owns" the graph
+// The current client the one that "owns" the graph
 var host = false;
 // Current states of the buttons
 var undirectedChecked;
 var nodeMode = true;
 var nodeSelected = false;
-
 
 ////////// Handle Buttons /////////////
 
@@ -57,12 +62,13 @@ $("#download").on('click', function(){
 $("#editUndirected").on('click', function(){
     updateCheckbox();
 })
-$("#autoApply").on('click', function(){
-    autoSave = $("#autoApply").is(":checked");
+$("#autoSave").on('click', function(){
+    autoSave = $("#autoSave").is(":checked");
 })
 // hide buttons that only the host of the session should see
 function hideButtons(){
     $("#editSave").css("display","none");
+    $("#editReload").css("display", "none");
 }
 // Either create a room number or get the one from the url
 getRoomNr();
@@ -82,15 +88,7 @@ const editor = CodeMirror(editorContainer, {
   })
   provider.disconnect();
 
-// detect change and update visualization after 500 ms
-editor.on('change', function(cm){
-    if(autoSave){
-        window.clearTimeout(timeoutHandle);
-        timeoutHandle = window.setTimeout(function(){
-            applyChanges(false);
-        }, 500)
-    }
-})
+
 
 window.addEventListener('load', () => {
     graphId = getUrlVar("graphId");
@@ -124,6 +122,21 @@ window.addEventListener('load', () => {
         var copyText = $('#copy-url')[0];
         copyText.select();
         navigator.clipboard.writeText(url);
+        Swal.fire({
+            position: 'top-end',
+            toast: true,
+            showClass: {
+                popup: '',                     // disable popup animation
+              },
+              hideClass: {
+                popup: '',                     // disable popup fade-out animation
+              },
+            width: '15%',
+            icon: 'success',
+            title: 'Link copied to clipboard',
+            showConfirmButton: false,
+            timer: 1000
+        })
     })
     
     // Set editor size with standard text
@@ -134,12 +147,50 @@ window.addEventListener('load', () => {
     // Bind the codemirror editor to yjs
     const binding = new CodemirrorBinding(ytext, editor, provider.awareness)
 
+    // detect change and update visualization after 500 ms
+    ytext.observe(function(){
+        // Wait 5 seconds after the last change and save the graph
+        // only possible if you "own" the graph
+        window.clearTimeout(timeoutHandleSV);
+        if(autoSave && host){
+            timeoutHandleSV = window.setTimeout(function(){
+                saveGraph();
+            }, 5000)
+        }
+        // Automatically apply changes to the visualization
+        if(autoTranslate){
+            if(checkFormat()){
+                timeoutHandleTR = window.setTimeout(function(){
+                    applyChanges("",false);
+                }, translateDelay)
+                
+            }
+        }
+        
+    })
+
     // Connection button
     const connectBtn = (document.getElementById('y-connect-btn'))
     connectBtn.addEventListener('click', () => {
       if (provider.shouldConnect) {
         provider.disconnect()
         connectBtn.textContent = 'Connect'
+        // Create animated popup
+        Swal.fire({
+            position: 'top-end',
+            toast: true,
+            showClass: {
+                popup: '',
+              },
+              hideClass: {
+                popup: '',
+              },
+            width: '15%',
+            icon: 'success',
+            title: 'Disconnected',
+            showConfirmButton: false,
+            timer: 1000
+        })
       } else {
           if(!host){
             editor.setValue("");
@@ -147,6 +198,21 @@ window.addEventListener('load', () => {
           }
         provider.connect()
         connectBtn.textContent = 'Disconnect'
+        Swal.fire({
+            position: 'top-end',
+            toast: true,
+            showClass: {
+                popup: '',                     // disable popup animation
+              },
+              hideClass: {
+                popup: '',                     // disable popup fade-out animation
+              },
+            width: '15%',
+            icon: 'success',
+            title: 'Connected',
+            showConfirmButton: false,
+            timer: 1000
+        })
       }
     })
     // @ts-ignore
@@ -168,11 +234,27 @@ function uuidv4() {
     return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
         (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     );
+};
+
+function checkFormat(){
+    let xmlStr = getXML();
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(xmlStr, 'text/xml');
+    if(xmlStr != ""){
+        return dom.documentElement.nodeName == 'html';
+    } else {
+        return true;
+    }
+    
 }
+
+/**
+ * Insert xml format
+ */
 function loadXml(){
     editor.setValue("");
     editor.clearHistory();
-    let xml = jsonToXmlL(forceGraph.graphData())
+    let xml = jsonToXmlL(forceGraph.graphData());
     ytext.insert(0, xml);
 }
 // Get the Graph visualization and set up visualozation
@@ -180,7 +262,6 @@ function initialize() {
     sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
         function (response) {
             initialGraph = JSON.parse(response);
-            console.log(initialGraph);
             getForceVis();
         },
         /* Error handler */
@@ -191,17 +272,19 @@ function initialize() {
             showConnectionErrorMessage("Visualization was not received.", errorData);
         });
 }
-// Translate the xml to a JSON format and look for changes in the graph and apply those
 
+function getXML(){
+    return xmlToJson(ytext.toString())
+}
+
+// Translate the xml to a JSON format and look for changes in the graph and apply those
 function applyChanges(edgeUpdate=true){
     const { nodes, links } = forceGraph.graphData();
-
-    let updated = xmlToJson(ytext.toString());
+    let updated = getXML();
+    let delNodes = [];
     let uNodes = updated.nodes;
     let uLinks = updated.links;
-    let delNodes = [];
-    console.log(uLinks);
-    console.log(links);
+    
     // Remove deleted nodes from the original array
     for(var key in nodes){
         if(!(uNodes.some(e => e.id == nodes[key].id))){
@@ -214,10 +297,12 @@ function applyChanges(edgeUpdate=true){
     //Check if updated nodes and nodes are the same
     for(var key in uNodes){
         if(!(nodes.some(e => e.id == uNodes[key].id))){
-            addNode(parseInt(uNodes[key].id));
+            if(typeof uNodes[key].id != 'undefined'){
+                addNode(parseInt(uNodes[key].id));
+            }
+            
         }
     }
-    // Update Edges in seperate function to guarantee execution after nodes were created
     updateEdges(uLinks);
     if(edgeUpdate){
         loadXml();
@@ -319,7 +404,7 @@ function xmlToJson(xml){
         return visualization;
     }
 }
-
+// Create a downloadable .txt file containing the current XML
 function downloadString(text, fileType, fileName) {
     var blob = new Blob([text], { type: fileType });
     var a = document.createElement('a');
@@ -350,7 +435,7 @@ function getForceVis() {
         .onLinkClick(removeLink)
         .backgroundColor("#fafafa")
         .centerAt(0,0)
-        .graphData(initialGraph)
+        .graphData(JSON.parse(JSON.stringify(initialGraph)))
         .linkWidth(3)
         .linkDirectionalArrowLength(3)
         .linkDirectionalArrowRelPos(1)
@@ -365,6 +450,7 @@ function getForceVis() {
     forceGraph.d3Force("collide", d3.forceCollide(forceGraph.nodeRelSize()))
         .d3Force("link",d3.forceLink(forceGraph.links).distance(20))
 
+    // set up dimensions of visualization
     forceGraph.width($('.editForceVisualizationContent').width());
     forceGraph.height($('.editForceVisualizationContent').height());
     const { nodes } = forceGraph.graphData();
@@ -373,6 +459,10 @@ function getForceVis() {
     }
 }
 // Functions that are executed by events, e.g. left click on a button
+/**
+ * Creates a node
+ * Is either passed the custom ID of the node or an event
+ */
 function addNode(ident) {
     const { nodes, links } = forceGraph.graphData();
     var id;
@@ -391,15 +481,14 @@ function addNode(ident) {
     
 }
 
-// Remove selected edge
+/**
+ * Remove edge
+ * Is passed down the link which is to be removed
+ */
 function removeLink(link){
     if(!nodeMode){
         let { nodes, links } = forceGraph.graphData();
-        // console.log(links);
-        console.log(link);
         var index = links.indexOf(link);
-        
-        // console.log(index);
         if(link == links[index] && index != -1){
             links.splice(index,1);
         }
@@ -414,6 +503,10 @@ function removeLink(link){
         loadXml();
     }             
 }
+/**
+ * Removes node and connected edges
+ * is passed down the node which shall be removed
+ */
 function deleteNode(node){
     let {nodes, links} = forceGraph.graphData();
     links = links.filter(l => l.source !== node && l.target !== node);
@@ -429,6 +522,10 @@ function deleteNode(node){
         nodes[n].name = nodes[n].id.toString();
     }
 }
+/**
+ * Creates a new edge
+ * Gets the source and the target as parameters 
+ */
 function addEdge(source, target){
     const{ nodes, links } = forceGraph.graphData();
     var edge = {};
@@ -443,6 +540,10 @@ function addEdge(source, target){
         })
     }
 }
+/**
+ * Different events after clicking on a node
+ * clicked node as parameter
+ */
 function editNode(node) {
     if(nodeMode){
         deleteNode(node);
@@ -485,17 +586,82 @@ function updateCheckbox(){
     }
 }
 function reloadGraph(){
-    if (confirm("Reload: Unsaved changes will be lost!") == true) {
-        initialize();
-    }
+    Swal.fire({
+        position: 'center',
+        toast: true,
+        showClass: {
+            popup: '',                     // disable popup animation
+          },
+          hideClass: {
+            popup: '',                     // disable popup fade-out animation
+          },
+        title: 'Are you sure you want to reload the graph?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#a1a1a1',
+        confirmButtonText: 'Yes, reload!'
+    }).then((result) => {
+        if(result.isConfirmed) {
+            forceGraph.graphData(JSON.parse(JSON.stringify(initialGraph)))
+            Swal.fire({
+                position: 'top-end',
+                toast: true,
+                showClass: {
+                    popup: '',                     // disable popup animation
+                  },
+                  hideClass: {
+                    popup: '',                     // disable popup fade-out animation
+                  },
+                width: '15%',
+                icon: 'success',
+                title: 'Graph has been reloaded!',
+                showConfirmButton: false,
+                timer: 1000
+            })
+        }
+    })    
 }
 function deleteGraph(){
-    if (confirm("Are you sure you want to delete your graph?") == true){
-        forceGraph.graphData({
-            nodes: [],
-            links: []
-        })
-    }
+    Swal.fire({
+        position: 'center',
+        toast: true,
+        showClass: {
+            popup: '',                     // disable popup animation
+          },
+          hideClass: {
+            popup: '',                     // disable popup fade-out animation
+          },
+        title: 'Are you sure you want to delete your graph?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#a1a1a1',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if(result.isConfirmed) {
+            forceGraph.graphData({
+                nodes: [],
+                links: []
+            })
+            Swal.fire({
+                position: 'top-end',
+                toast: true,
+                showClass: {
+                    popup: '',                     // disable popup animation
+                  },
+                  hideClass: {
+                    popup: '',                     // disable popup fade-out animation
+                  },
+                width: '15%',
+                icon: 'success',
+                title: 'Graph has been deleted!',
+                showConfirmButton: false,
+                timer: 1500
+            })
+        }
+    })
+
     
 }
 function saveGraph() {
@@ -503,10 +669,41 @@ function saveGraph() {
     sendRequest("put","update/" + graphId, content,
     function(response) {
         showSuccess(response);
-        alert("Graph saved");
+        window.clearTimeout(timeoutHandleSV);
+        Swal.fire({
+            position: 'top-end',
+            toast: true,
+            showClass: {
+                popup: '',                     // disable popup animation
+              },
+              hideClass: {
+                popup: '',                     // disable popup fade-out animation
+              },
+            width: '15%',
+            icon: 'success',
+            title: 'Graph has been saved!',
+            showConfirmButton: false,
+            timer: 1000
+        })
     },
     function (errorData) {
         showConnectionErrorMessage("Graph update failed", errorData);
+        window.clearTimeout(timeoutHandleSV);
+        Swal.fire({
+            position: 'top-end',
+            toast: true,
+            showClass: {
+                popup: '',                     // disable popup animation
+              },
+              hideClass: {
+                popup: '',                     // disable popup fade-out animation
+              },
+            width: '15%',
+            icon: 'error',
+            title: errorData,
+            showConfirmButton: false,
+            timer: 1000
+        })
     });
 }
 function switchMode() {
@@ -551,7 +748,8 @@ Text Editor:
 -You can add edges by adding a "<node id="id"/>" or "<node id="id"></node>" tag.
 Edges need a target and source attribute.
 
--Auto translate is enabled by default, however, you can disable it to save some RAM.
+-Enable Autosave, so you won't have to save manually and changes aren't lost in case of a crash
+note that the graph is only saved correctly, if you get the notification of a successful save
 
 Collaborative session:
 -Copy the invite link and send it to your colleagues. 
@@ -560,4 +758,4 @@ They will need a learning layers account to get access.
 (The collaborative session is hostet on your browsers, 
 make sure you save your progress before closing your browser)
 
-Click on insert graph to begin`;
+Now click insert graph or start editing the graph`;
