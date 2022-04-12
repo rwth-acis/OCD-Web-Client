@@ -4,20 +4,21 @@
   "description": "The web client for the webOCD service at https://github.com/rwth-acis/REST-OCD-Services",
   "license": "MIT",
   "dependencies": {
-    "uuid": "^8.3.2",
-    "force-graph": "^1.35.1",
     "3d-force-graph": "^1.67.7",
-    "three": "^0.125.2",
-    "three-spritetext": "^1.5.4",
-    "file-saver": "^2.0.5",
     "arangojs": "6.14.1",
-    "js-base64": "^3.6.0",
     "bootstrap": "^4.5.3",
     "bootstrap-select": "^1.13.18",
     "chart.js": "^2.9.4",
-    "jsrsasign": "^10.1.4",
+    "file-saver": "^2.0.5",
+    "force-graph": "^1.35.1",
+    "http-server": "^14.1.0",
     "jquery.mousewheel": "^3.1.9",
     "jquery.panzoom": "^3.2.3",
-    "tablesorter": "^2.0.5b"
+    "js-base64": "^3.6.0",
+    "jsrsasign": "^10.1.4",
+    "tablesorter": "^2.0.5b",
+    "three": "^0.125.2",
+    "three-spritetext": "^1.5.4",
+    "uuid": "^8.3.2"
   }
 }
