@@ -21,4 +21,4 @@ Finally, change the values of _baseUrl_ to the [services](https://github.com/rwt
 
 Finally, dont forget to run ``npm install`` to get all the needed packages. 
 
-You can then for example use the http-server package to have the server running do ``./node_modules/.bin/http-server -p <your-port>`` from the root directory of the project and now, the web client should be able to communicate with the OCD service and be reachable under _http://localhost:your-port/_.
+You can then for example use the http-server package dependency of the web client to have the server running: Do ``./node_modules/.bin/http-server -p <your-port>`` from the root directory of the project and now, the web client should be able to communicate with the OCD service and be reachable under _http://localhost:your-port/_.
