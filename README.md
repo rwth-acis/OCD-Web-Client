@@ -7,10 +7,10 @@ To set up the Learning layers OIDC login, either use an existing Learning Layers
 The client at learning Layers has to have the following configurations:
 * The web clients login page has to be mentioned as a _Redirect URI_
 * The _Access Type_ should be public and you should use _Implicit Flow_
-* You need to have your clients' origin, e.g. ``http://localhost:8090``, and ``https://api.learning-layers.eu/*`` as an allowed _Web Origin_ (Lazy People can just use ``*`` to allow any). Keep in mind that it needs to be the **exact** origin, an extra ``/`` may for example lead to a CORS policy block.
+* You need to have your clients' origin, e.g. ``http://localhost:<your-port>``, and ``https://api.learning-layers.eu/*`` as an allowed _Web Origin_ (Lazy People can just use ``*`` to allow any). Keep in mind that it needs to be the **exact** origin, an extra ``/`` may for example lead to a CORS policy block.
 
 ### Adjusting the Files
-You will then have to change the _data-clientid_ field to your client id from Learning Layers and the _data-redirecturi_ field to your web clients address. This has to be done in both.
+You will then have to change the _data-clientid_ field to your client id from Learning Layers and the _data-redirecturi_ field to your web clients address (usually something like _http://localhost:your-port/_). This has to be done in both.
 * login.html
 * JS/contentHandler.js
 
@@ -21,4 +21,4 @@ Finally, change the values of _baseUrl_ to the [services](https://github.com/rwt
 
 Finally, dont forget to run ``npm install`` to get all the needed packages. 
 
-To have the server running do ``./node_modules/.bin/http-server -p <your-port>`` from the root directory of the project and now, the web client should be able to communicate with the OCD service and reachable under _http://localhost:your-port/_.
+You can then for example use the http-server package to have the server running do ``./node_modules/.bin/http-server -p <your-port>`` from the root directory of the project and now, the web client should be able to communicate with the OCD service and be reachable under _http://localhost:your-port/_.
