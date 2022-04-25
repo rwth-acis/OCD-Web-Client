@@ -20,3 +20,17 @@ Finally, change the values of _baseUrl_ to the services address in the following
 * JS/simulation/jsonRequestHandler.js
 
 Now, the web client should be able to communicate with the OCD service.
+
+# Quickstart with a Docker Container
+To build a docker image for the OCD-Web-Client that connects to the WebOCD Service running locally with the default parameters, you can navigate to the OCD-Web-Client directory and execute 
+```
+docker build -t <image_name> .
+```
+
+To run a docker container interactively, based on the above created image that connects to the default address of ``http://localhost:8090`` you can execute
+
+```
+docker run -it -p 8090:8090 <image_name> 
+```
+
+Now you should be able to navigate to ``http://localhost:8090``, log in with your Learning Layers account, and start using the WebClient with your locally running WebOCD Service instance. 
