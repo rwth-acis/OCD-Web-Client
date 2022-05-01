@@ -129,6 +129,7 @@
                     var params = getParameterXml("#algorithmParameterDiv");
                     var coverName = $("#coverName").val();
                     var contentWeighting = $("#contentWeighting").is(':checked');
+                    var ignoreCompatibility = $("#ignoreCompatibility").is(':checked');
                     if (coverName === "") {
                         showErrorMessage('Please define a cover name.');
                         window.scrollTo(0, 0);
@@ -141,7 +142,7 @@
                     //console.log("post" + " " + "covers/graphs/" + graphId
                     //    + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting + " " + params);
                     sendRequest("post", "covers/graphs/" + graphId
-                        + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
+                        + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&ignoreCompatibility=" + ignoreCompatibility + "&contentWeighting=" + contentWeighting, params,
                         /* Response handler */
                         function (response) {
                             window.location.href = 'index.html';
@@ -257,7 +258,18 @@
                     window.location.href = "centrality_simulations_info.html?simulationName=" + simulationName.replace(/ /g, "_");
                 }
             });
+
+            $("#ignoreCompatibility").click(
+                function() {
+                    if($("#ignoreCompatibility").is(':checked')){
+                       alert("The algorithm will run on a graph it is not compatible with. The result might not be optimal!")
+                    }
+                  });
+
+
         });
+
+
 
         /* Requests the names of all OCD algorithms.
          * Then executes a callback function */
@@ -1399,6 +1411,18 @@
                                     <!-- Algorithm Parameters -->
                                     <div class="col-sm-10" id="algorithmParameterDiv"></div>
 
+                                    <div class="form-group row">
+                                        <div class="container">
+                                            <label class="custom-control custom-checkbox"> <input
+                                                    id="ignoreCompatibility" type="checkbox"
+                                                    class="custom-control-input"> <span
+                                                    class="custom-control-indicator"></span> <span
+                                                    class="custom-control-label">Ignore Graph Compatibility
+                                                   
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
                                     <div class="form-group row">
                                         <div class="container">
                                             <label class="custom-control custom-checkbox"> <input
