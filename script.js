@@ -65,6 +65,15 @@ $("#editUndirected").on('click', function(){
 $("#autoSave").on('click', function(){
     autoSave = $("#autoSave").is(":checked");
 })
+$("#edge_length").on('focusout', function(){
+    var str = $("#edge_length").val();
+    if(!isNaN(str)){
+        updateLength(str);
+    } else {
+        alert("edge length has to be a number!");
+    }
+    
+})
 // hide buttons that only the host of the session should see
 function hideButtons(){
     $("#editSave").css("display","none");
@@ -142,7 +151,7 @@ window.addEventListener('load', () => {
     // Set editor size with standard text
     editorContainer.setAttribute('id', 'editor');
     document.body.insertBefore(editorContainer, null)
-    editor.setSize("60%","700");
+    editor.setSize("50%","700");
     ytext.insert(0, tutorial);
     // Bind the codemirror editor to yjs
     const binding = new CodemirrorBinding(ytext, editor, provider.awareness)
@@ -439,11 +448,11 @@ function getForceVis() {
         .linkWidth(3)
         .linkDirectionalArrowLength(3)
         .linkDirectionalArrowRelPos(1)
-        .d3Force("center", d3.forceCenter().strength(1))
+        .d3Force("center", d3.forceCenter().strength(0.5))
         .d3Force("charge", d3.forceManyBody()
                                 .strength(-10)
-                                .distanceMin(0.5)
-                                .distanceMax(50)
+                                .distanceMin(10)
+                                .distanceMax(20)
                                 )
     // Set Dimensions and Parameters for the force engine   
 
@@ -458,6 +467,21 @@ function getForceVis() {
         nodes[n].name = nodes[n].id.toString();
     }
 }
+/**
+ * update the length of edges
+ */
+function updateLength(length){
+    forceGraph.d3Force("charge", d3.forceManyBody().distanceMax(length));
+    if(length > 600){
+        forceGraph.linkWidth(1);
+    } else if(length > 300){
+        forceGraph.linkWidth(2);
+    } else {
+        forceGraph.linkWidth(3);
+    }
+    forceGraph.graphData(forceGraph.graphData());
+}
+
 // Functions that are executed by events, e.g. left click on a button
 /**
  * Creates a node
@@ -686,6 +710,10 @@ function saveGraph() {
             timer: 1000
         })
     },
+    /**
+     * 
+     * @param {*} errorData 
+     */
     function (errorData) {
         showConnectionErrorMessage("Graph update failed", errorData);
         window.clearTimeout(timeoutHandleSV);
@@ -740,7 +768,8 @@ to get back to the initial graph. Please note that this will reload the graph,
 so it will load the last graph you saved!
 
 -Clicking on the undirected checkbox will enable undirected mode. 
-Here the edges are displayed without arrows and adding/deleting edges will affect both directions.
+Here the edges are displayed without arrows and adding/deleting edges will affect both
+directions.
 
 Text Editor:
 -Here you can edit the xml-based code of your graph.
@@ -748,8 +777,9 @@ Text Editor:
 -You can add edges by adding a "<node id="id"/>" or "<node id="id"></node>" tag.
 Edges need a target and source attribute.
 
--Enable Autosave, so you won't have to save manually and changes aren't lost in case of a crash
-note that the graph is only saved correctly, if you get the notification of a successful save
+-Enable Autosave, so you won't have to save manually and changes aren't lost in case of a
+crash note that the graph is only saved correctly, if you get the notification of a 
+successful save
 
 Collaborative session:
 -Copy the invite link and send it to your colleagues. 
