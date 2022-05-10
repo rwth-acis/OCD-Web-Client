@@ -43267,8 +43267,9 @@ Visual Editor:
 by clicking on them and add edges by selecting 2 nodes
 
 -If you want to undo your changes, you can click on Reload Graph
-to get back to the initial graph. Please note that this will reload the graph, 
-so it will load the last graph you saved!
+to get back to the initial graph. Please note that this will reload the 
+initial graph from the first time you started the editor!
+This will revert all changes even saved ones.
 
 -Clicking on the undirected checkbox will enable undirected mode. 
 Here the edges are displayed without arrows and adding/deleting edges will affect both
@@ -43277,15 +43278,16 @@ directions.
 Text Editor:
 -Here you can edit the xml-based code of your graph.
 
--You can add edges by adding a "<node id="id"/>" or "<node id="id"></node>" tag.
+-You can add nodes by adding a "<node id="id"/>" or "<node id="id"></node>" tag.
 Edges need a target and source attribute.
 
 -Enable Autosave, so you won't have to save manually and changes aren't lost in case of a
-crash note that the graph is only saved correctly, if you get the notification of a 
+crash. Note that the graph is only saved correctly, if you get the notification of a 
 successful save
 
 Collaborative session:
--Copy the invite link and send it to your colleagues. 
+-Copy the invite link and send it to your colleagues
+and click on connect.
 They will need a learning layers account to get access.
 
 (The collaborative session is hostet on your browsers, 
