@@ -1,5 +1,5 @@
 # OCD-Web-Client
-This repository contains the code of the web client for the OCD service at https://github.com/rwth-acis/REST-OCD-Services
+This repository contains the code of the web client for the OCD service at https://github.com/rwth-acis/REST-OCD-Services. As the WebClient only acts as the UI of WebOCD, you will need to have an instance of the service running as well.
 
 # Quick Set-Up Guide
 ### Client Configuration at Learning Layers
