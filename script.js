@@ -393,7 +393,21 @@ function xmlToJson(xml){
         for(var key in tNodes){
             let curId = tNodes[key]._attributes.id;
             if(nodeIds.some(e => e == curId)){
-                alert("Error: Id's must be unique: Id " + curId + " used multiple times!");
+                Swal.fire({
+                    position: 'top-end',
+                    toast: true,
+                    showClass: {
+                        popup: '',                     // disable popup animation
+                      },
+                      hideClass: {
+                        popup: '',                     // disable popup fade-out animation
+                      },
+                    width: '15%',
+                    icon: 'warning',
+                    title: "ID's must be unique!",
+                    showConfirmButton: false,
+                    timer: 1000
+                })
                 break translate;
             } else {
                 nodeIds.push(curId);
