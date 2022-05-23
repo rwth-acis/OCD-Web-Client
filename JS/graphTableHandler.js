@@ -51,6 +51,10 @@ function appendGraphRow(table, graphElt, cells) {
     if($.inArray("L", cells) > -1) {
         row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("SELF_LOOPS", types) > -1));
     }
+    /* Dynamic Graphs */
+    if($.inArray("DY", cells) > -1) {
+        row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("DYNAMIC", types) > -1));
+    }
     /* Show corresponding covers */
     if($.inArray("Co", cells) > -1) {
         row += createShowGraphCoversCell();

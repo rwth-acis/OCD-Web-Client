@@ -31,14 +31,14 @@
                 if(!pageNumber) {
                     pageNumber = 0;
                 }
-                $('.pageNumWrapper').append(pageNumber);
+                $('.pageNumWrapper').append(pageNumber);//Rick: JQuery class selector
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
                 /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R"];
+                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L","DY","Co", "Cn", "CS", "R"];
                 /* Requests the graph meta information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
-                    function(graphMetasXml) {
+                    function(graphMetasXml) { //call back function
                         /*
                          * GraphMetas request succeeded
                          */
@@ -57,19 +57,19 @@
                             try {
                                 $("#graphTable").tablesorter({sortList: [[0,0]],
                                     headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
-                                        8: {sorter: false}, 9: {sorter: false}, 10: {sorter: false}, 11: {sorter: false}}});
+                                        8: {sorter: false}, 9: {sorter: false}, 10: {sorter: false}, 11: {sorter: false},12: {sorter: false}}});
                             } catch(err) { /* table empty */ }
                             /*
                              * Register event handlers
                              */
                             registerGraphTable();
                     },
-                    function(errorData) {
+                    function(errorData) { //Rick: errorcallback
                         /*
                          * GraphIds request failed
                          */
                         showConnectionErrorMessage("Graphs metas were not received.", errorData);
-                });
+                });//Rick: no mimetype parameter
                 /* Listeners for the table page control */
                 $('.pageLeft').click(function(){
                     if(pageNumber > 0) {
@@ -139,6 +139,9 @@
                                 </th>
                                 <th width="20" title="Has Self Loops">
                                     L
+                                </th>
+                                <th width="20" title="Is Dynamic Graph">
+                                    DY
                                 </th>
                                 <th width="20" title="Show Covers">
                                     Co
