@@ -4,7 +4,8 @@
     <list default="true" id="345ed28a-0e42-4ad8-bc4b-2096af2721e3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/JS/graphTableHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/graphTableHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphs.html" beforeDir="false" afterPath="$PROJECT_DIR$/graphs.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/graph.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/import.html" beforeDir="false" afterPath="$PROJECT_DIR$/import.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,13 +31,15 @@
     <property name="aspect.path.notification.shown" value="true" />
   </component>
   <component name="RunManager">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
       <option name="arquillianRunConfiguration">
         <value>
           <option name="containerStateName" value="" />
         </value>
       </option>
-      <option name="TEST_OBJECT" value="class" />
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -54,7 +57,8 @@
       <workItem from="1652956709959" duration="716000" />
       <workItem from="1652963721963" duration="1198000" />
       <workItem from="1653047845489" duration="411000" />
-      <workItem from="1653305446479" duration="3375000" />
+      <workItem from="1653305446479" duration="10594000" />
+      <workItem from="1653470607727" duration="13964000" />
     </task>
     <servers />
   </component>

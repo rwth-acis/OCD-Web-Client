@@ -75,6 +75,12 @@ function appendGraphRow(table, graphElt, cells) {
     if($.inArray("Select", cells) > -1) {
         row += createSelectGraphCell(id);
     }
+
+    /* Dynamic graph order*/
+    if($.inArray("Order", cells) > -1) {
+        row += createOrderGraphCell();
+    }
+
     row += "</tr>";
     $(table).children('tbody').append(row);
 }
@@ -113,6 +119,13 @@ function createShowGraphCell() {
 function createSelectGraphCell(id) {
     return '<td>'
         + '<input type="radio" name="graphSelect" value="' + id + '">'
+        + '</td>';
+}
+
+/* Creates order graph cell*/
+function createOrderGraphCell(){
+    return '<td>'
+        + '<input type="number" name="dynamicGraphOrder">'
         + '</td>';
 }
 

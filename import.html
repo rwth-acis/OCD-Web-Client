@@ -163,10 +163,10 @@ Facilitates import / upload of new graphs and covers.
                     $(".selectorWrapper").css("display", "none");
                     $(".graphOptionsRow").css("display", "none");
                     $("#objectType option:selected").each(function() {
-                        if($(this).val() !== selectOptionVal) {
+                        if($(this).val() !== selectOptionVal) {//Rick: selectOptionVal="SELECT"
                             /* Requests input format names and adds them to the form */
                             getInputFormats(function() {
-                                $("#objectFormat").append(selectOptionStr);
+                                $("#objectFormat").append(selectOptionStr);//Rick: '<option value=SELECT>--SELECT--</option>'
                                 $(inputFormatNames).find('Name').each(function() {
                                     $("#objectFormat").append(
                                         '<option value="' + $(this).text()
@@ -228,14 +228,24 @@ Facilitates import / upload of new graphs and covers.
                         $("#objectFileDiv").removeClass('hidden');
                 	}
                 });
+                $("#doMakeDynamic").change(function(){
+                    if($(this).prop('checked')){
+                        loadGraphTable();
+                        $(".selectorWrapper").css("display", "block");
+                    }else{
+                        $("#selectorWrapper").css("display", "none");
+                    }
+                });
             });
             /* Requests a graph import */
             function postGraph(content) {
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
+                var doMakeDynamic=$('#doMakeDynamic').prop('checked');
                 var restUrl = "graphs?name=" + $("#objectName").val() +
                 "&creationType=" + $("#objectCreator").val()
                 + "&inputFormat=" + $("#objectFormat").val()
-                + "&doMakeUndirected=" + doMakeUndirected;
+                + "&doMakeUndirected=" + doMakeUndirected
+                + "&doMakeDynamic=" + doMakeDynamic;
                 if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE'){
                 	restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
                     if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
@@ -359,7 +369,7 @@ Facilitates import / upload of new graphs and covers.
                 $('.pageNumWrapper').append(pageNumber);
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
                 /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "Select"];
+                var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "DY", "Select", "Order"];
                 /* Requests the graph information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
@@ -381,7 +391,7 @@ Facilitates import / upload of new graphs and covers.
                             try {
                                 $("#graphTable").tablesorter({sortList: [[0,0]],
                                     headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
-                                        8: {sorter: false}, 9: {sorter: false}}});
+                                        8: {sorter: false}, 9: {sorter: false},10:{sorter:false},11:{sorter:false}}});
                             } catch(err) { /* table empty */ }
                     },
                     function(errorData) {
@@ -407,10 +417,8 @@ Facilitates import / upload of new graphs and covers.
     <body>
         <div>
             <div id="wrapper">
-
                 <div id="contentWrapper">
                     <div id="content">
-
                         <!-- Container for displaying error messages -->
                         <div id="errorMessageWrapper">
                             <div id="errorMessage"></div>
@@ -430,6 +438,7 @@ Facilitates import / upload of new graphs and covers.
                                   <label for="objectType" class="col-form-label">Import</label>
                                   <select id="objectType" class="form-control custom-select"></select>
                                 </div>
+
                                 <!-- Input format -->
                                 <div class="form-group">
                                   <label for="objectFormat" class="col-form-label">Format</label>
@@ -492,6 +501,14 @@ Facilitates import / upload of new graphs and covers.
                                     make undirected
                                   </label>
                                 </div>
+
+                                <!-- Graph import options (i.e. making graphs dynamic) -->
+                                <div class="form-check graphOptionsRow hidden">
+                                    <label for="doMakeDynamic" class="form-check-label">
+                                        <input type="checkbox" class="form-check-input" id="doMakeDynamic">
+                                        make dynamic
+                                    </label>
+                                </div>
                                 <!-- Form submit -->
                                 <div class="submitWrapper form-group">
                                   <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
@@ -553,8 +570,14 @@ Facilitates import / upload of new graphs and covers.
                                                         <th width="20" title="Has Self Loops">
                                                             L
                                                         </th>
-                                                        <th width="20" title="Select Graph">
+                                                        <th width="20" title="Is Dynamic Graph">
+                                                            DY
+                                                        </th>
+                                                        <th width="60" title="Select Graph">
                                                             Select
+                                                        </th>
+                                                        <th width="60" title="Dynamic Graph Order">
+                                                            Order
                                                         </th>
                                                     </tr>
                                                     </thead>
