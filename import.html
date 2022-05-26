@@ -41,6 +41,11 @@ Facilitates import / upload of new graphs and covers.
                         + '<option value="cover">Cover</option>'
                         + '<option value="centrality">Centrality</option>'
                 );
+                // Rick:
+                // '<option value=SELECT>--SELECT--</option>
+                // <option value="graph">Graph</option>
+                // <option value="cover">Cover</option>
+                // <option value="centrality">Centrality</option>'
                 /*
                 * Import form listener.
                 */
@@ -65,7 +70,7 @@ Facilitates import / upload of new graphs and covers.
                             showErrorMessage('Please select an Algorithm.');
                             return;
                         }
-                        var graphId = $("input[name='graphSelect']:checked").val();
+                        var graphId = $("input[name='graphSelect']:checked").val();//selected graph in graph tables at bottom
                         if(typeof graphId === 'undefined') {
                             showErrorMessage('Please select a graph.');
                             return;
@@ -433,9 +438,9 @@ Facilitates import / upload of new graphs and covers.
                         <div class="container-fluid">
                           <form id="importForm" action="javascript:void(0); return false;">
                             <div class="">
-                                <!-- Import object type, i.e. cover or graph -->
+                                <!-- Import object type, i.e. cover, graph or centrality-->
                                 <div class="form-group">
-                                  <label for="objectType" class="col-form-label">Import</label>
+                                  <label for="objectType" class="col-form-label">Import</label><!--Rick: The for attribute specifies which form element the label is bound to-->
                                   <select id="objectType" class="form-control custom-select"></select>
                                 </div>
 
