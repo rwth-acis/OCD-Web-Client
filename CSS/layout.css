@@ -650,6 +650,10 @@ input:checked + .slider:before {
   background-color: #ccffcc;
 }
 
+/*.seriesColor{*/
+/*    background-color: #aecad5;*/
+/*}*/
+
 .simulationColor {
   background-color: #F7F8E0;
 }

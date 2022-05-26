@@ -144,7 +144,7 @@ function showConnectionErrorMessage(message, errorData) {
             "              data-logo=\"http://results.learning-layers.eu/images/learning-layers.svg\"\n" +
             "              data-server=\"https://api.learning-layers.eu/o/oauth2\"\n" +
             "              data-clientid=\"localtestclient\"\n" +
-            "              data-redirecturi=\"http://localhost:8090/login.html\"\n" +
+            "              data-redirecturi=\"http://localhost:8090/OCD-Web-Client/login.html\"\n" +
             "              data-scope=\"openid email profile\">\n" +
             "        </span>\n" +
             "    </form> </button>"));
@@ -392,7 +392,7 @@ function buttonSubmitStart(buttonId) {
         } else if (submitButton.querySelector(".submitText").textContent === "Submit") {
             submitText = "Submitting";
         } else {
-            submitText = "Running";
+            submitText = "Running";//Rick: text on the button, 'Run' will change to 'Running'
         }
 
         submitButton.querySelector(".submitText").textContent = submitText;

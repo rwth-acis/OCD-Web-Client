@@ -3,9 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="345ed28a-0e42-4ad8-bc4b-2096af2721e3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/JS/graphTableHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/graphTableHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CSS/layout.css" beforeDir="false" afterPath="$PROJECT_DIR$/CSS/layout.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/JS/contentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/contentHandler.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/graph.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/import.html" beforeDir="false" afterPath="$PROJECT_DIR$/import.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/login.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,6 +30,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
   </component>
   <component name="RunManager">
     <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
@@ -58,11 +60,23 @@
       <workItem from="1652963721963" duration="1198000" />
       <workItem from="1653047845489" duration="411000" />
       <workItem from="1653305446479" duration="10594000" />
-      <workItem from="1653470607727" duration="13964000" />
+      <workItem from="1653470607727" duration="29544000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/graph.html</url>
+          <line>163</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

@@ -71,7 +71,7 @@
         /* Executed after page loading */
         $(document).ready(function () {
             /* Identifiers for the graph information to be displayed */
-            var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
+            var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R","DY"];
             /* Requests the graph meta information */
             sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
                 /* Response handler */
@@ -88,18 +88,22 @@
                     });
                     var directed = $.inArray("DIRECTED", types);
                     var weighted = $.inArray("WEIGHTED", types);
+                    var dynamic = $.inArray("DYNAMIC", types);
 
                     var description = "A";
-                    if (directed == -1 && weighted == -1)
+                    if (directed == -1 && weighted == -1 && dynamic==-1)
                         description += " simple ";
                     if (directed > -1)
                         description += " directed ";
                     if (weighted > -1)
                         description += " weighted ";
+                    if (dynamic > -1)
+                        description += " dynamic ";
 
                     description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
                     $('#graphHeader').html(getHeadLine(name, description));
                     $('#graphCovers').html('<a href="covers.html?graphId=' + graphId + '">Covers</a>');
+                    // $('#graphSeries').html('<a href="covers.html?graphId=' + graphId + '">Series</a>');
                     $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId=' + graphId + '">Simulations</a>');
                     $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId + '">Centralities</a>');
                     $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
@@ -107,6 +111,7 @@
                     /* Registers components and event handlers */
                     registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
                     registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
+                    registerCollapsable("#graphSeriesCollapsable",graphSeriesCollapsableHandler);
                     registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
                     registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
                     registerCollapsable("#runSimulationCollapsable", runSimulationCollapsableHandler);
@@ -124,8 +129,8 @@
             * Run algorithm form listener.
             */
             $('#runAlgorithmForm').submit(function () {
-                var algo = $('#algorithm').val();
-                if (algo !== getSelectOptionVal()) {
+                var algo = $('#algorithm').val();//Rick: selected algorithm
+                if (algo !== getSelectOptionVal()) {//"SELECT"
                     var params = getParameterXml("#algorithmParameterDiv");
                     var coverName = $("#coverName").val();
                     var contentWeighting = $("#contentWeighting").is(':checked');
@@ -561,6 +566,28 @@
                 }, "text");
         }
 
+        /* Requests and stores the graph series of the dynamic graph.
+         * Then executes a callback function */
+        function getGraphSeriesList(callback) {
+            sendRequest("get", "graphs/" + graphId + "?outputFormat=GRAPH_SERIES_LIST", "",
+                /* Response handler */
+                function (response) {
+                    graphSeriesList = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Graph was not received.", errorData);
+                }, "text");
+        }
+
+
+
         /* Handles the collapsable element for the properties. */
         function propertiesCollapsableHandler() {
             if (typeof graphProperties === 'undefined') {
@@ -604,6 +631,28 @@
                         }
                     });
                     $("#graphEdgeTable").tablesorter({sortList: [[0, 0], [1, 0]]});
+                });
+            }
+        }
+
+        /* Handles the collapsable element for the graph Series. */
+        function graphSeriesCollapsableHandler() {
+            if (typeof graphSeriesList === 'undefined') {
+                /* Requests the edge list */
+                getGraphSeriesList(function () {
+                    /* Adds the edge list information to a table */
+                    var lines = graphSeriesList.split('\n');
+                    $.each(lines, function (key, line) {
+                        var parts = line.split(' ');
+                        if ($(parts).length === 2) {
+                            var row = '<tr>'
+                                + '<td>' + parts[0] + '</td>'
+                                + '<td>' + parts[1] + '</td>'
+                                + '</tr>';
+                            $("#graphSeriesTable tbody").append(row);
+                        }
+                    });
+                    $("#graphSeriesTable").tablesorter({sortList: [[0, 0], [1, 0]]});
                 });
             }
         }
@@ -1287,16 +1336,20 @@
                 <div id="graphHeader" class="col-sm-12 col-md-12 graphColor"></div>
                 <div class="side-nav d-flex flex-row">
                     <ul class="nav" style="width: 100%;">
-                        <div class="p-2 coverColor col-md-3 col-sm-6">
+                        <div class="p-2 coverColor col-md-3 col-sm-6" >
                             <li id="graphCovers" class="nav-item coverColor"></li>
                         </div>
-                        <div class="p-2 simulationColor col-md-3 col-sm-6">
+                        <!--Rick: not fulfill the 100% width-->
+                        <!--<div class="p-2 seriesColor col-md-2 col-sm-4" >-->
+                        <!--    <li id="graphSeries" class="nav-item seriesColor"></li>-->
+                        <!--</div>-->
+                        <div class="p-2 simulationColor col-md-3 col-sm-6" >
                             <li id="graphSimulations" class="nav-item simulationColor"></li>
                         </div>
-                        <div class="p-2 centralityColor col-md-3 col-sm-6">
+                        <div class="p-2 centralityColor col-md-3 col-sm-6" >
                             <li id="graphCentralities" class="nav-item centralityColor"></li>
                         </div>
-                        <div class="p-2 deleteColor col-md-3 col-sm-6">
+                        <div class="p-2 deleteColor col-md-3 col-sm-6" >
                             <li id="graphDelete" class="nav-item deleteColor"></li>
                         </div>
                     </ul>
@@ -1359,6 +1412,37 @@
                             </div>
                         </div>
                     </div>
+
+                    <!--if the graph is dynamic replace the edges list with the graph series list-->
+                    <!-- Collapsable for dynamic graph series -->
+                    <div id="graphSeriesCollapsable" class="collapsable col-sm-12 col-lg-6">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Graph Series</div>
+
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table for graph series list -->
+                            <div class="tableWrapper table-responsive">
+                                <table id="graphSeriesTable" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th title="Order">Order</th>
+                                        <th title="Static Graph">Static Graph</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
                 </div>
                 <div class="row">
                     <!-- Collapsable for algorithm execution -->
@@ -1404,6 +1488,7 @@
                                                     class="custom-control-input"> <span
                                                     class="custom-control-indicator"></span> <span
                                                     class="custom-control-label">Content Weighting</span>
+                                                    <!--Rick: what's the content weighting-->
                                             </label>
                                         </div>
                                     </div>
@@ -1419,6 +1504,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="row">
                     <!-- Collapsable for simulation execution -->
                     <div id="runSimulationCollapsable" class="collapsable col-sm-12">
@@ -1437,6 +1523,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="row">
                     <!-- Collapsable for centrality calculation execution -->
                     <div id="runCentralityCalculationCollapsable"
@@ -1486,6 +1573,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="row">
                     <!-- Collapsable for centrality simulation execution -->
                     <div id="runCentralitySimulationCollapsable"
@@ -1536,6 +1624,7 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Collapsable for graph visualization -->
                 <div class="row">
                     <div id="visualizationCollapsable" class="collapsable col-sm-12">
