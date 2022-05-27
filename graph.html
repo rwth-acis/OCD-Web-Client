@@ -86,18 +86,36 @@
                     $(graphMetaXml).children('Types').find('Type').each(function () {
                         types.push($(this).text());
                     });
-                    var directed = $.inArray("DIRECTED", types);
-                    var weighted = $.inArray("WEIGHTED", types);
+                    var origin = [$(graphMetaXml).find('CreationMethod').find('Type').text(), $(graphMetaXml).find('CreationMethod').find('Type').attr('DisplayName')];
 
                     var description = "A";
-                    if (directed == -1 && weighted == -1)
+                    if ($.inArray("DIRECTED", types) === -1 && $.inArray("WEIGHTED", types) === -1)
                         description += " simple ";
-                    if (directed > -1)
+                    if ($.inArray("DIRECTED", types) > -1)
                         description += " directed ";
-                    if (weighted > -1)
+                    if ($.inArray("WEIGHTED", types) > -1)
                         description += " weighted ";
+                    if (origin[0] !== "UNDEFINED") {
+                        description += " " + origin[1] + " ";
+                        if (origin[0] !== "REAL_WORLD")
+                            description += " benchmark ";
+                    }
 
                     description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
+
+                    if($.inArray("ZERO_WEIGHTS", types) > -1 || $.inArray("NEGATIVE_WEIGHTS", types) > -1 || $.inArray("SELF_LOOPS", types) > -1) {
+                        description += " The network has";
+                        if ($.inArray("ZERO_WEIGHTS", types) > -1)
+                            description += " zero weights,";
+                        if ($.inArray("NEGATIVE_WEIGHTS", types) > -1)
+                            description += " negative weights,";
+                        if ($.inArray("SELF_LOOPS", types) > -1)
+                            description += " self loops";
+                        if(description.endsWith(","))
+                            description = description.slice(0, description.length-1)
+                        description += "."
+                    }
+
                     $('#graphHeader').html(getHeadLine(name, description));
                     $('#graphCovers').html('<a href="covers.html?graphId=' + graphId + '">Covers</a>');
                     $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId=' + graphId + '">Simulations</a>');
@@ -240,8 +258,6 @@
                 $('#annotationDiv').hide();
             });
             $('#centralityInfo').click(function () {
-                console.log($('#centralityMeasure').val())
-                console.log($('#centralityMeasure').val().replace(/ /g, "_"))
                 var measureName = $('#centralityMeasure').val();
                 if (measureName == getSelectOptionVal()) {
                     window.location.href = "centralities_info.html";
