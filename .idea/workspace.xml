@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="345ed28a-0e42-4ad8-bc4b-2096af2721e3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/import.html" beforeDir="false" afterPath="$PROJECT_DIR$/import.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/graph.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,22 +58,11 @@
       <workItem from="1653047845489" duration="411000" />
       <workItem from="1653305446479" duration="10594000" />
       <workItem from="1653470607727" duration="29966000" />
+      <workItem from="1653824542143" duration="3438000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/graph.html</url>
-          <line>163</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

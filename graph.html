@@ -66,7 +66,7 @@
         var centralityMeasureNames;
         /* Names of all centrality simulations */
         var centralitySimulationNames;
-        /* Principal eigenvalue of the grapph's adjacency matrix */
+        /* Principal eigenvalue of the graph's adjacency matrix */
         var eigenvalue;
         /* Executed after page loading */
         $(document).ready(function () {
@@ -78,6 +78,7 @@
                 function (response) {
                     /* Stores graph meta information and adds it to the graph header */
                     graphMetaXml = response;
+                    //where is the format of thhis graphMetaXml definiert?
                     var name = $(graphMetaXml).find('Name').text();
                     var nodes = $(graphMetaXml).find('NodeCount').text();
                     var edges = $(graphMetaXml).find('EdgeCount').text();
