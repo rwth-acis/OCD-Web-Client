@@ -26,6 +26,10 @@ function appendGraphRow(table, graphElt, cells) {
     if($.inArray("EdgeCount", cells) > -1) {
         row += createGraphTableCell($(graphElt).find('EdgeCount').text());
     }
+    /* Creation Method */
+    if($.inArray("CreationMethod", cells) > -1) {
+        row += createGraphTableCell($(graphElt).find('CreationMethod').find('Type').attr('DisplayName'));
+    }
     /* Graph types */
     var types = [];
     $(graphElt).children('Types').find('Type').each(function() {
