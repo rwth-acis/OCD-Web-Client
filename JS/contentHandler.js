@@ -249,12 +249,12 @@ function registerGraphTypes(selectId, graphTypeDivId, getOptions) {
     $(selectId).change(function() {
         $(graphTypeDivId).html("");
         $(selectId + " option:selected").each(function() {
-            if($(this).val() !== getSelectOptionVal()) {
-                var selected = $(this).val();
+            if($(this).val() !== getSelectOptionVal()) {//Rick: getSelectOptionVal()='SELECT'
+                var selected = $(this).val();//Rick: this= graphTypeDivId = algorithmGraphTypeDiv
                 /* Requests the parameter names for the currently selected option */
-                getOptions(selected, function(response) {
+                getOptions(selected, function(response) {//Rick: getOptions = getAlgorithmCompatibleGraphTypes(algorithmName, callback)
                     /* Check if the option has graph types */
-                    var graphTypeString = ''//'<div class="col-sm-4 col-form-label">'
+                    var graphTypeString = ''; //'<div class="col-sm-4 col-form-label">'
 
                     graphTypeString += '<div class="row mb-4 border-bottom">'
                         + '<label class = "col-sm-4" > ' + 'Compatible Graph Types' +' </label>'

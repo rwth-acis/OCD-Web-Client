@@ -137,7 +137,7 @@
                     var contentWeighting = $("#contentWeighting").is(':checked');
                     if (coverName === "") {
                         showErrorMessage('Please define a cover name.');
-                        window.scrollTo(0, 0);
+                        window.scrollTo(0, 0);//Rick: move to the top to show the error message
                         return;
                     }
 
