@@ -47,6 +47,7 @@ Facilitates import / upload of new graphs and covers.
                 // <option value="cover">Cover</option>
                 // <option value="centrality">Centrality</option>'
                 /*
+
                 * Import form listener.
                 */
                 $('#importForm').submit(function(){
@@ -110,6 +111,7 @@ Facilitates import / upload of new graphs and covers.
                         showErrorMessage('Client Error.');
                         return;
                     }
+
                     /*
                      * Verifies browser compatibility
                      */
@@ -233,15 +235,31 @@ Facilitates import / upload of new graphs and covers.
                         $("#objectFileDiv").removeClass('hidden');
                 	}
                 });
-                $("#doMakeDynamic").change(function(){
-                    if($(this).prop('checked')){
-                        loadGraphTable();
-                        $(".selectorWrapper").css("display", "block");
-                    }else{
-                        $("#selectorWrapper").css("display", "none");
-                    }
-                });
+                // $("#doMakeDynamic").change(function(){
+                //     if($(this).prop('checked')){
+                //         loadGraphTable();
+                //         $(".selectorWrapper").css("display", "block");
+                //     }else{
+                //         $("#selectorWrapper").css("display", "none");
+                //     }
+                // });
             });
+
+            function onClickDynamic(obj){
+                if(obj.checked){
+                    loadGraphTable();
+                    $(".selectorWrapper").css("display", "block");
+                }else{
+                    $("#selectorWrapper").css("display", "none");
+                }
+                // if($("#doMakeDynamic").prop('checked')){
+                //     loadGraphTable();
+                //     $(".selectorWrapper").css("display", "block");
+                // }else{
+                //     $("#selectorWrapper").css("display", "none");
+                // }
+            }
+
             /* Requests a graph import */
             function postGraph(content) {
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
@@ -510,7 +528,7 @@ Facilitates import / upload of new graphs and covers.
                                 <!-- Graph import options (i.e. making graphs dynamic) -->
                                 <div class="form-check graphOptionsRow hidden">
                                     <label for="doMakeDynamic" class="form-check-label">
-                                        <input type="checkbox" class="form-check-input" id="doMakeDynamic">
+                                        <input type="checkbox" class="form-check-input" id="doMakeDynamic" onclick="onClickDynamic(this)">
                                         make dynamic
                                     </label>
                                 </div>
