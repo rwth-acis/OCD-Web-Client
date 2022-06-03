@@ -143,7 +143,7 @@ Facilitates import / upload of new graphs and covers.
                             };
                             reader.readAsText(file);
                         }
-                        else if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
+                        else if($("#objectFormat").val() === 'LMS_TRIPLESTORE'||$("#objectFormat").val() === 'GRAPH_LIST') {
                             if($("#objectType").val() === "graph") {
                                 /* Requests graph import */
                                 postGraph("");
@@ -208,6 +208,9 @@ Facilitates import / upload of new graphs and covers.
                         }
                     });
                 });
+                /*
+                 * Object format select listener
+                 */
                 $("#objectFormat").change(function() {
                 	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE') {
                 		$("#startDatetr").removeClass('hidden');
@@ -234,31 +237,74 @@ Facilitates import / upload of new graphs and covers.
                         $("#involvedUserURIstr").addClass('hidden');
                         $("#objectFileDiv").removeClass('hidden');
                 	}
-                });
-                // $("#doMakeDynamic").change(function(){
-                //     if($(this).prop('checked')){
-                //         loadGraphTable();
-                //         $(".selectorWrapper").css("display", "block");
-                //     }else{
-                //         $("#selectorWrapper").css("display", "none");
-                //     }
-                // });
-            });
 
-            function onClickDynamic(obj){
-                if(obj.checked){
-                    loadGraphTable();
-                    $(".selectorWrapper").css("display", "block");
-                }else{
-                    $("#selectorWrapper").css("display", "none");
-                }
-                // if($("#doMakeDynamic").prop('checked')){
-                //     loadGraphTable();
-                //     $(".selectorWrapper").css("display", "block");
-                // }else{
-                //     $("#selectorWrapper").css("display", "none");
-                // }
-            }
+                    if($("#objectFormat").val() === 'GRAPH_LIST'){
+                        loadGraphTable();
+                        $(".selectorWrapper").css("display", "block");
+                        $("#objectFileDiv").addClass('hidden');
+                    }else{
+                        $(".selectorWrapper").css("display", "none");
+                    }
+
+                });
+
+                /*
+                 * Dynamic checkbox select listener
+                 */
+                $("#doMakeDynamic").change(function(){
+                    if($(this).prop('checked')){
+                        $("#objectFormat").empty();
+                        getInputFormats(function() {
+                            $("#objectFormat").append(selectOptionStr);//Rick: '<option value=SELECT>--SELECT--</option>'
+                            $("#objectFormat").append(
+                                '<option value=GRAPH_LIST>Graph List</option>');
+                            $("#objectFormat").append(
+                                '<option value=XML>XML</option>');
+                        });
+                    }else{
+                        //$("#objectFormat").empty();
+                        // $("#objectType option:selected").each(function() {
+                        //     if($(this).val() !== selectOptionVal) {//Rick: selectOptionVal="SELECT"
+                        //         /* Requests input format names and adds them to the form */
+                        //         getInputFormats(function() {
+                        //             $("#objectFormat").append(selectOptionStr);//Rick: '<option value=SELECT>--SELECT--</option>'
+                        //             $(inputFormatNames).find('Name').each(function() {
+                        //                 $("#objectFormat").append(
+                        //                     '<option value="' + $(this).text()
+                        //                     + '">' + $(this).attr("displayName") + '</option>');
+                        //             });
+                        //         });
+                        //         /* Loads and displays graph table to select a corresponding graph */
+                        //         if($(this).val() === "cover" || $(this).val() === "centrality") {
+                        //             loadGraphTable();
+                        //             $(".selectorWrapper").css("display", "block");
+                        //         }
+                        //         /* Displays graph import options */
+                        //         else if($(this).val() === "graph") {
+                        //             $(".graphOptionsRow").css("display", "block");
+                        //         }
+                        //         else {
+                        //             showErrorMessage("Client Error");
+                        //         }
+                        //         /* Loads and displays creator types */
+                        //         getCreatorTypes(function() {
+                        //             $("#objectCreator").append(selectOptionStr);
+                        //             $(creatorTypes).find('Name').each(function() {
+                        //                 $("#objectCreator").append(
+                        //                     '<option value="' + $(this).text()
+                        //                     + '">' + $(this).attr("displayName") + '</option>');
+                        //             });
+                        //         });
+                        //         $("#objectCreatorRow").css("display", "block");
+                        //     }
+                        //     else {
+                        //         $("#objectCreatorRow").css("display", "none");
+                        //     }
+                        // });
+
+                    }
+                });
+            });
 
             /* Requests a graph import */
             function postGraph(content) {
@@ -280,7 +326,27 @@ Facilitates import / upload of new graphs and covers.
                         }
                     }
                 }
-                // !!This Code can only be used when webOCD supports edge types!!
+                else if($("#objectFormat").val() === 'GRAPH_LIST'){
+                    //根据input[name='dynamicGraphOrder']中的order顺序将id加入graphIds
+                    //首先所有'dynamicGraphOrder'的input如果value不为undefined,全部标记一个新的class
+                    var graphIds=[];
+                    //<td> <input type="number" value=""> 1 </td>
+                    //<td> <input type="number" value=""> 2 </td>
+                    //<td> <input type="number" value="2"> 3 </td>
+                    //<td> <input type="number" value="1"> 4 </td>
+                    //<td> <input type="number" value="3"> 5 </td>
+                    //graphIds={4,3,5}
+                    restUrl+="&graphList=";
+                    $("input[name='dynamicGraphOrder']").each(function(){
+                        if($(this).val().length>0){//not null
+                            restUrl+=$(this).parent().text()+'_';
+                        }
+                    });
+                    // sort according to the order still haven't been implemented
+                    // &graphList=4_3_5_
+                }
+
+                // !!This Code can only bse used when webOCD supports edge types!!
                 // if($("#objectFormat").val() === 'XGMML') {
                 //     restUrl = restUrl + "&key=" + $("#key").val() + "&type1=" + $("#type1").val() + "&type2=" + $("#type2").val() + "&type3=" + $("#type3").val()
                 // }
@@ -528,7 +594,7 @@ Facilitates import / upload of new graphs and covers.
                                 <!-- Graph import options (i.e. making graphs dynamic) -->
                                 <div class="form-check graphOptionsRow hidden">
                                     <label for="doMakeDynamic" class="form-check-label">
-                                        <input type="checkbox" class="form-check-input" id="doMakeDynamic" onclick="onClickDynamic(this)">
+                                        <input type="checkbox" class="form-check-input" id="doMakeDynamic" >
                                         make dynamic
                                     </label>
                                 </div>
