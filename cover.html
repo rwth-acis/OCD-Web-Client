@@ -69,7 +69,7 @@
             var metricNames;
             $(document).ready(function() {
                 /* Identifiers for meta information to be displayed */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", ".xml", ".txt"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities","CoverSeries", "R", ".xml", ".txt"];
                 /* Requests cover meta information */
                 sendRequest("get", "covers/" + coverId + "/graphs/" + graphId + "?outputFormat=META_XML", "",
                     /* Response handler */
@@ -115,6 +115,7 @@
                          */
                         registerCoverTable("#coverMetaTable");						
                         //registerCollapsable("#metricsCollapsable", metricsCollapsableHandler);
+                        registerCollapsable("#coverSeriesCollapsable",coverSeriesCollapsableHandler);
                         registerCollapsable("#metricsCollapsable");
                         registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
                         registerCollapsable("#runMetricCollapsable");
@@ -943,6 +944,60 @@
                         showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
             }
+
+
+            /* Handles the collapsable element for the cover series. */
+            function coverSeriesCollapsableHandler() {
+                if (typeof coverSeriesList === 'undefined') {
+                    /* Requests the cover list */
+                    getCoverSeriesList(function () {
+                        /* Adds the coverseries list information to a table */
+                        var lines = coverSeriesList.split('\n');
+                        $.each(lines, function (key, line) {
+                            var parts = line.split(' ');
+                            if ($(parts).length === 5) {
+                                var coverId = parts[1];
+                                var coverName=parts[2];
+                                var graphId = parts[3];
+                                var graphName=parts[4];
+
+                                var row = '<tr>'
+                                    + '<td>' + parts[0] + '</td>'
+                                    + '<td>' + coverId + '</td>'
+                                    //cover.html?coverId=3&graphId=3
+                                    + '<td><a href="cover.html?coverId='+ coverId + '&graphId='+graphId +'">' + coverName + '</a></td>'
+                                    + '<td>' + graphId + '</td>'
+                                    //'<td><a href="graph.html?id='+ id + '">' + name + '</a></td>'
+                                    + '<td><a href="graph.html?id='+ graphId + '">' + graphName + '</a></td>'
+                                    + '</tr>';
+                                $("#coverSeriesTable tbody").append(row);
+                            }
+                        });
+                        $("#coverSeriesTable").tablesorter({sortList: [[0, 0], [1, 0]]});
+                    });
+                }
+            }
+
+
+            /* Requests and stores the cover series of the dynamic graph.
+             * Then executes a callback function */
+            function getCoverSeriesList(callback) {
+                sendRequest("get", "covers/" + coverId + "/graphs/" + graphId + "?outputFormat=COVER_SERIES_LIST", "",
+                    /* Response handler */
+                    function (response) {
+                        coverSeriesList = response;
+                        if (typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                         * CoverIds request failed
+                         */
+                        showConnectionErrorMessage("Cover was not received.", errorData);
+                    }, "text");
+            }
         </script>
     </head>
     <body>
@@ -977,8 +1032,12 @@
                                     Creation Method
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
-                                <th width="100" title="Community Count" class="sortable">
+                                <th width="180" title="Community Count" class="sortable">
                                     Communities
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th width="180" title="CoverSeries Count" class="sortable">
+                                    Cover Series
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
                                 <th width="20" title="Remove Cover">
@@ -995,6 +1054,39 @@
                             <tbody></tbody>
                         </table>
                     </div>
+
+
+                    <!-- Collapsable for cover series of dynamic graph -->
+                    <div id="coverSeriesCollapsable" class="collapsable">
+                        <div class="collapsableHeader">
+                            <div class="collapsableTitle">Cover Series</div>
+
+                            <div class="collapsableCollapser">
+                                <img class="icon iconBtn collapsableDisplayBtn"
+                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                    class="icon iconBtn collapsableCollapseBtn"
+                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                            </div>
+                        </div>
+                        <div class="collapsableContent">
+                            <!-- Table for graph series list -->
+                            <div class="tableWrapper table-responsive">
+                                <table id="coverSeriesTable" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th title="Order">Order</th>
+                                        <th title="Static Cover ID">Static Cover ID</th>
+                                        <th title="Static Cover Name">Static Cover Name</th>
+                                        <th title="Static Graph ID">Static Graph ID</th>
+                                        <th title="Static Graph Name">Static Graph Name</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Collapsable element for metric value display -->
                     <div id="metricsCollapsable" class="collapsable">
                         <div class="collapsableHeader">

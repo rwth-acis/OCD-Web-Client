@@ -639,19 +639,23 @@
             }
         }
 
-        /* Handles the collapsable element for the graph Series. */
+        /* Handles the collapsable element for the graph series. */
         function graphSeriesCollapsableHandler() {
             if (typeof graphSeriesList === 'undefined') {
-                /* Requests the edge list */
+                /* Requests the graph series list */
                 getGraphSeriesList(function () {
-                    /* Adds the edge list information to a table */
+                    /* Adds the graph series list information to a table */
                     var lines = graphSeriesList.split('\n');
                     $.each(lines, function (key, line) {
                         var parts = line.split(' ');
-                        if ($(parts).length === 2) {
+                        if ($(parts).length === 3) {
+                            var graphId = parts[1];
+                            var graphName=parts[2];
                             var row = '<tr>'
                                 + '<td>' + parts[0] + '</td>'
-                                + '<td>' + parts[1] + '</td>'
+                                + '<td>' + graphId + '</td>'
+                            //'<td><a href="graph.html?id='+ id + '">' + name + '</a></td>'
+                                + '<td><a href="graph.html?id='+ graphId + '">' + graphName + '</a></td>'
                                 + '</tr>';
                             $("#graphSeriesTable tbody").append(row);
                         }
@@ -1437,7 +1441,8 @@
                                     <thead>
                                     <tr>
                                         <th title="Order">Order</th>
-                                        <th title="Static Graph">Static Graph</th>
+                                        <th title="Static Graph ID">Static Graph ID</th>
+                                        <th title="Static Graph Name">Static Graph Name</th>
                                     </tr>
                                     </thead>
                                     <tbody></tbody>
