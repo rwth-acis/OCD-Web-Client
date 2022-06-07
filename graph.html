@@ -82,6 +82,8 @@
                     var name = $(graphMetaXml).find('Name').text();
                     var nodes = $(graphMetaXml).find('NodeCount').text();
                     var edges = $(graphMetaXml).find('EdgeCount').text();
+                    var staticGraphs=$(graphMetaXml).find('staticGraphCount').text();
+
                     /* Graph types */
                     var types = [];
                     $(graphMetaXml).children('Types').find('Type').each(function () {
@@ -99,9 +101,10 @@
                     if (weighted > -1)
                         description += " weighted ";
                     if (dynamic > -1)
-                        description += " dynamic ";
+                        description += " dynamic network with " + staticGraphs + " static graphs.";
 
-                    description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
+                    if (dynamic == -1)  description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
+
                     $('#graphHeader').html(getHeadLine(name, description));
                     $('#graphCovers').html('<a href="covers.html?graphId=' + graphId + '">Covers</a>');
                     // $('#graphSeries').html('<a href="covers.html?graphId=' + graphId + '">Series</a>');
