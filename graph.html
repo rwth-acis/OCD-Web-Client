@@ -647,7 +647,7 @@
                     /* Adds the graph series list information to a table */
                     var lines = graphSeriesList.split('\n');
                     $.each(lines, function (key, line) {
-                        var parts = line.split(' ');
+                        var parts = line.split('_');
                         if ($(parts).length === 3) {
                             var graphId = parts[1];
                             var graphName=parts[2];

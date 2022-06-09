@@ -954,7 +954,7 @@
                         /* Adds the coverseries list information to a table */
                         var lines = coverSeriesList.split('\n');
                         $.each(lines, function (key, line) {
-                            var parts = line.split(' ');
+                            var parts = line.split('_');
                             if ($(parts).length === 5) {
                                 var coverId = parts[1];
                                 var coverName=parts[2];
