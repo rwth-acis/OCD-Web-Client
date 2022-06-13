@@ -46,8 +46,8 @@ Facilitates import / upload of new graphs and covers.
                 // <option value="graph">Graph</option>
                 // <option value="cover">Cover</option>
                 // <option value="centrality">Centrality</option>'
-                /*
 
+                /*
                 * Import form listener.
                 */
                 $('#importForm').submit(function(){
@@ -93,6 +93,10 @@ Facilitates import / upload of new graphs and covers.
                                 return;
                     		}
                     	}
+
+                    	if($("#objectFormat").val()==='GRAPH_LIST'){
+                    	    //todo: check the inputs of orderboxes, if they are illegal inputs, show error messages.
+                        }
 
                     }
                     else if($("#objectType").val() === "centrality") {
@@ -262,49 +266,49 @@ Facilitates import / upload of new graphs and covers.
                                 '<option value=XML>XML</option>');
                         });
                     }else{
-                        //$("#objectFormat").empty();
-                        // $("#objectType option:selected").each(function() {
-                        //     if($(this).val() !== selectOptionVal) {//Rick: selectOptionVal="SELECT"
-                        //         /* Requests input format names and adds them to the form */
-                        //         getInputFormats(function() {
-                        //             $("#objectFormat").append(selectOptionStr);//Rick: '<option value=SELECT>--SELECT--</option>'
-                        //             $(inputFormatNames).find('Name').each(function() {
-                        //                 $("#objectFormat").append(
-                        //                     '<option value="' + $(this).text()
-                        //                     + '">' + $(this).attr("displayName") + '</option>');
-                        //             });
-                        //         });
-                        //         /* Loads and displays graph table to select a corresponding graph */
-                        //         if($(this).val() === "cover" || $(this).val() === "centrality") {
-                        //             loadGraphTable();
-                        //             $(".selectorWrapper").css("display", "block");
-                        //         }
-                        //         /* Displays graph import options */
-                        //         else if($(this).val() === "graph") {
-                        //             $(".graphOptionsRow").css("display", "block");
-                        //         }
-                        //         else {
-                        //             showErrorMessage("Client Error");
-                        //         }
-                        //         /* Loads and displays creator types */
-                        //         getCreatorTypes(function() {
-                        //             $("#objectCreator").append(selectOptionStr);
-                        //             $(creatorTypes).find('Name').each(function() {
-                        //                 $("#objectCreator").append(
-                        //                     '<option value="' + $(this).text()
-                        //                     + '">' + $(this).attr("displayName") + '</option>');
-                        //             });
-                        //         });
-                        //         $("#objectCreatorRow").css("display", "block");
-                        //     }
-                        //     else {
-                        //         $("#objectCreatorRow").css("display", "none");
-                        //     }
-                        // });
-
+                        $("#objectFormat").empty();
+                        $("#objectType option:selected").each(function() {
+                            if($(this).val() !== selectOptionVal) {//Rick: selectOptionVal="SELECT"
+                                /* Requests input format names and adds them to the form */
+                                getInputFormats(function() {
+                                    $("#objectFormat").append(selectOptionStr);//Rick: '<option value=SELECT>--SELECT--</option>'
+                                    $(inputFormatNames).find('Name').each(function() {
+                                        $("#objectFormat").append(
+                                            '<option value="' + $(this).text()
+                                            + '">' + $(this).attr("displayName") + '</option>');
+                                    });
+                                });
+                                /* Loads and displays graph table to select a corresponding graph */
+                                if($(this).val() === "cover" || $(this).val() === "centrality") {
+                                    loadGraphTable();
+                                    $(".selectorWrapper").css("display", "block");
+                                }
+                                /* Displays graph import options */
+                                else if($(this).val() === "graph") {
+                                    $(".graphOptionsRow").css("display", "block");
+                                }
+                                else {
+                                    showErrorMessage("Client Error");
+                                }
+                                /* Loads and displays creator types */
+                                getCreatorTypes(function() {
+                                    $("#objectCreator").append(selectOptionStr);
+                                    $(creatorTypes).find('Name').each(function() {
+                                        $("#objectCreator").append(
+                                            '<option value="' + $(this).text()
+                                            + '">' + $(this).attr("displayName") + '</option>');
+                                    });
+                                });
+                                $("#objectCreatorRow").css("display", "block");
+                            }
+                            else {
+                                $("#objectCreatorRow").css("display", "none");
+                            }
+                        });
                     }
                 });
             });
+
 
             /* Requests a graph import */
             function postGraph(content) {
@@ -417,6 +421,7 @@ Facilitates import / upload of new graphs and covers.
                             showConnectionErrorMessage("Input format names were not received.", errorData);
                         });
             }
+
             /* Requests creator type names.
              * Then executes a callback function. */
             function getCreatorTypes(callback) {
@@ -450,6 +455,7 @@ Facilitates import / upload of new graphs and covers.
                             }
                         });
             }
+
             /* Requests graph information and displays a graph table */
             function loadGraphTable() {
                 /* Table initialization */
@@ -480,7 +486,7 @@ Facilitates import / upload of new graphs and covers.
                             try {
                                 $("#graphTable").tablesorter({sortList: [[0,0]],
                                     headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
-                                        8: {sorter: false}, 9: {sorter: false},10:{sorter:false},11:{sorter:false}}});
+                                        8: {sorter: false}, 9: {sorter: false},10:{sorter:false}}});
                             } catch(err) { /* table empty */ }
                     },
                     function(errorData) {
@@ -501,6 +507,22 @@ Facilitates import / upload of new graphs and covers.
                     loadGraphTable();
                 });
             }
+
+
+
+            var asc = function(a, b) {
+                return $(a).find('input').val() > $(b).find('input').val() ? 1 : -1;
+            }
+
+            var sortByInput = function(sortBy) {
+                var sortEle = $('tbody>tr').sort(sortBy);
+                $('tbody').empty().append(sortEle);
+            }
+
+            $('#orderByInput').click(function() {
+                sortByInput(asc);
+            });
+
         </script>
     </head>
     <body>
@@ -518,101 +540,102 @@ Facilitates import / upload of new graphs and covers.
                           <h3>Importing</h3>
                         </div>
 
-                        <!-- Import form -->
-                        <div class="container-fluid">
-                          <form id="importForm" action="javascript:void(0); return false;">
-                            <div class="">
-                                <!-- Import object type, i.e. cover, graph or centrality-->
-                                <div class="form-group">
-                                  <label for="objectType" class="col-form-label">Import</label><!--Rick: The for attribute specifies which form element the label is bound to-->
-                                  <select id="objectType" class="form-control custom-select"></select>
-                                </div>
+                            <!-- Import form -->
+                            <div class="container-fluid">
+                                <form id="importForm" action="javascript:void(0); return false;">
+                                    <div class="">
+                                        <!-- Import object type, i.e. cover, graph or centrality-->
+                                        <div class="form-group">
+                                          <label for="objectType" class="col-form-label">Import</label><!--Rick: The for attribute specifies which form element the label is bound to-->
+                                          <select id="objectType" class="form-control custom-select"></select>
+                                        </div>
 
-                                <!-- Input format -->
-                                <div class="form-group">
-                                  <label for="objectFormat" class="col-form-label">Format</label>
-                                  <select id="objectFormat" class="form-control custom-select"></select>
-                                </div>
-                                <!-- Input file -->
-                                <div id="objectFileDiv" class="form-group">
-                                  <label for="objectFile" class="form-label">File</label>
-                                  <input id="objectFile" type="file" class="form-control-file">
-                                </div>
-                                  <!-- Input Start Date -->
-                                  <div id="startDatetr" class="hidden">
-                                    <label for="startDate" class="col-form-label">Start Date:</label>
-                                    <input id="startDate" type="text" placeholder="YYYY-MM-DD">
-                                  </div>
-                                  <!-- Input End Date -->
-                                  <div id="endDatetr" class="hidden">
-                                    <label for="endDate" class="col-form-label">End Date:</label>
-                                    <input id="endDate" type="text" placeholder="YYYY-MM-DD">
-                                  </div>
-                                <div id="showUserNamestr" class="hidden">
-                                    <label for="showUserNames" class="col-form-label">Show Usernames:</label>
-                                    <input id="showUserNames" type="text" placeholder="false">
-                                </div>
-                                <div id="involvedUserURIstr" class="hidden">
-                                    <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
-                                    <input id="involvedUserURIs" type="text" style="width:240px" placeholder="Comma separated uri list">
-                                </div>
-                                  <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
-                                  <div id="keytr" class="hidden">
-                                      <label for="key" class="col-form-label">Key:</label>
-                                      <input id="key" type="text" value="" placeholder="empty">
-                                  </div>
-                                  <div id="type1tr" class="hidden">
-                                      <label for="type1" class="col-form-label">Type 1:</label>
-                                      <input id="type1" type="text" value="" placeholder="empty">
-                                  </div>
-                                  <div id="type2tr" class="hidden">
-                                      <label for="type2" class="col-form-label">Type 2:</label>
-                                      <input id="type2" type="text" value="" placeholder="empty">
-                                  </div>
-                                  <div id="type3tr" class="hidden">
-                                      <label for="type3" class="col-form-label">Type 3:</label>
-                                      <input id="type3" type="text" value="" placeholder="empty">
-                                  </div> -->
-                                <!-- Name for imported object -->
-                                <div class="form-group">
-                                  <label for="objectName" class="col-form-label">Name</label>
-                                  <input id="objectName" type="text" class="form-control">
-                                </div>
-                                <!-- Object creator type -->
-                                <div id="objectCreatorRow" class="form-group hidden">
-                                  <label for="objectCreator" class="col-form-label">Creation Method</label>
-                                  <select id="objectCreator" class="form-control custom-select"></select>
-                                </div>
-                                <!-- Graph import options (i.e. making graphs undirected) -->
-                                <div class="form-check graphOptionsRow hidden">
-                                  <label for="doMakeUndirected" class="form-check-label">
-                                  <input type="checkbox" class="form-check-input" id="doMakeUndirected">
-                                    make undirected
-                                  </label>
-                                </div>
+                                        <!-- Input format -->
+                                        <div class="form-group">
+                                          <label for="objectFormat" class="col-form-label">Format</label>
+                                          <select id="objectFormat" class="form-control custom-select"></select>
+                                        </div>
+                                        <!-- Input file -->
+                                        <div id="objectFileDiv" class="form-group">
+                                          <label for="objectFile" class="form-label">File</label>
+                                          <input id="objectFile" type="file" class="form-control-file">
+                                        </div>
+                                          <!-- Input Start Date -->
+                                          <div id="startDatetr" class="hidden">
+                                            <label for="startDate" class="col-form-label">Start Date:</label>
+                                            <input id="startDate" type="text" placeholder="YYYY-MM-DD">
+                                          </div>
+                                          <!-- Input End Date -->
+                                          <div id="endDatetr" class="hidden">
+                                            <label for="endDate" class="col-form-label">End Date:</label>
+                                            <input id="endDate" type="text" placeholder="YYYY-MM-DD">
+                                          </div>
+                                        <div id="showUserNamestr" class="hidden">
+                                            <label for="showUserNames" class="col-form-label">Show Usernames:</label>
+                                            <input id="showUserNames" type="text" placeholder="false">
+                                        </div>
+                                        <div id="involvedUserURIstr" class="hidden">
+                                            <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
+                                            <input id="involvedUserURIs" type="text" style="width:240px" placeholder="Comma separated uri list">
+                                        </div>
+                                          <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
+                                          <div id="keytr" class="hidden">
+                                              <label for="key" class="col-form-label">Key:</label>
+                                              <input id="key" type="text" value="" placeholder="empty">
+                                          </div>
+                                          <div id="type1tr" class="hidden">
+                                              <label for="type1" class="col-form-label">Type 1:</label>
+                                              <input id="type1" type="text" value="" placeholder="empty">
+                                          </div>
+                                          <div id="type2tr" class="hidden">
+                                              <label for="type2" class="col-form-label">Type 2:</label>
+                                              <input id="type2" type="text" value="" placeholder="empty">
+                                          </div>
+                                          <div id="type3tr" class="hidden">
+                                              <label for="type3" class="col-form-label">Type 3:</label>
+                                              <input id="type3" type="text" value="" placeholder="empty">
+                                          </div> -->
+                                        <!-- Name for imported object -->
+                                        <div class="form-group">
+                                          <label for="objectName" class="col-form-label">Name</label>
+                                          <input id="objectName" type="text" class="form-control">
+                                        </div>
+                                        <!-- Object creator type -->
+                                        <div id="objectCreatorRow" class="form-group hidden">
+                                          <label for="objectCreator" class="col-form-label">Creation Method</label>
+                                          <select id="objectCreator" class="form-control custom-select"></select>
+                                        </div>
+                                        <!-- Graph import options (i.e. making graphs undirected) -->
+                                        <div class="form-check graphOptionsRow hidden">
+                                          <label for="doMakeUndirected" class="form-check-label">
+                                          <input type="checkbox" class="form-check-input" id="doMakeUndirected">
+                                            make undirected
+                                          </label>
+                                        </div>
 
-                                <!-- Graph import options (i.e. making graphs dynamic) -->
-                                <div class="form-check graphOptionsRow hidden">
-                                    <label for="doMakeDynamic" class="form-check-label">
-                                        <input type="checkbox" class="form-check-input" id="doMakeDynamic" >
-                                        make dynamic
-                                    </label>
-                                </div>
-                                <!-- Form submit -->
-                                <div class="submitWrapper form-group">
-                                  <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
-                                      <span class="submitText">Submit</span>
-                                      <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
-                                  </button>
-                                </div>
+                                        <!-- Graph import options (i.e. making graphs dynamic) -->
+                                        <div class="form-check graphOptionsRow hidden">
+                                            <label for="doMakeDynamic" class="form-check-label">
+                                                <input type="checkbox" class="form-check-input" id="doMakeDynamic" >
+                                                make dynamic
+                                            </label>
+                                        </div>
+                                        <!-- Form submit -->
+                                        <div class="submitWrapper form-group">
+                                          <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
+                                              <span class="submitText">Submit</span>
+                                              <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                          </button>
+                                        </div>
 
-                              </div>
-                              <!-- Graph selector for choosing a corresponding graph for cover import -->
-                              <div class="selectorWrapper hidden">
-                                <div class="selectorTitle">
-                                    Select a Graph
-                                </div>
-                                        <div class="selectorContent">
+                                      </div>
+
+                                      <!-- Graph selector for choosing a corresponding graph for cover import -->
+                                      <div class="selectorWrapper hidden">
+                                      <div class="selectorTitle">
+                                            Select a Graph
+                                        </div>
+                                      <div class="selectorContent">
                                             <!-- Graph table page control -->
                                             <div class = "card">
                                                 <div class="pageControl">
@@ -626,6 +649,7 @@ Facilitates import / upload of new graphs and covers.
                                                     </div>
                                                 </div>
                                             </div>
+
                                             <!-- Graph table -->
                                             <div class="tableWrapper">
                                                 <table id="graphTable">
@@ -665,17 +689,18 @@ Facilitates import / upload of new graphs and covers.
                                                         <th width="60" title="Select Graph">
                                                             Select
                                                         </th>
-                                                        <th width="60" title="Dynamic Graph Order">
+                                                        <th width="60" title="Dynamic Graph Order" class="sortable">
                                                             Order
+                                                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d" id="orderByInput">
                                                         </th>
                                                     </tr>
                                                     </thead>
                                                     <tbody></tbody>
                                                 </table>
                                             </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </form>
+                                  </form>
                             </div>
                         </div>
                     </div>
