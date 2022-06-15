@@ -263,7 +263,7 @@ Facilitates import / upload of new graphs and covers.
                             $("#objectFormat").append(
                                 '<option value=GRAPH_LIST>Graph List</option>');
                             $("#objectFormat").append(
-                                '<option value=XML>XML</option>');
+                                '<option value=WEIGHTED_EDGE_LIST_SERIES>Weighted Edge List Series</option>');
                         });
                     }else{
                         $("#objectFormat").empty();
@@ -333,7 +333,6 @@ Facilitates import / upload of new graphs and covers.
                 else if($("#objectFormat").val() === 'GRAPH_LIST'){
                     //根据input[name='dynamicGraphOrder']中的order顺序将id加入graphIds
                     //首先所有'dynamicGraphOrder'的input如果value不为undefined,全部标记一个新的class
-                    var graphIds=[];
                     //<td> <input type="number" value=""> 1 </td>
                     //<td> <input type="number" value=""> 2 </td>
                     //<td> <input type="number" value="2"> 3 </td>
@@ -346,7 +345,7 @@ Facilitates import / upload of new graphs and covers.
                             restUrl+=$(this).parent().text()+'_';
                         }
                     });
-                    // sort according to the order still haven't been implemented
+                    // todo: sort according to the order still haven't been implemented
                     // &graphList=4_3_5_
                 }
 
@@ -509,20 +508,18 @@ Facilitates import / upload of new graphs and covers.
             }
 
 
-
-            var asc = function(a, b) {
-                return $(a).find('input').val() > $(b).find('input').val() ? 1 : -1;
-            }
-
-            var sortByInput = function(sortBy) {
-                var sortEle = $('tbody>tr').sort(sortBy);
-                $('tbody').empty().append(sortEle);
-            }
-
-            $('#orderByInput').click(function() {
-                sortByInput(asc);
-            });
-
+            // function asc(a,b){
+            //     return $(a).find('input').val() > $(b).find('input').val() ? 1 : -1;
+            // }
+            //
+            // function sortByInput=(sortBy){
+            //     var sortEle = $('tbody>tr').sort(sortBy);
+            //     $('tbody').empty().append(sortEle);
+            // }
+            //
+            // $('#orderByInput').click(function() {
+            //     sortByInput(asc);
+            // });
         </script>
     </head>
     <body>
@@ -612,7 +609,6 @@ Facilitates import / upload of new graphs and covers.
                                             make undirected
                                           </label>
                                         </div>
-
                                         <!-- Graph import options (i.e. making graphs dynamic) -->
                                         <div class="form-check graphOptionsRow hidden">
                                             <label for="doMakeDynamic" class="form-check-label">

@@ -38,7 +38,7 @@
                 /* Index of the first cover to be displayed */
                 var firstIndex = COVERS_PER_PAGE * pageNumber;
                 /* Identifiers for the cover information to display */
-                var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", ".xml", ".txt"];
+                var cells = ["Name", "Graph", "CreationMethod", "Communities","CoverSeries", "R", ".xml", ".txt"];
                 var graphIdQueryExtension = getUrlVar("graphId");
                 if(!graphIdQueryExtension) {
                     graphIdQueryExtension = "";
@@ -165,6 +165,10 @@
                                     </th>
                                     <th width="100" title="Community Count" class="sortable">
                                         Communities
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="180" title="CoverSeries Count" class="sortable">
+                                        Cover Series
                                         <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                     </th>
                                     <th width="20" title="Remove Cover">
