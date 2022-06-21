@@ -118,7 +118,7 @@ function createShowGraphCell() {
 /* Creates select graph cell */
 function createSelectGraphCell(id) {
     return '<td>'
-        + '<input type="checkbox" name="graphSelect" value="' + id + '">'
+        + '<input type="radio" name="graphSelect" value="' + id + '">'
         + '</td>';
 }
 

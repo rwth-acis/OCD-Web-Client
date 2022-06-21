@@ -18,6 +18,7 @@ Facilitates import / upload of new graphs and covers.
         <script src="JS/ServiceAPI/moduleHelper.js"></script>
         <script src="JS/ServiceAPI/serviceAPI.js"></script>
         <script src="JS/requestHandler.js"></script>
+        <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
         <script src="JS/graphTableHandler.js"></script>
         <script type="text/javascript">
             /* Names of all input formats */
@@ -455,6 +456,20 @@ Facilitates import / upload of new graphs and covers.
                         });
             }
 
+            // for tablesort of dynamicorder
+            // $.tablesorter.addParser({
+            //     id: "numberOfInputs",
+            //     is: function(s, table, cell, $cell) {return false;},
+            //     format: function(s, table, cell, cellIndex) {
+            //         var $cell = $(cell);
+            //         if($cell.children("input").val().length==0){
+            //             return 100;
+            //         }else{
+            //             return $cell.children("input").val();
+            //         }
+            //     },
+            //     type: 'text'
+            // });
             /* Requests graph information and displays a graph table */
             function loadGraphTable() {
                 /* Table initialization */
@@ -485,7 +500,8 @@ Facilitates import / upload of new graphs and covers.
                             try {
                                 $("#graphTable").tablesorter({sortList: [[0,0]],
                                     headers: { 4: { sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false},
-                                        8: {sorter: false}, 9: {sorter: false},10:{sorter:false}}});
+                                        8: {sorter: false}, 9: {sorter: false},10:{sorter:false},11:{sorter: 'numberOfInputs'}}});
+                                $("#graphTable").trigger('update');
                             } catch(err) { /* table empty */ }
                     },
                     function(errorData) {
@@ -520,6 +536,7 @@ Facilitates import / upload of new graphs and covers.
             // $('#orderByInput').click(function() {
             //     sortByInput(asc);
             // });
+
         </script>
     </head>
     <body>
