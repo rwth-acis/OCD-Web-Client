@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays basic / meta information on multiple graphs -->
+    <head>
+        <title>OCD - Edit Graph</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css" async defer>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="node_modules/d3-force/dist/d3-force.min.js"></script>
+        <script src="node_modules/d3-array/dist/d3-array.min.js"></script>
+        <script src="node_modules/d3-binarytree/dist/d3-binarytree.min.js"></script>
+        <script src="node_modules/d3-color/dist/d3-color.min.js"></script>
+        <script src="node_modules/d3-dispatch/dist/d3-dispatch.min.js"></script>
+        <script src="node_modules/d3-drag/dist/d3-drag.min.js"></script>
+        <script src="node_modules/d3-ease/dist/d3-ease.min.js"></script>
+        <script src="node_modules/d3-format/dist/d3-format.min.js"></script>
+        <script src="node_modules/d3-interpolate/dist/d3-interpolate.min.js"></script>
+        <script src="node_modules/d3-octree/dist/d3-octree.min.js"></script>
+        <script src="node_modules/d3-quadtree/dist/d3-quadtree.min.js"></script>
+        <script src="node_modules/d3-scale-chromatic/dist/d3-scale-chromatic.min.js"></script>
+        <script src="node_modules/d3-scale/dist/d3-scale.min.js"></script>
+        <script src="node_modules/d3-selection/dist/d3-selection.min.js"></script>
+        <script src="node_modules/d3-time-format/dist/d3-time-format.min.js"></script>
+        <script src="node_modules/d3-time/dist/d3-time.min.js"></script>
+        <script src="node_modules/d3-timer/dist/d3-timer.min.js"></script>
+        <script src="node_modules/d3-transition/dist/d3-transition.min.js"></script>
+        <script src="node_modules/d3-zoom/dist/d3-zoom.min.js"></script>
+        <script src="node_modules/js-base64/base64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/graphTableHandler.js"></script>
+        <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+        <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
+        <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+        <script src="JS/simulation/jsonRequestHandler.js"></script>
+        <script src="JS/simulation/simulationForm.js"></script>
+        <script src="node_modules/three/build/three.min.js"></script>
+        <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
+        <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+        <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+        <script src="node_modules/arangojs/lib/web.js"></script>
+        <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+        <script src="graphEdit.js"></script>
+        <script src="bundle.js" defer></script>
+    </head>
+
+    <style>
+        .btn {
+            margin: 1%;
+        }
+        .remote-caret {
+          position: relative;
+          border-left: 2px solid black;
+          margin-left: -1px;
+          margin-right: -1px;
+          box-sizing: border-box;
+        }
+        .remote-caret > div {
+          position: absolute;
+          top: -1.05em;
+          left: -2px;
+          font-size: .6em;
+          background-color: rgb(250, 129, 0);
+          font-family: serif;
+          font-style: normal;
+          font-weight: normal;
+          line-height: normal;
+          user-select: none;
+          color: white;
+          padding-left: 2px;
+          padding-right: 2px;
+          z-index: 3;
+          transition: opacity .3s ease-in-out;
+        }
+        .remote-caret.hide-name > div {
+          transition-delay: .7s;
+          opacity: 0;
+        }
+        .remote-caret:hover > div {
+          opacity: 1;
+          transition-delay: 0s;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div>
+                <div class="btnContainer">
+                    <div style="margin-bottom: -1%;" id="copy">
+                        <input style="width:250px;" type="text" id="copy-url">
+                        <button id="copyUrl-btn" class="btn btn-primary">copy invite link</button>
+                    </div>
+                    <button class="btn btn-primary" id="y-connect-btn">Connect</button>
+                    <button class="btn btn-primary" id="insertGraph">&lt&lt&lt insert your Graph</button>
+                    <button class="btn btn-primary" id="apply">apply changes >>></button>
+                    <button class="btn btn-primary" id="download"><span>Download</span></button>
+                    <input type="checkbox" id="autoSave">
+                    Autosave
+                    <div style="float:right;min-width:35%;">
+                            <input id="edge_length" size="7" placeholder="edge length"></input>
+                            <button class="btn btn-primary" id="modeBtn">Node Mode</button>
+                            
+                            <button class="btn btn-primary" id="editReload"><span>Reload Graph</span></button>
+                            <br />
+                            <button class="btn btn-primary" id="editDelete"><span>Delete Graph</span></button>
+                            <button class="btn btn-primary" id="editSave"><span>Save</span></button>
+                            <input type="checkbox" id="editUndirected">
+                            undirected
+                    </div>
+
+                </div>  
+            </div>
+            <div style="margin:1%" class="clearfix"></div>
+            <div style="width:50%;height:200px;" class="float-right visualization">
+                <div id="editVisualizationContent" class="EditVisualizationContent">
+                    <div class="editVisualizationGraphic"></div>
+                </div>
+                <div id="editForceVisualizationContent" class="editForceVisualizationContent">
+                    <div id="editForceVisualizationGraphic" class="editForceVisualizationGraphic"></div>
+                </div>
+            </div>
+
+
+        </div>
+    </body>
+</html>

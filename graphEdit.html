@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+    <!-- Displays basic / meta information on multiple graphs -->
+    <head>
+        <title>OCD - Edit Graph</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="node_modules/d3-force/dist/d3-force.min.js"></script>
+        <script src="node_modules/d3-array/dist/d3-array.min.js"></script>
+        <script src="node_modules/d3-binarytree/dist/d3-binarytree.min.js"></script>
+        <script src="node_modules/d3-color/dist/d3-color.min.js"></script>
+        <script src="node_modules/d3-dispatch/dist/d3-dispatch.min.js"></script>
+        <script src="node_modules/d3-drag/dist/d3-drag.min.js"></script>
+        <script src="node_modules/d3-ease/dist/d3-ease.min.js"></script>
+        <script src="node_modules/d3-format/dist/d3-format.min.js"></script>
+        <script src="node_modules/d3-interpolate/dist/d3-interpolate.min.js"></script>
+        <script src="node_modules/d3-octree/dist/d3-octree.min.js"></script>
+        <script src="node_modules/d3-quadtree/dist/d3-quadtree.min.js"></script>
+        <script src="node_modules/d3-scale-chromatic/dist/d3-scale-chromatic.min.js"></script>
+        <script src="node_modules/d3-scale/dist/d3-scale.min.js"></script>
+        <script src="node_modules/d3-selection/dist/d3-selection.min.js"></script>
+        <script src="node_modules/d3-time-format/dist/d3-time-format.min.js"></script>
+        <script src="node_modules/d3-time/dist/d3-time.min.js"></script>
+        <script src="node_modules/d3-timer/dist/d3-timer.min.js"></script>
+        <script src="node_modules/d3-transition/dist/d3-transition.min.js"></script>
+        <script src="node_modules/d3-zoom/dist/d3-zoom.min.js"></script>
+        <script src="JS/contentHandler.js"></script>
+        <script src="node_modules/js-base64/base64.js"></script>
+        <script src="JS/ServiceAPI/moduleHelper.js"></script>
+        <script src="JS/ServiceAPI/serviceAPI.js"></script>
+        <script src="JS/requestHandler.js"></script>
+        <script src="JS/graphTableHandler.js"></script>
+        <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+        <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
+        <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+        <script src="JS/simulation/jsonRequestHandler.js"></script>
+        <script src="JS/simulation/simulationForm.js"></script>
+        <script src="node_modules/three/build/three.min.js"></script>
+        <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
+        <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+        <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+        <script src="node_modules/arangojs/lib/web.js"></script>
+        <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+        <script src="node_modules/codemirror/lib/codemirror.js"></script>
+        <script src="node_modules/codemirror/mode/xml/xml.js"></script>
+        <script src="graphEdit.js"></script>
+        <script type="text/javascript">
+            // var visualization;
+            // var forceGraph;
+            // var initialGraph;
+
+            // var graphId;
+
+            // var lastNode;
+            // var lastId;
+
+            // var undirectedChecked;
+            // var nodeMode = true;
+            // var nodeSelected = false;
+
+            // var edgeFormat;
+            
+            // $(document).ready(function() {
+            //     graphId = getUrlVar("graphId");
+            //     var graphIdQueryExtension = "";
+            //     if(graphId) {
+            //         graphIdQueryExtension = "&graphId=" + graphId;
+            //     }
+            //     initialize();
+            // });
+            // // GET the graph and execute the visualization function on that graph
+            // function initialize() {
+            //     sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+            //         function (response) {
+            //             console.log(response);
+            //             initialGraph = JSON.parse(response);
+            //             getForceVis();
+            //         },
+            //         /* Error handler */
+            //         function (errorData) {
+            //             /*
+            //             * GraphIds request failed
+            //             */
+            //             showConnectionErrorMessage("Visualization was not received.", errorData);
+            //         });
+            // }
+                
+            // function getForceVis() {
+
+            //     var nodes = initialGraph.nodes;
+            //     var links = initialGraph.links;
+            //     edgeFormat = JSON.parse(JSON.stringify(links[0]));
+            //     const elem = document.getElementById("editForceVisualizationGraphic");
+
+            //     // First initialization of the Visualiuation
+            //     // Setup of the general desing
+            //     forceGraph = ForceGraph()(elem)
+            //         .onNodeClick(editNode)
+            //         .onBackgroundRightClick(addNode)
+            //         .onLinkClick(removeLink)
+            //         .backgroundColor("#fafafa")
+            //         .centerAt(0,0)
+            //         .graphData(initialGraph)
+            //         .linkWidth(3)
+            //         .linkDirectionalArrowLength(3)
+            //         .linkDirectionalArrowRelPos(1)
+            //         .d3Force("center", d3.forceCenter().strength(1))
+            //         .d3Force("charge", d3.forceManyBody()
+            //                                 .strength(-10)
+            //                                 .distanceMin(0.5)
+            //                                 .distanceMax(50)
+            //                                 )
+            //     // Set Dimensions and Parameters for the force engine   
+            //     forceGraph.d3Force("collide", d3.forceCollide(forceGraph.nodeRelSize()))
+            //         .d3Force("link",d3.forceLink(forceGraph.links).distance(20))
+
+            //     forceGraph.width($('.editForceVisualizationContent').width());
+            //     forceGraph.height($('.editForceVisualizationContent').height());
+                
+            //     // Functions that are executed by events, e.g. left click on a button
+            //     function addNode(event) {
+            //         var e = event;
+            //         let px = e.pageX;
+            //         let py = e.pageY;
+            //         let coords = forceGraph.screen2GraphCoords(px,py);
+            //         let cx = coords.x;
+            //         let cy = coords.y;
+            //             const { nodes, links } = forceGraph.graphData();
+            //             const id = nodes.length;
+            //             forceGraph.graphData({
+            //                 nodes: [...nodes, {"color":"rgba(204.0,204.0,255.0,1.0)","size":20.0,"name":id,"id":id,"label":"","x":cx,"y":cy}],
+            //                 links: links
+            //         });
+            //     }
+            //     function showCoords(node) {
+            //         if(typeof node !== 'undefined'){
+            //             console.log(node.x + "  " + node.y)
+            //         }
+                    
+            //     }
+            //     function editNode(node) {
+            //         if(nodeMode){
+            //             let {nodes, links} = forceGraph.graphData();
+            //             links = links.filter(l => l.source !== node && l.target !== node);
+            //             nodes.splice(node.id,1);
+            //             nodes.forEach((n,idx) => {n.id = idx; });
+            //             forceGraph.graphData({ nodes, links });  
+            //             console.log(links);
+
+            //         // Select node or connect 2 selected nodes
+            //         // Connect 2 nodes in both directions if undirected box is checked
+            //         }else {
+            //             // If no node is selected
+            //             if(!nodeSelected){
+            //                 lastNode = node;
+            //                 lastId = node.id;
+            //                 node.color = "orange";
+            //             // if the selected nod e is clicked again, unselect it
+            //             } else if(lastNode == node){
+            //                 lastNode.color = "rgba(204.0,204.0,255.0,1.0)";  
+            //             // Connect two selected nodes with directed edge
+            //             } else if(!undirectedChecked) {
+            //                 const{ nodes, links } = forceGraph.graphData();
+            //                 var containsEdge = false;
+            //                 var edge = JSON.parse(JSON.stringify(edgeFormat));
+            //                 edge.target = node;
+            //                 edge.source = lastNode;
+            //                 console.log(links);
+            //                 for(key in links){
+            //                     if(links[key].source.id == edge.source.id && links[key].target.id == edge.target.id){
+            //                         containsEdge = true;
+            //                         break;
+            //                     }
+            //                 }
+            //                 if(!containsEdge){
+            //                     console.log("ho");
+            //                     forceGraph.graphData({
+            //                         nodes: nodes,
+            //                         links: [...links, edge]
+            //                     })
+            //                     lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+            //                 } else {
+            //                     lastNode.color = "rgba(204.0,204.0,255.0,1.0)";
+            //                     alert("Edge already exists!");
+            //                 }
+                              
+            //             // Connect two selected nodes with undirected edge
+            //             } else if(undirectedChecked){
+            //                 const{ nodes, links } = forceGraph.graphData();
+            //                 var containsEdge = false;
+            //                 var secondEdge = JSON.parse(JSON.stringify(edgeFormat));
+            //                 var edge = JSON.parse(JSON.stringify(edgeFormat));
+            //                 edge.target = node;
+            //                 edge.source = lastNode;
+            //                 secondEdge.source = node;
+            //                 secondEdge.target = lastNode;
+
+            //                 console.log(edge);
+            //                 // console.log("secEdge: " + secondEdge.source.id);
+            //                 for(key in links){
+            //                     if((links[key].source.id == edge.source.id && links[key].target.id == edge.target.id)){
+            //                         containsEdge = true;
+            //                         break;
+            //                     }
+            //                 }
+            //                 for(key in links){
+            //                     if((links[key].source.id == secondEdge.source.id && links[key].target.id == secondEdge.target.id)){
+            //                         containsEdge = true;
+            //                         break;
+            //                     }
+            //                 }
+            //                 if(!containsEdge){
+            //                         forceGraph.graphData({
+            //                         nodes: nodes,
+            //                         links: [...links, edge, secondEdge]
+            //                      })
+            //                      lastNode.color = "rgba(204.0,204.0,255.0,1.0)"; 
+            //                 } else {
+            //                     lastNode.color = "rgba(204.0,204.0,255.0,1.0)"; 
+            //                     alert("Edge already exists!");
+            //                 }
+
+                             
+            //             }              
+                                    
+            //             nodeSelected = !nodeSelected;
+            //         }                    
+            //     }
+            // }
+            // // remove edge
+            // function removeLink(link){
+            //     if(!nodeMode){
+            //         let { nodes, links } = forceGraph.graphData();
+            //         for(key in links){
+            //             if(link.source.id == links[key].source.id && link.target.id == links[key].target.id){
+            //                 links.splice(key,1);
+            //                 if(undirectedChecked){
+            //                     for(key2 in links){
+            //                         if(link.source.id == links[key2].target.id && link.target.id == links[key2].source.id){
+            //                             links.splice(key2,1);
+            //                             break;
+            //                         }
+            //                     }
+            //                 }
+            //             }
+
+            //         }
+            //         forceGraph.graphData({ nodes, links });
+            //     }                
+            // }
+
+            // // remove the node
+            // function removeNode(node){
+            //     let {nodes, links} = forceGraph.graphData();
+            //     links = links.filter(l => l.source !== node && l.target !== node);
+            //     nodes.splice(node.id,1);
+            //     nodes.forEach((n,idx) => {n.id = idx;});
+            //     forceGraph.graphData({ nodes, links });  
+            // }
+
+            // // Button and Checkbox functionalities
+            // function updateCheckbox(){
+            //     undirectedChecked = $("#editUndirected").is(":checked");
+            //     if(undirectedChecked){
+            //         forceGraph.linkDirectionalArrowLength(0);
+            //     }else{
+            //         forceGraph.linkDirectionalArrowLength(3);
+            //     }
+            // }
+            // function reloadGraph(){
+            //     if (confirm("Reload: Unsaved changes will be lost!") == true) {
+            //         initialize();
+            //     }
+            // }
+            // function deleteGraph(){
+            //     if (confirm("Are you sure you want to delete your graph?") == true){
+            //         let { nodes , links } = forceGraph.graphData();
+            //         forceGraph.graphData({
+            //             nodes: [],
+            //             links: []
+            //         })
+            //     }
+                
+            // }
+            // function saveGraph() {
+            //     var content = jsonToXml();
+            //     console.log(content);
+            //     console.log(graphId);
+
+            //     sendRequest("put","update/" + graphId, content,
+            //     function(response) {
+            //         showSuccess(response);
+            //         alert("Graph saved");
+            //     },
+            //     function (errorData) {
+            //         showConnectionErrorMessage("Graph update failed", errorData);
+            //     });
+            // }
+            // function switchMode() {
+            //     nodeMode = !nodeMode;  
+            //     if (!nodeMode) {
+            //         $("#modeBtn").html("Edge Mode");
+            //     }else {
+            //         $("#modeBtn").html("Node Mode");
+            //     }
+            // }
+            // // Shortcuts for the Buttons:
+            // // Switch modes by pressing N
+            // document.addEventListener('keydown', function(e) {
+            //     const key = e.code;
+            //     if(key === "KeyN"){
+            //         switchMode();
+            //     }
+            // })
+            // // Delete selected node by pressing DELETE
+            // document.addEventListener('keydown', function(e) {
+            //     const key = e.key;
+            //     if(key === "Delete" && nodeSelected){
+            //         removeNode(lastNode);
+            //         nodeSelected = false;
+            //         console.log("pressed delete");
+            //         }
+            // })
+
+            // // Translate JSON graph format to XML String
+            // function jsonToXml(){
+            //     var xmlString = '<?xml version="1.0" encoding="UTF-8"?>\n<graphml xmlns="http://graphml.graphdrawing.org/xmlns">\n<key attr.name="number" attr.type="integer" for="node" id="number"/>\n<key attr.name="label" attr.type="string" for="edge" id="label"/>\n<graph edgedefault="directed">'
+            //     let { nodes, links } = forceGraph.graphData();
+            //     console.log(links);
+            //     for(var key in nodes){
+            //         xmlString += '\n<node id="' + nodes[key].id + '">';
+            //         xmlString += '\n</node>'
+            //     }
+            //     for(var key in links){
+            //         xmlString += '\n<edge source="' + links[key].source.id + '" target="' + links[key].target.id + '">';
+            //         xmlString += '\n</edge>'
+            //     }
+            //     xmlString += '\n</graph>';
+            //     xmlString += '\n</graphml>';
+            //     return xmlString
+            // }
+            // function initCollabSession(){
+            //     const roomNumber = uuidv4();
+            //     window.location.href = "collaborativeEditing.html?graphId=" + graphId + "&room=" + roomNumber;
+            // }
+            // function uuidv4() {
+            //     return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+            //         (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            //     );
+            // }
+        </script>
+    </head>
+    <!-- <body>
+        <div id="wrapper">
+            <div id="contentWrapper">
+                <h1>Edit your Graph</h1>
+                <div class="float-left">
+                <div id="editContent">
+                    <div class="visualization">
+                        <div id="editVisualizationContent" class="EditVisualizationContent">
+                            <div class="editVisualizationGraphic"></div>
+                        </div>
+                        <div id="editForceVisualizationContent" class="editForceVisualizationContent">
+                            <div id="editForceVisualizationGraphic" class="editForceVisualizationGraphic"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="float-left">
+                <div class="btnContainer">
+                    <div class="collabButton">
+                        <button class="btn btn-primary" id="collab" onclick="initCollabSession()"><span>Open collaborative session</span></button>
+                    </div>
+                    <div class="editButton">
+                        <button class="btn btn-primary" id="modeBtn" onclick="switchMode()">Node Mode</button>
+                    </div>
+                    <div class="editButton">
+                        <button class="btn btn-primary" id="editReload" onClick="reloadGraph()"><span>Reload Graph</span></button>
+                    </div>
+                    <div class="editButton">
+                        <button class="btn btn-primary" id="editDelete" onClick="deleteGraph()"><span>Delete Graph</span></button>
+                    </div>
+                    <div class="editButton">
+                        <button class="btn btn-primary" id="editSave" onClick="saveGraph()"><span>Save</span></button>
+                    </div> 
+                    <div class="editCheckBox">
+                        <input type="checkbox" id="editUndirected" onClick="updateCheckbox()">
+                        Show as undirected Graph
+                    </div>
+                </div>  
+            </div>
+        </div>
+    </body> -->
+</html>
