@@ -57,6 +57,7 @@
 
             /* SVG for Visualization */
             var visualization;
+            var visualizationById;
             /* Maximum ground truth candidates (for metric execution) displayed per page */
             var COVERS_PER_PAGE = 20;
             /* Current page of ground truth candidates (for metric execution) */
@@ -903,9 +904,41 @@
             /* Handles the collapsable element for the graph visualization */
             function visualizationCollapsableHandler() {
                 /* Requests the graph visualization */
-                if (typeof visualization === 'undefined') {
-                    getVisualization();
-                }
+                getCoverSeriesList(function () {
+                    var Orders=new Array();
+                    var coverIds=new Array();
+                    var coverNames=new Array();
+                    var graphIds=new Array();
+                    var graphNames=new Array();
+                    var lines = coverSeriesList.split('\n');
+                    $.each(lines, function (key, line) {
+                        var parts = line.split('_');
+                        if ($(parts).length === 5) {
+                            Orders.push(parts[0]);
+                            coverIds.push(parts[1]);
+                            coverNames.push(parts[2]);
+                            graphIds.push(parts[3]);
+                            graphNames.push(parts[4]);
+                        }
+                    });
+                    if(graphIds.length === 0){
+                        /* Requests the graph visualization */
+                        if (typeof visualization === 'undefined') {
+                            getVisualization(function () {
+                                $('.visualizationGraphic').append(visualization);
+                            });
+                        }
+                    }else{
+                        if (typeof visualizationById === 'undefined') {
+                            getVisualizationByCoverAndGraphId(function () {
+                                $('.staticGraphAndCoverName').append("Order:"+Orders[0]+"    Graph name:"+graphNames[0]+"  Cover name:"+coverNames[0]);
+                                $('.visualizationGraphic').append(visualizationById);
+                            }, coverIds[0],graphIds[0]);
+                        }
+                    }
+                });
+
+
 
                 /* Registers the visualization for panzoom */
                 var $panzoom = $('body').find('.visualizationGraphic').panzoom({
@@ -927,14 +960,16 @@
                 });
             }
             /* Requests and stores the visualization of the cover */
-            function getVisualization() {
+            function getVisualization(callback) {
                 /* Requests the visualization */
                 sendRequest("get", "visualization/cover/" + coverId + "/graph/"
                         + graphId + "/outputFormat/SVG/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
                     /* Response handler */
                     function(response) {
                         visualization = response;
-                        $('.visualizationGraphic').append(visualization);
+                        if (typeof callback !== 'undefined') {
+                            callback();
+                        }
                     },
                     /* Error handler */
                     function(errorData) {
@@ -945,6 +980,53 @@
                 });
             }
 
+            function getVisualizationByCoverAndGraphId(callback,staticCoverId,staticGraphId){
+                sendRequest("get", "visualization/cover/" + staticCoverId + "/graph/"
+                    + staticGraphId + "/outputFormat/SVG/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    /* Response handler */
+                    function(response) {
+                        visualizationById = response;
+                        if (typeof callback !== 'undefined') {
+                            callback();
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Visualization request failed
+                         */
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
+                    });
+            }
+
+            function changeCoverVisual(){
+                var order = $('#dynamicOrderInput').val();
+                getCoverSeriesList(function () {
+                    var Orders=new Array();
+                    var coverIds=new Array();
+                    var coverNames=new Array();
+                    var graphIds=new Array();
+                    var graphNames=new Array();
+                    var lines = coverSeriesList.split('\n');
+                    $.each(lines, function (key, line) {
+                        var parts = line.split('_');
+                        if ($(parts).length === 5) {
+                            Orders.push(parts[0]);
+                            coverIds.push(parts[1]);
+                            coverNames.push(parts[2]);
+                            graphIds.push(parts[3]);
+                            graphNames.push(parts[4]);
+
+                        }
+                    });
+                    getVisualizationByCoverAndGraphId(function () {
+                        $('.staticGraphAndCoverName').empty();
+                        $('.visualizationGraphic').empty();
+                        $('.staticGraphAndCoverName').append("Order:"+order+"   Graph name:"+graphNames[order-1]+"  Cover name:"+coverNames[order-1]);
+                        $('.visualizationGraphic').append(visualizationById);
+                    }, coverIds[order-1],graphIds[order-1]);
+                });
+            }
 
             /* Handles the collapsable element for the cover series. */
             function coverSeriesCollapsableHandler() {
@@ -1260,9 +1342,16 @@
                             <!-- Container for graph visualization -->
                             <div class="visualization">
                                 <div class="visualizationControl" id="visualizationControl">
+                                    Order of dynamic graph:
+                                    <input id="dynamicOrderInput" class="dynamicOrderInput" type="number">
+                                    <button type="button" id="dynamicOrderBtn" class="btn btn-primary" onclick="changeCoverVisual()">
+                                        <span class="submitText">Change</span>
+                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                    </button>
                                     <input id="visualizationZoomer" class="visualizationZoomer" type="range">
                                 </div>
                                 <div id="visualizationContent" class="visualizationContent">
+                                    <div class="staticGraphAndCoverName"></div>
                                     <div class="visualizationGraphic"></div>
                                 </div>
                                 <div id="forceVisualizationContent" class="forceVisualizationContent">
