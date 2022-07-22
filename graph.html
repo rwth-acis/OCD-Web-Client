@@ -59,6 +59,7 @@
         var rightClickNode = null;
         var rightClickLink = null;
 
+        var graphSeriesIds;
         var visualization;
         /* Names of all OCD algorithms */
         var algorithmNames;
@@ -590,8 +591,6 @@
                 }, "text");
         }
 
-
-
         /* Handles the collapsable element for the properties. */
         function propertiesCollapsableHandler() {
             if (typeof graphProperties === 'undefined') {
@@ -654,7 +653,6 @@
                             var row = '<tr>'
                                 + '<td>' + parts[0] + '</td>'
                                 + '<td>' + graphId + '</td>'
-                            //'<td><a href="graph.html?id='+ id + '">' + name + '</a></td>'
                                 + '<td><a href="graph.html?id='+ graphId + '">' + graphName + '</a></td>'
                                 + '</tr>';
                             $("#graphSeriesTable tbody").append(row);
@@ -1249,12 +1247,14 @@
             }
         }
 
+
         /* Handles the collapsable element for the graph visualization */
         function visualizationCollapsableHandler() {
             /* Requests the graph visualization */
             if (typeof visualization === 'undefined') {
                 getVisualization();
             }
+
             // if (typeof forceGraph === 'undefined') {
             //     getJSON();
             //     document.getElementById("forceVisualizationContent").style.display = "none";
@@ -1423,7 +1423,7 @@
 
                     <!--if the graph is dynamic replace the edges list with the graph series list-->
                     <!-- Collapsable for dynamic graph series -->
-                    <div id="graphSeriesCollapsable" class="collapsable col-sm-12 col-lg-6">
+                    <div id="graphSeriesCollapsable" class="collapsable col-sm-12">
                         <div class="collapsableHeader">
                             <div class="collapsableTitle">Graph Series</div>
 

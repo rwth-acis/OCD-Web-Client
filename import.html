@@ -343,7 +343,9 @@ Facilitates import / upload of new graphs and covers.
                     restUrl+="&graphList=";
                     $("input[name='dynamicGraphOrder']").each(function(){
                         if($(this).val().length>0){//not null
-                            restUrl+=$(this).parent().text()+'_';
+                            //restUrl+=$(this).parent().text()+'_';
+                            //console.log($(this).parent().parent());
+                            restUrl+=$(this).parent().siblings(".graphId").text()+"_";
                         }
                     });
                     // todo: sort according to the order still haven't been implemented

@@ -21,6 +21,10 @@
   <component name="ChangeListManager">
     <list default="true" id="0276549e-b89c-43d7-b691-7b3c54514d84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/JS/graphTableHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/graphTableHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cover.html" beforeDir="false" afterPath="$PROJECT_DIR$/cover.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/graph.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/import.html" beforeDir="false" afterPath="$PROJECT_DIR$/import.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +50,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
+    <property name="ts.external.directory.path" value="C:\Program Files\JetBrains\IntelliJ IDEA 2020.2.3\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -65,6 +70,8 @@
       <workItem from="1656675508860" duration="2411000" />
       <workItem from="1657112465255" duration="4261000" />
       <workItem from="1657123436549" duration="3736000" />
+      <workItem from="1658394996017" duration="4563000" />
+      <workItem from="1658410150437" duration="4359000" />
     </task>
     <servers />
   </component>

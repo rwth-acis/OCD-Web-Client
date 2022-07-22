@@ -124,8 +124,7 @@ function createSelectGraphCell(id) {
 
 /* Creates order graph cell*/
 function createOrderGraphCell(id){
-    return '<td>'
-        + id + '<input type="number" name="dynamicGraphOrder">'+ '</td>';
+    return '<td><input type="number" name="dynamicGraphOrder"></td>';
 }
 
 /* Creates show covers cell */
