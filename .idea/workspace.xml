@@ -21,10 +21,7 @@
   <component name="ChangeListManager">
     <list default="true" id="0276549e-b89c-43d7-b691-7b3c54514d84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/JS/graphTableHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/graphTableHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cover.html" beforeDir="false" afterPath="$PROJECT_DIR$/cover.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/graph.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/import.html" beforeDir="false" afterPath="$PROJECT_DIR$/import.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +49,27 @@
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="ts.external.directory.path" value="C:\Program Files\JetBrains\IntelliJ IDEA 2020.2.3\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
   </component>
+  <component name="RunManager">
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="graph.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/ocd-web/graph.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JavaScript Debug.graph.html" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -71,7 +89,7 @@
       <workItem from="1657112465255" duration="4261000" />
       <workItem from="1657123436549" duration="3736000" />
       <workItem from="1658394996017" duration="4563000" />
-      <workItem from="1658410150437" duration="4359000" />
+      <workItem from="1658410150437" duration="13934000" />
     </task>
     <servers />
   </component>
@@ -89,5 +107,59 @@
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1492" height="277" key="GridCell.Tab.0.bottom" timestamp="1658499303639">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.0.bottom/0.0.1536.864@0.0.1536.864" timestamp="1658499303639" />
+    <state width="1492" height="277" key="GridCell.Tab.0.center" timestamp="1658499303639">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.0.center/0.0.1536.864@0.0.1536.864" timestamp="1658499303639" />
+    <state width="1492" height="277" key="GridCell.Tab.0.left" timestamp="1658499303638">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.0.left/0.0.1536.864@0.0.1536.864" timestamp="1658499303638" />
+    <state width="1492" height="277" key="GridCell.Tab.0.right" timestamp="1658499303639">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.0.right/0.0.1536.864@0.0.1536.864" timestamp="1658499303639" />
+    <state width="1492" height="277" key="GridCell.Tab.1.bottom" timestamp="1658499303640">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.1.bottom/0.0.1536.864@0.0.1536.864" timestamp="1658499303640" />
+    <state width="1492" height="277" key="GridCell.Tab.1.center" timestamp="1658499303639">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.1.center/0.0.1536.864@0.0.1536.864" timestamp="1658499303639" />
+    <state width="1492" height="277" key="GridCell.Tab.1.left" timestamp="1658499303639">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.1.left/0.0.1536.864@0.0.1536.864" timestamp="1658499303639" />
+    <state width="1492" height="277" key="GridCell.Tab.1.right" timestamp="1658499303639">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.1.right/0.0.1536.864@0.0.1536.864" timestamp="1658499303639" />
+    <state width="1492" height="277" key="GridCell.Tab.2.bottom" timestamp="1658499303640">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.2.bottom/0.0.1536.864@0.0.1536.864" timestamp="1658499303640" />
+    <state width="1492" height="277" key="GridCell.Tab.2.center" timestamp="1658499303640">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.2.center/0.0.1536.864@0.0.1536.864" timestamp="1658499303640" />
+    <state width="1492" height="277" key="GridCell.Tab.2.left" timestamp="1658499303640">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.2.left/0.0.1536.864@0.0.1536.864" timestamp="1658499303640" />
+    <state width="1492" height="277" key="GridCell.Tab.2.right" timestamp="1658499303640">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state width="1492" height="277" key="GridCell.Tab.2.right/0.0.1536.864@0.0.1536.864" timestamp="1658499303640" />
+    <state x="430" y="181" width="672" height="678" key="search.everywhere.popup" timestamp="1658489167482">
+      <screen x="0" y="0" width="1536" height="864" />
+    </state>
+    <state x="430" y="181" width="672" height="678" key="search.everywhere.popup/0.0.1536.864@0.0.1536.864" timestamp="1658489167482" />
   </component>
 </project>

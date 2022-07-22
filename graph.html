@@ -59,8 +59,8 @@
         var rightClickNode = null;
         var rightClickLink = null;
 
-        var graphSeriesIds;
         var visualization;
+        var visualizationById;
         /* Names of all OCD algorithms */
         var algorithmNames;
         /* Names of all centrality measures */
@@ -267,6 +267,7 @@
                     window.location.href = "centrality_simulations_info.html?simulationName=" + simulationName.replace(/ /g, "_");
                 }
             });
+
         });
 
         /* Requests the names of all OCD algorithms.
@@ -1250,10 +1251,40 @@
 
         /* Handles the collapsable element for the graph visualization */
         function visualizationCollapsableHandler() {
-            /* Requests the graph visualization */
-            if (typeof visualization === 'undefined') {
-                getVisualization();
-            }
+            // var graphIds=new Array();
+            // var graphNames=new Array();
+            getGraphSeriesList(function () {
+                var lines = graphSeriesList.split('\n');
+                var graphOrders=new Array();
+                var graphIds=new Array();
+                var graphNames=new Array();
+                $.each(lines, function (key, line) {
+                    var parts = line.split('_');
+                    if ($(parts).length === 3) {
+                        graphOrders.push(parts[0]);
+                        graphIds.push(parts[1]);
+                        graphNames.push(parts[2]);
+                    }
+                });
+
+                if(graphIds.length === 0){
+                    /* Requests the graph visualization */
+                    if (typeof visualization === 'undefined') {
+                        getVisualization(function () {
+                            $('.visualizationGraphic').append(visualization);
+                        });
+                    }
+                }else{
+                    if (typeof visualizationById === 'undefined') {
+                        getVisualizationByGraphId(function () {
+                            $('.staticGraphName').append("Order:"+graphOrders[0]+"         Graph name:"+graphNames[0]);
+                            $('.visualizationGraphic').append(visualizationById);
+                        }, graphIds[0]);
+                    }
+                }
+
+            });
+
 
             // if (typeof forceGraph === 'undefined') {
             //     getJSON();
@@ -1280,13 +1311,14 @@
             });
         }
 
-        /* Requests and stores the graph visualization */
-        function getVisualization() {
-            sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+        function getVisualizationByGraphId(callback, id) {
+            sendRequest("get", "visualization/graph/" + id + "/outputFormat/SVG/layout/ORGANIC", "",
                 /* Request handler */
                 function (response) {
-                    visualization = response;
-                    $('.visualizationGraphic').append(visualization);
+                    visualizationById = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
                 },
                 /* Error handler */
                 function (errorData) {
@@ -1295,6 +1327,50 @@
                      */
                     showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
+        }
+
+        /* Requests and stores the graph visualization */
+        function getVisualization(callback) {
+            sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+                /* Request handler */
+                function (response) {
+                    visualization = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Visualization was not received.", errorData);
+                });
+        }
+
+
+        function changeGraphVisual(){
+            var order = $('#dynamicOrderInput').val();
+            getGraphSeriesList(function () {
+                var lines = graphSeriesList.split('\n');
+                var graphOrders=new Array();
+                var graphIds=new Array();
+                var graphNames=new Array();
+                $.each(lines, function (key, line) {
+                    var parts = line.split('_');
+                    if ($(parts).length === 3) {
+                        graphOrders.push(parts[0]);
+                        graphIds.push(parts[1]);
+                        graphNames.push(parts[2]);
+                    }
+                });
+                getVisualizationByGraphId(function () {
+                    $('.staticGraphName').empty();
+                    $('.visualizationGraphic').empty();
+                    $('.staticGraphName').append("Order:"+order+"           Graph name:"+graphNames[order-1]);
+                    $('.visualizationGraphic').append(visualizationById);
+                }, graphIds[order-1]);
+            });
         }
 
         function deleteGraph() {
@@ -1687,9 +1763,19 @@
                             <!-- Container for graph visualization -->
                             <div class="visualization">
                                 <div class="visualizationControl" id="visualizationControl">
+
+                                    Order of dynamic graph:
+                                    <input id="dynamicOrderInput" class="dynamicOrderInput" type="number">
+                                    <button type="button" id="dynamicOrderBtn" class="btn btn-primary" onclick="changeGraphVisual()">
+                                        <span class="submitText">Change</span>
+                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                    </button>
+
+
                                     <input id="visualizationZoomer" class="visualizationZoomer" type="range">
                                 </div>
                                 <div id="visualizationContent" class="visualizationContent">
+                                    <div class="staticGraphName"></div>
                                     <div class="visualizationGraphic"></div>
                                 </div>
                                 <div id="forceVisualizationContent" class="forceVisualizationContent">
