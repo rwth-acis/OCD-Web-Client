@@ -285,8 +285,21 @@ function registerGraphTypes(selectId, graphTypeDivId, getOptions) {
     });
 }
 
+function fillArr(response) {
+    var arr = [];
+    if($(response).size() > 0) {
+        $(response).find("Name").each(function () {
+            var temp = $(this).first().text();
+            arr.push(temp);
+        });
+    }
+    return arr;
+}
+
 /* Initializes a parameters table bound to a select element and provides the corresponding event handlers */
-function registerParameterSelect(selectId, paramDivId, getOptions) {
+function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
+    var weightFunctionArr = [];
+    var rankingFunctionArr = [];
     /* Initialization */
     $(selectId).prepend('<option value="' + getSelectOptionVal() + '">--SELECT--</option>');
     /* Change listener on the select element */
@@ -297,11 +310,35 @@ function registerParameterSelect(selectId, paramDivId, getOptions) {
                 var selected = $(this).val();
                 /* Requests the parameter names for the currently selected option */
                 getOptions(selected, function(response) {
-
+                    if(String(selected) === "RANK_REMOVAL_AND_ITERATIVE_SCAN_ALGORITHM") {
+                        /* Requests weightFunction parameter values */
+                        getEnum(selected, "weightFunction", async function(response) {
+                            // if($(response).size() > 0) {
+                            //     $(response).find("Name").each(function () {
+                            //         var temp = $(this).first().text();
+                            //         console.log(temp);
+                            //         weightFunctionArr.push(temp);
+                            //     });
+                            // }
+                            var weightFunctionArr = await fillArr(response);
+                            console.log(weightFunctionArr);
+                        });
+                        /* Requests rankingFunction parameter values */
+                        getEnum(selected, "rankingFunction", function(response) {
+                            if($(response).size() > 0) {
+                                $(response).find("Name").each(function () {
+                                    rankingFunctionArr.push(String($(this).first().text()));
+                                });
+                            }
+                        });
+                    }
                     /* Check if the option has parameters */
                     if($(response).find("Parameter").size() > 0) {
+                        console.log(weightFunctionArr.indexOf("EDGE_RATIO") > 0);
+                        if(weightFunctionArr.indexOf("EDGE_RATIO") > 0) {
+                            console.log("SUCCESS");
+                        }
                         var parameterString = '';
-
                        /* Adds the parameters to the form */
                         $(response).find("Parameter").each(function() {
                          var paramRow = '<div class="form-group row">'

@@ -354,6 +354,25 @@
                 });
         }
 
+        /* Requests all enum parameter values for a given algorithm.
+         * Then executes a calllback function */
+        function getAlgorithmEnum(algorithmName, enumName, callback) {
+            sendRequest("get", "algorithms/" + algorithmName + "/parameters/" + enumName, "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Enum does not exist for this algorithm.", errorData);
+                });
+        }
+
         /* Requests all compatible graph types for a given algorithm.
          * Then executes a calllback function */
         function getAlgorithmCompatibleGraphTypes(algorithmName, callback) {
@@ -474,7 +493,7 @@
                 /* Registers the graph type component for the contentHandler */
                 registerGraphTypes("#algorithm", "#algorithmGraphTypeDiv", getAlgorithmCompatibleGraphTypes);
                 /* Registers the parameter component for the contentHandler */
-                registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
+                registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters, getAlgorithmEnum);
             }
         }
 
