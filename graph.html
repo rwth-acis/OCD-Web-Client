@@ -145,6 +145,7 @@
                 var algo = $('#algorithm').val();
                 if (algo !== getSelectOptionVal()) {
                     var params = getParameterXml("#algorithmParameterDiv");
+                    console.log("PARAMETERS: ", params);
                     var coverName = $("#coverName").val();
                     var contentWeighting = $("#contentWeighting").is(':checked');
                     if (coverName === "") {
