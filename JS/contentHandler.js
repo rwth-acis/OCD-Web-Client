@@ -285,25 +285,6 @@ function registerGraphTypes(selectId, graphTypeDivId, getOptions) {
     });
 }
 
-/* Returnes select element with one option for every entry of arr */
-function workWithArr(arr,name, val) {
-    if(arr.indexOf(val) > -1) {
-        var paramRow = '<div class="form-group row">'
-        + '<label class="col-sm-4 col-form-label">' + name  +'</label>'
-        + '<div class="col-sm-8">'
-        + '<input type="text" class="form-control parameter" name="' + name +'" placeholder="' + val + '">'
-        + '</div></div>'
-    } else {
-        var paramRow = '<div class="form-group row">'
-        + '<label class="col-sm-4 col-form-label">' + name  +'</label>'
-        + '<div class="col-sm-8">'
-        + '<input type="text" class="form-control parameter" name="' + name +'" placeholder="' + val + '">'
-        + '</div></div>'
-    }
-
-    return paramRow;
-}
-
 /* Initializes a parameters table bound to a select element and provides the corresponding event handlers */
 function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
     var weightFunctionArr = [];
@@ -325,11 +306,9 @@ function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
                         $(response).find("Parameter").each(function() {
                             var paramVal = $(this).find("Value").first().text();
                             var paramName = $(this).find("Name").first().text();
-                            var handle = true;
                             if(String(selected) === "RANK_REMOVAL_AND_ITERATIVE_SCAN_ALGORITHM") {
                                 /* Requests weightFunction parameter values */
                                 getEnum(selected, "weightFunction", function(response) {
-                                    console.log("WEIGHT FUNCTION EXECUTED!");
                                     if($(response).size() > 0) {
                                         $(response).find("Name").each(function () {
                                             if(!weightFunctionArr.includes($(this).first().text())) {
@@ -337,13 +316,12 @@ function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
                                             }
                                         });
                                         if(weightFunctionArr.indexOf(paramVal) != -1) {
-                                            console.log("SELECT: ", paramName);
                                             var paramRow = '<div class="form-group row">'
                                             + '<label class="col-sm-4 col-form-label">' + paramName +'</label>'
                                             + '<div class="col-sm-8">'
                                             + '<select class="form-control parameter" name="' + paramName + '">'
                                             weightFunctionArr.forEach((val) => {
-                                                optionRow = '<option '
+                                                var optionRow = '<option '
                                                 if(val === "EDGE_RATIO") {
                                                     optionRow += 'selected';
                                                 }
@@ -353,48 +331,52 @@ function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
                                             paramRow += '</select></div></div>';
 
                                             parameterString += paramRow;
-                                            handle = false;
 
-                                        } else if (handle) {
-                                            console.log("DO NOTHING!");
+                                        } else {
+                                            /* Requests rankingFunction parameter values */
+                                            getEnum(selected, "rankingFunction", function(response) {
+                                                if($(response).size() > 0) {
+                                                    $(response).find("Name").each(function () {
+                                                        if(!rankingFunctionArr.includes($(this).first().text())) {
+                                                            rankingFunctionArr.push($(this).first().text());
+                                                        }
+                                                    });
+                                                    if(rankingFunctionArr.indexOf(paramVal) != -1) {
+                                                        var paramRow = '<div class="form-group row">'
+                                                        + '<label class="col-sm-4 col-form-label">' + paramName +'</label>'
+                                                        + '<div class="col-sm-8">'
+                                                        + '<select class="form-control parameter" name="' + paramName + '">'
+                                                        rankingFunctionArr.forEach((val) => {
+                                                            var optionRow = '<option '
+                                                            if(val === "PAGE_RANK") {
+                                                                optionRow += 'selected';
+                                                            }
+                                                            optionRow += ' value="' + val + '">' + val + '</option>';
+                                                            paramRow += optionRow;
+                                                        });
+                                                        paramRow += '</select></div></div>';
+
+                                                        parameterString += paramRow;
+                                                    } else {
+                                                        var paramRow = '<div class="form-group row">'
+                                                        + '<label class="col-sm-4 col-form-label">' + paramName  +'</label>'
+                                                        + '<div class="col-sm-8">'
+                                                        + '<input type="text" class="form-control parameter" name="' + paramName +'" placeholder="' + paramVal + '">'
+                                                        + '</div></div>'
+
+                                                        parameterString += paramRow;
+                                                    }
+                                                    /* Write the parameter string into the parameter form */
+                                                    $(paramDivId).html(parameterString);
+                                                }
+                                            });
                                         }
                                         /* Write the parameter string into the parameter form */
                                         $(paramDivId).html(parameterString);
                                     }
                                 });
-                                /* Requests rankingFunction parameter values */
-                                getEnum(selected, "rankingFunction", function(response) {
-                                    console.log("RANKING FUNCTION EXECUTED!");
-                                    if($(response).size() > 0) {
-                                        $(response).find("Name").each(function () {
-                                            rankingFunctionArr.push(String($(this).first().text()));
-                                        });
-                                        if(rankingFunctionArr.indexOf(paramVal) != -1 && handle) {
-                                            console.log("SELECT: ", paramName);
-                                            var paramRow = '<div class="form-group row">'
-                                            + '<label class="col-sm-4 col-form-label">' + paramName  +'</label>'
-                                            + '<div class="col-sm-8">'
-                                            + '<input type="text" class="form-control parameter" name="' + paramName +'" placeholder="' + paramVal + '">'
-                                            + '</div></div>'
-                                            parameterString += paramRow;
-                                            handle = false;
-                                        } else if(handle) {
-                                            console.log("INPUT: ", paramName);
-                                            var paramRow = '<div class="form-group row">'
-                                               + '<label class="col-sm-4 col-form-label">' + paramName  +'</label>'
-                                               + '<div class="col-sm-8">'
-                                               + '<input type="text" class="form-control parameter" name="' + paramName +'" placeholder="' + paramVal + '">'
-                                               + '</div></div>'
-
-                                            parameterString += paramRow;
-                                            handle = false;
-                                        }
-                                        /* Write the parameter string into the parameter form */
-                                        $(paramDivId).html(parameterString);
-                                    }
-                                });
+                                
                             } else {
-                                console.log("DEFAULT: ", paramName);
                                 var paramRow = '<div class="form-group row">'
                                     + '<label class="col-sm-4 col-form-label">' + $(this).find("Name").first().text()  +'</label>'
                                     + '<div class="col-sm-8">'
