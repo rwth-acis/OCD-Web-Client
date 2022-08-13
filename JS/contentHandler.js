@@ -315,6 +315,7 @@ function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
                                                 weightFunctionArr.push($(this).first().text());
                                             }
                                         });
+                                        /* Adds dropdown menu to the form */
                                         if(weightFunctionArr.indexOf(paramVal) != -1) {
                                             var paramRow = '<div class="form-group row">'
                                             + '<label class="col-sm-4 col-form-label">' + paramName +'</label>'
@@ -341,6 +342,7 @@ function registerParameterSelect(selectId, paramDivId, getOptions, getEnum) {
                                                             rankingFunctionArr.push($(this).first().text());
                                                         }
                                                     });
+                                                    /* Adds dropdown menu to the form */
                                                     if(rankingFunctionArr.indexOf(paramVal) != -1) {
                                                         var paramRow = '<div class="form-group row">'
                                                         + '<label class="col-sm-4 col-form-label">' + paramName +'</label>'
