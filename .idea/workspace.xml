@@ -20,14 +20,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0276549e-b89c-43d7-b691-7b3c54514d84" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cover.html" beforeDir="false" afterPath="$PROJECT_DIR$/cover.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/graph.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/JS/ServiceAPI/serviceAPI.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/ServiceAPI/serviceAPI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/JS/contentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/JS/contentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeStyleSettingsInfer">
+    <option name="done" value="true" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -35,21 +41,24 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="2" />
+  </component>
   <component name="ProjectId" id="2AFK1z1yJT7wOo4EY5hcmS2GrDI" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="aspect.path.notification.shown" value="true" />
-    <property name="nodejs_package_manager_path" value="npm" />
-    <property name="ts.external.directory.path" value="C:\Program Files\JetBrains\IntelliJ IDEA 2020.2.3\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/fsain/Documents/Uni/BA/webclient/OCD-Web-Client",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
   <component name="RunManager">
     <configuration name="graph.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/ocd-web/graph.html" useBuiltInWebServerPort="true">
       <method v="2" />
@@ -81,6 +90,7 @@
       <workItem from="1658394996017" duration="4563000" />
       <workItem from="1658410150437" duration="17102000" />
       <workItem from="1659441460949" duration="1490000" />
+      <workItem from="1663769474921" duration="417000" />
     </task>
     <servers />
   </component>
@@ -97,7 +107,6 @@
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
     <state width="1492" height="277" key="GridCell.Tab.0.bottom" timestamp="1658499303639">
