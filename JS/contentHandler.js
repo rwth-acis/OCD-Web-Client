@@ -46,13 +46,52 @@ $(document).ready(function(){
                 </ul>\
                 <ul class="navbar-nav navbar-right">\
                   <li class="nav-item"><a class="nav-link" href="import.html">Import</a></li>\
-                  <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>\
+                  <div class="nav-item dropdown" style="padding-top:1px">\
+                      <button class="btn btn-info dropdown-toggle removecaret" type="button" id="userDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                        User\
+                      </button>\
+                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdownMenuButton">\
+                        <button id="dropdownInactivityItem" class="dropdown-header btn" data-toggle="tooltip" data-placement="left" title="Your content will be deleted after an inactivity period"\
+                                style="color:#eac813;font-family: Arial, Helvetica, sans-serif;font-weight:bold">\
+                            Inactivity\
+                        </button>\
+                        <div class="dropdown-divider"></div>\
+                        <a class="dropdown-item" style="text-align:center" href="logout.html">Logout</a>\
+                      </div>\
+                  </div>\
                 </ul>\
               </div>\
             </nav>\
         ';
 
     $('body').prepend(menuString);
+
+    if(localStorage.getItem("user") !== null) { //already logged in
+        /* Assemble User Dropdown Menu */
+        document.getElementById("userDropdownMenuButton").textContent = localStorage.getItem("user")
+
+        /* Fetch Days until User Data is deleted */
+        sendRequest("get", "inactivity/" + localStorage.getItem("user"), "",
+            /* Response handler */
+            function (inactivityInfoXml) {
+                /* InactivityInfo request succeeded */
+                document.getElementById("dropdownInactivityItem").textContent
+                    = "Allowed Inactivity: " + $(inactivityInfoXml).find("DaysTillDeletion").text() + " days";
+                document.getElementById("dropdownInactivityItem").setAttribute("title",
+                    document.getElementById("dropdownInactivityItem").getAttribute("title")
+                    + " at " + $(inactivityInfoXml).find("DeletionDate").text())
+
+                $(function () {
+                    $('[data-toggle="tooltip"]').tooltip()
+                })
+            },
+            function (errorData) {
+                /* InactivityInfo request failed */
+                if (errorData.indexOf("401") === -1) { //Dont throw error if just called too early
+                    showConnectionErrorMessage("Inactivity information was not received.", errorData);
+                }
+            });
+    }
 });
 
 /*
