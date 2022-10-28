@@ -32,6 +32,10 @@ body {
     height: 100%;
 }
 
+.removecaret.dropdown-toggle::after {
+    display: none;
+}
+
 #content {
 /*     height: 100%; */
     overflow: auto;
