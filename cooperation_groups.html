@@ -138,7 +138,7 @@
           var meta = JSON.parse(response);
           var tableString = "";
           jQuery.each(meta, function(index, value) {
-            var groupId = value.id;
+            var groupId = value.key;
             var groupName = value.name;
             var groupSize = value.size;
             var cooperation = value.evaluation.average.toFixed(4);

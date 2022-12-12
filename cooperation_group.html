@@ -268,10 +268,10 @@
           <td>Deviation</td><td>'+ coopEval.deviation +'</td><td>'+ payoffEval.deviation +'</td>\
           </tr>\
           <tr>\
-          <td>Maximum</td><td>'+ coopEval.max +'</td><td>'+ payoffEval.max +'</td>\
+          <td>Maximum</td><td>'+ coopEval.maximum +'</td><td>'+ payoffEval.maximum +'</td>\
           </tr>\
           <tr>\
-          <td>Minimum</td><td>'+ coopEval.min +'</td><td>'+ payoffEval.min +'</td>\
+          <td>Minimum</td><td>'+ coopEval.minimum +'</td><td>'+ payoffEval.minimum +'</td>\
           </tr>\
           ';
 
@@ -294,7 +294,6 @@
       }
 
       function fillSeries(data) {
-
             var tableString = "";
             jQuery.each(data, function(index, value) {
               var seriesId = value.id;
