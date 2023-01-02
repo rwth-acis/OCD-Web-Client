@@ -248,6 +248,7 @@
           generatePayoffChart(dataArrayPayoff);
 
           textFileDownload(getParameterByName('seriesId'));
+          deleteButtonHandler(getParameterByName('seriesId'));
 
           sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
             /* Response handler */
@@ -283,6 +284,30 @@
 
       return string;
     }
+
+    function deleteButtonHandler(simulationId) {
+    deleteButton.addEventListener('click', function() {
+      deleteButton.disabled="disabled";
+      $("#errorMessage").empty();
+      $("#errorMessage").html(writeAlertInfo("Info ", "delete Simulation"));
+      $("#errorMessageWrapper").show();
+      sendRequest("delete", "simulation/" + simulationId, "",
+        /* Response handler */
+        function(response) {
+
+          $("#errorMessage").empty();
+          $("#errorMessage").html(writeAlertSuccess("Simulation Series", "Successfully Deleted!"));
+          $("#errorMessageWrapper").show();
+
+        },
+        /* Error handler */
+        function(errorData) {
+          showErrorMessage(errorData);
+        }, "");
+
+
+    }, false);
+  };
 
     function getChartData(dataArray) {
 

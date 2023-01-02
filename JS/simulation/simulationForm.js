@@ -25,7 +25,6 @@ $(document).ready(function(){
              jsonObject.graphId = graphId;
              var content = JSON.stringify(jsonObject);
 
-
              console.log(content);
               showInfo("simulation in progress");
 
@@ -35,6 +34,7 @@ $(document).ready(function(){
                 /* Response handler */
                 function(response) {
                     showSuccess("simulation done");
+                    window.location.href = 'index.html';
                     //console.log("test");
               },
                 /* Error handler */
