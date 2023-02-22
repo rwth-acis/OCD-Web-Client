@@ -625,6 +625,7 @@ input:checked + .slider:before {
     margin-top: 2px;
     display: block;
     vertical-align: middle;
+    position: relative;
 }
 
 .forceVisualizationGraphic {
