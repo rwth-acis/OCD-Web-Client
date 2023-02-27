@@ -8,6 +8,7 @@ Facilitates import / upload of new graphs and covers.
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-multiselect/dist/css/bootstrap-multiselect.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
@@ -20,6 +21,8 @@ Facilitates import / upload of new graphs and covers.
         <script src="JS/requestHandler.js"></script>
         <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
         <script src="JS/graphTableHandler.js"></script>
+        <script src="node_modules/arangojs/lib/web.js"></script>
+        <script src="node_modules/bootstrap-multiselect/dist/js/bootstrap-multiselect.min.js"></script>
         <script type="text/javascript">
             /* Names of all input formats */
             var inputFormatNames;
@@ -33,8 +36,16 @@ Facilitates import / upload of new graphs and covers.
             var pageNumber = 0;
             /* Default select option code */
             var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
+
             /* Executed after page loading */
             $(document).ready(function() {
+                $("#edgeCollections").multiselect({
+                    buttonTextAlignment: 'left',
+                    buttonWidth: '100%',
+                    widthSynchronizationMode: "ifPopupIsSmaller",
+                    includeSelectAllOption: true,
+                    allSelectedText: 'All Edges'
+                });
                 /* Import form initialization */
                 $("#objectType").append(
                         selectOptionStr
@@ -132,12 +143,13 @@ Facilitates import / upload of new graphs and covers.
                                     postCentrality(content);
                                 }
                                 else {
+									buttonSubmitEnd("submitButton");
                                     showErrorMessage("Client Error");
                                 }
                             };
                             reader.readAsText(file);
                         }
-                        else if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
+                        else if($("#objectFormat").val() === 'LMS_TRIPLESTORE' || $("#objectFormat").val() === 'ARANGODB') {
                             if($("#objectType").val() === "graph") {
                                 /* Requests graph import */
                                 postGraph("");
@@ -151,6 +163,7 @@ Facilitates import / upload of new graphs and covers.
                      * Browser not compatible
                      */
                     } else {
+					  buttonSubmitEnd("submitButton");
                       showErrorMessage('Your Browser does not support html file input.');
                     }
                 });
@@ -169,9 +182,17 @@ Facilitates import / upload of new graphs and covers.
                             getInputFormats(function() {
                                 $("#objectFormat").append(selectOptionStr);
                                 $(inputFormatNames).find('Name').each(function() {
-                                    $("#objectFormat").append(
-                                        '<option value="' + $(this).text()
-                                        + '">' + $(this).attr("displayName") + '</option>');
+                                    if ($(this).text() === "ARANGODB" && localStorage.getItem("arangoUser@WebOCD") === null) {
+                                        $("#objectFormat").append(
+                                            '<option id="arangoDBFormatOption" value="' + $(this).text()
+                                            + '" disabled>' + $(this).attr("displayName") + '  (LOG INTO YOUR DATABASE AT THE USERMENU TO USE THIS FEATURE)' + '</option>');
+                                    }
+                                    else {
+                                        $("#objectFormat").append(
+                                            '<option value="' + $(this).text()
+                                            + '">' + $(this).attr("displayName") + '</option>');
+                                    }
+
                                 });
                             });
                             /* Loads and displays graph table to select a corresponding graph */
@@ -203,67 +224,211 @@ Facilitates import / upload of new graphs and covers.
                     });
                 });
                 $("#objectFormat").change(function() {
-                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE') {
-                		$("#startDatetr").removeClass('hidden');
-                		$("#endDatetr").removeClass('hidden');
+                    $("#startDateStr").addClass('hidden');
+                    $("#endDateStr").addClass('hidden');
+                    $("#showUserNamestr").addClass('hidden');
+                    $("#involvedUserURIstr").addClass('hidden');
+                    $("#objectFileDiv").removeClass('hidden');
+                    $("#databaseInput").addClass('hidden');
+
+                	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE' || $("#objectFormat").val() === 'ARANGODB') {
+                		$("#startDateStr").removeClass('hidden');
+                		$("#endDateStr").removeClass('hidden');
                         $("#objectFileDiv").removeClass('hidden');
                 		if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
                             $("#showUserNamestr").removeClass('hidden');
                             $("#involvedUserURIstr").removeClass('hidden');
                             $("#objectFileDiv").addClass('hidden');
                         }
+                        else if($("#objectFormat").val() === 'ARANGODB') {
+                            $("#databaseInput").removeClass('hidden');
+                            $("#objectFileDiv").addClass('hidden');
+
+                            let db = logInAndGetDatabase();
+                            db.listDatabases().then(
+                                (databaseNames) => {
+                                    for (const databaseName of databaseNames) {
+                                        if (databaseName !== "_system") { //Ignore system database if available. Wont have any useful collections
+                                            $("#databaseName").append(
+                                                '<option value="' + databaseName + '" >' + databaseName + '</option>');
+                                        }
+                                    }
+                                    getDatabaseCollections();
+                            });
+                        }
                 	}
                     // !!This Code can only be used when webOCD supports edge types!!
                 	// } else if($("#objectFormat").val() === 'XGMML') {
-                    //     $("#startDatetr").addClass('hidden');
-                    //     $("#endDatetr").addClass('hidden');
+                    //     $("#startDateStr").addClass('hidden');
+                    //     $("#endDateStr").addClass('hidden');
                     //     $("#keytr").removeClass('hidden');
                     //     $("#type1tr").removeClass('hidden');
                     //     $("#type2tr").removeClass('hidden');
                     //     $("#type3tr").removeClass('hidden');
                     else {
-                		$("#startDatetr").addClass('hidden');
-                		$("#endDatetr").addClass('hidden');
+                		$("#startDateStr").addClass('hidden');
+                		$("#endDateStr").addClass('hidden');
                         $("#showUserNamestr").addClass('hidden');
                         $("#involvedUserURIstr").addClass('hidden');
                         $("#objectFileDiv").removeClass('hidden');
+                        $("#databaseInput").addClass('hidden');
                 	}
                 });
+                $("#databaseName").change(function() {
+                    getDatabaseCollections();
+                });
             });
+
+            function getDatabaseCollections() {
+                let db = logInAndGetDatabase();
+                db = db.useDatabase($("#databaseName").val());
+
+                db.listCollections().then(
+                    (collections) => {
+                        document.getElementById("nodeCollection").options.length = 0
+                        document.getElementById("edgeCollections").options.length = 0
+                        //let edgeCollections = []
+                        // Add option to simply use all edge collections
+                        for (const collection of collections) {
+                            if (collection.type === 3) { //i.e., if we have an edge collection
+                                //edgeCollections.push(collection.name)
+                                $("#edgeCollections").append(
+                                    '<option value="' + collection.name + '" >' + collection.name + '</option>');
+                            }
+                            else {
+                                $("#nodeCollection").append(
+                                    '<option value="' + collection.name + '" >' + collection.name + '</option>');
+                            }
+                        }
+                        //$("#edgeCollections").append('<option value="' + edgeCollections.toString() + '" >All Edges</option>');
+                        $("#edgeCollections").multiselect("rebuild")
+                        $("#edgeCollections").multiselect('selectAll', true)
+                    });
+            }
+
+            function sendPostGraphRequest(restUrl, content) {
+                sendRequest("post", restUrl, content,
+                    /* Response handler */
+                    function(response) {
+                        window.location.href = 'graphs.html';
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Request failed
+                         */
+                        buttonSubmitEnd("submitButton");
+                        showConnectionErrorMessage("Graph could not be sent.", errorData);
+                    });
+            }
+
             /* Requests a graph import */
             function postGraph(content) {
+
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
                 var restUrl = "graphs?name=" + $("#objectName").val() +
                 "&creationType=" + $("#objectCreator").val()
                 + "&inputFormat=" + $("#objectFormat").val()
                 + "&doMakeUndirected=" + doMakeUndirected;
-                if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE'){
+                if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE' || $("#objectFormat").val() === 'ARANGODB'){
                 	restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
                     if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
                         if($("#showUserNames").val() !== "") {
                             restUrl = restUrl + "&showUserNames=" + $("#showUserNames").val();
                         }
                         if($("#involvedUserURIs").val() !== "") {
-                            restUrl = restUrl + "&involvedUserURIs=" + $("#involvedUserURIs").val();
+                            restUrl = restUrl + "&involvedUsers=" + $("#involvedUserURIs").val();
+                        }
+                        sendPostGraphRequest(restUrl, content)
+                    } else if ($("#objectFormat").val() === 'ARANGODB') {
+                        restUrl = restUrl + "&databaseAddress=" + localStorage.getItem("arangoAdress@WebOCD");
+                        restUrl = restUrl + "&databaseCredentials=" + localStorage.getItem("arangoUser@WebOCD") + "," +  localStorage.getItem("arangoPass@WebOCD");
+                        if($("#databaseName").val() !== "") {
+                            restUrl = restUrl + "&databaseName=" + $("#databaseName").val();
+                        }
+                        if($("#nodeCollection").val() !== "") {
+                            restUrl = restUrl + "&nodeCollectionName=" + $("#nodeCollection").val();
+                        }
+                        if($("#involvedUsers").val() !== "") {
+                            restUrl = restUrl + "&involvedUsers=" + $("#involvedUsers").val();
+                        }
+                        console.log(document.getElementById("databaseNodeQueryRules"));
+                        console.log(document.getElementById("databaseNodeQueryRules").children, "\n" + document.getElementById("databaseNodeQueryRules"));
+                        if($("#databaseNodeQueryRules").childElementCount !== 0) {
+                            let nodeQueriesElement = document.getElementById("databaseNodeQueryRules");
+                            for (const arangoQueryElement of nodeQueriesElement.children) {
+                                if (arangoQueryElement.children[0].value !== "") {
+                                    restUrl = restUrl + "&nodeFilters=" + arangoQueryElement.children[0].value
+                                        + ":::" + arangoQueryElement.children[1].value
+                                        + ":::" + arangoQueryElement.children[2].value;
+                                }
+                            }
+                        }
+                        if($("#edgeCollections").val() !== null || $("#edgeCollections").val() !== []) {
+                            restUrl = restUrl + "&edgeCollectionNames=" + $("#edgeCollections").val().toString();
+                        }
+                        if($("#databaseEdgeQueryRules").childElementCount !== 0) {
+                            let edgeQueriesElement = document.getElementById("databaseEdgeQueryRules");
+                            for (const arangoQueryElement of edgeQueriesElement.children) {
+                                if (arangoQueryElement.children[0].value !== "") {
+                                    restUrl = restUrl + "&edgeFilters=" + arangoQueryElement.children[0].value
+                                        + ":::" + arangoQueryElement.children[1].value
+                                        + ":::" + arangoQueryElement.children[2].value
+                                        + ":::" + arangoQueryElement.children[3].value;
+                                }
+                            }
+                        }
+                        if($("#dateAttribute").val() !== "") {
+                            restUrl = restUrl + "&dateAttributeName=" + $("#dateAttribute").val()
+                            sendPostGraphRequest(restUrl, content)
+                        }
+                        else {
+                            let db = logInAndGetDatabase();
+                            db = db.useDatabase($("#databaseName").val());
+
+                            let edgeDocumentsQuery = "RETURN [";
+                            for (const edgeCollectionName of $("#edgeCollections").val()) {
+                                edgeDocumentsQuery += "(FOR edge IN " + edgeCollectionName + " LIMIT 1 RETURN edge)[0],";
+                            }
+                            if (edgeDocumentsQuery.endsWith(",")) {
+                                edgeDocumentsQuery = edgeDocumentsQuery.slice(0,edgeDocumentsQuery.length-1)
+                            }
+                            edgeDocumentsQuery += "]"
+                            db.query(edgeDocumentsQuery).then((cursor) => cursor.all()).then(
+                                (docs) => {
+                                    let found_doc = false;
+                                    for (const doc of docs[0]) {
+                                        if (doc !== null) {
+                                            for (const key of Object.keys(doc)) {
+                                                let possibleDateAttr = Date.parse(doc[key])
+                                                if (!isNaN(possibleDateAttr)) {
+                                                    restUrl = restUrl + "&dateAttributeName=" + key;
+                                                    //console.log("KEY:" + key + " " + Date.parse(doc[key]))
+                                                    //console.log(restUrl)
+                                                    found_doc = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (found_doc) {
+                                            break;
+                                        }
+                                    }
+                                    sendPostGraphRequest(restUrl, content)
+                                },
+                                (errorData) => { showConnectionErrorMessage(errorData) } //TODO: Make this nicer
+                            )
                         }
                     }
+                    else {
+                        sendPostGraphRequest(restUrl, content)
+                    }
                 }
+
                 // !!This Code can only be used when webOCD supports edge types!!
                 // if($("#objectFormat").val() === 'XGMML') {
                 //     restUrl = restUrl + "&key=" + $("#key").val() + "&type1=" + $("#type1").val() + "&type2=" + $("#type2").val() + "&type3=" + $("#type3").val()
                 // }
-                sendRequest("post", restUrl, content,
-                            /* Response handler */
-                            function(response) {
-                                window.location.href = 'graphs.html';
-                            },
-                            /* Error handler */
-                            function(errorData) {
-                                /*
-                                 * Request failed
-                                 */
-                                showConnectionErrorMessage("Graph could not be sent.", errorData);
-                        });
             }
             /* Requests a cover import */
             function postCover(filecontent) {
@@ -279,6 +444,7 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
+								buttonSubmitEnd("submitButton");
                                 showConnectionErrorMessage("Cover could not be sent.", errorData);
                         });
             }
@@ -296,6 +462,7 @@ Facilitates import / upload of new graphs and covers.
                                 /*
                                  * Request failed
                                  */
+								buttonSubmitEnd("submitButton"); 
                                 showConnectionErrorMessage("Centrality could not be sent.", errorData);
                         });
             }
@@ -352,6 +519,71 @@ Facilitates import / upload of new graphs and covers.
                             }
                         });
             }
+            /* Gets ArangoDB database names  */
+            function getDatabaseInfo(callback) {
+                if (db_server !== null) {
+                    db_server.listDatabases().then(
+                        (databases) => {
+                            databases = response;
+                            if(typeof callback !== 'undefined') {
+                                callback();
+                            }
+                        },
+                        (errorData) => {
+                            /*
+                             * Request failed
+                             */
+                            showConnectionErrorMessage("Could not get databases for user", errorData);
+                        });
+                }
+            }
+
+            /* Adds a database query rule element  */
+            function addDatabaseQueryElement(parentId) {
+                let parent = document.getElementById(parentId)
+                parent.lastElementChild.lastElementChild.remove()
+
+                let databaseQueryElement =
+                    '<div class="row" style="margin-left:20px">\n' +
+                    (parentId === "databaseEdgeQueryRules" ? '<input class="col-md-3 form-control databaseCollectionValue" type="text" placeholder="Collection, e.g. \'Retweets\'" style="margin-left:10px">' : '') +
+                    '     <input class="col-md-3 form-control databaseDocumentAttribute" type="text" placeholder="Attribute, e.g. \'age\'" style="margin-left:10px">\n' +
+                    '     <select class="col-md-1 form-control custom-select databaseDocumentAttributeComparator" style="margin-left:10px">\n' +
+                    '          <option><</option>\n' +
+                    '          <option>></option>\n' +
+                    '          <option><=</option>\n' +
+                    '          <option>>=</option>\n' +
+                    '          <option>!=</option>\n' +
+                    '          <option>==</option>\n' +
+                    '          <option>IN</option>\n' +
+                    '          <option>NOT IN</option>\n' +
+                    '          <option>LIKE</option>\n' +
+                    '     </select>\n' +
+                    '     <input class="col-md-3 form-control databaseDocumentAttributeValue" type="text" placeholder="Some value, e.g. \'15\'" style="margin-left:10px">\n' +
+                    '     <div class="col-md-1" style="margin-left:10px">\n' +
+                    '         <div>\n' +
+                    '             <button name="submit"  class="btn" onclick="addDatabaseQueryElement(\'' + parentId + '\')" style="background-color:#74c40f;width:30px;height:30px;margin-top:4px;padding: 3px 3px 3px 3px">\n' +
+                    '                 <img class="submitIcon" src="IMG/open-iconic/svg/plus.svg" alt="Add Query" height=75% style="margin-bottom:6px">\n' +
+                    '             </button>\n' +
+                    '         </div>\n' +
+                    '     </div>\n' +
+                    '</div>';
+
+                parent.insertAdjacentHTML('beforeend', databaseQueryElement)
+            }
+
+            function showDatabaseQueryFields(showQueryFields) {
+                if(showQueryFields.checked) {
+                    document.getElementById("databaseNodeQueryRules").hidden = false;
+                    document.getElementById("databaseEdgeQueryRules").hidden = false;
+                    document.getElementById("dateAttributeStr").hidden = false;
+                }
+                else {
+                    document.getElementById("databaseNodeQueryRules").hidden = true;
+                    document.getElementById("databaseEdgeQueryRules").hidden = true;
+                    document.getElementById("dateAttributeStr").hidden = true;
+                }
+            }
+
             /* Requests graph information and displays a graph table */
             function loadGraphTable() {
                 /* Table initialization */
@@ -437,47 +669,142 @@ Facilitates import / upload of new graphs and covers.
                                   <label for="objectFormat" class="col-form-label">Format</label>
                                   <select id="objectFormat" class="form-control custom-select"></select>
                                 </div>
-                                <!-- Input file -->
-                                <div id="objectFileDiv" class="form-group">
-                                  <label for="objectFile" class="form-label">File</label>
-                                  <input id="objectFile" type="file" class="form-control-file">
+                                <div style="margin-left: 20px">
+                                    <!-- Input file -->
+                                    <div id="objectFileDiv" class="form-group">
+                                        <label for="objectFile" class="form-label">File</label>
+                                        <input id="objectFile" type="file" class="form-control-file">
+                                    </div>
+                                    <div id="databaseInput" class="hidden">
+                                        <!-- Input format -->
+                                        <div class="row form-group">
+                                            <div class="col-md-4">
+                                            <label for="databaseName" class="col-form-label">Database</label>
+                                            <select id="databaseName" class="form-control custom-select"></select>
+                                            </div>
+                                            <div class="col-md-4" style="margin-top:9px">
+                                                <label class="form-check-label" for="dbImportSwitchContainer" >Advanced Mode</label>
+                                                <div id="dbImportSwitchContainer" class="form-check form-switch" style="margin-top:10px">
+                                                    <input class="form-check-input" type="checkbox" role="switch" onchange="showDatabaseQueryFields(this)" id="databaseImportAdvancedModeSwitch">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row form-group">
+                                            <div class="col-md-4">
+                                                <label for="nodeCollection" class="col-form-label">Node Collection</label>
+                                                <select id="nodeCollection" class="form-control custom-select"></select>
+                                            </div>
+                                            <div id="involvedUsersstr" class="col-md-4" >
+                                                <label for="involvedUsers" class="col-form-label">Involved User IDs</label>
+                                                <input id="involvedUsers" class="form-control" type="text" placeholder="Comma separated user id list">
+                                            </div>
+                                        </div>
+                                        <div id="databaseNodeQueryRules" hidden>
+                                            <div class="row" style="margin-left:20px" >
+                                                <input class="col-md-3 form-control databaseDocumentAttribute" type="text" placeholder="Attribute, e.g. 'age'" style="margin-left:10px">
+                                                <select class="col-md-1 form-control custom-select databaseDocumentAttributeComparator" style="margin-left:10px">
+                                                    <option><</option>
+                                                    <option>></option>
+                                                    <option><=</option>
+                                                    <option>>=</option>
+                                                    <option>!=</option>
+                                                    <option>==</option>
+                                                    <option>IN</option>
+                                                    <option>NOT IN</option>
+                                                    <option>LIKE</option>
+                                                </select>
+                                                <input class="col-md-3 form-control databaseDocumentAttributeValue" type="text" placeholder="Some value, e.g. '15'" style="margin-left:10px">
+                                                <div class="col-md-1" style="margin-left:10px">
+                                                    <div>
+                                                        <button name="submit"  class="btn" onclick="addDatabaseQueryElement('databaseNodeQueryRules')" style="background-color:#74c40f;width:30px;height:30px;margin-top:4px;padding: 3px 3px 3px 3px">
+                                                            <img class="submitIcon" src="IMG/open-iconic/svg/plus.svg" alt="Add Query" height=75% style="margin-bottom:6px">
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row form-group">
+                                            <div class="col-md-4">
+                                                <label for="edgeCollections" style="width:100%; margin-top:4px">Edge Collections</label>
+                                                <select id="edgeCollections" class="form-control row" multiple="multiple" style="width:inherit"></select>
+                                            </div>
+                                        </div>
+                                        <div id="databaseEdgeQueryRules" hidden>
+                                            <div class="row" style="margin-left:20px">
+                                                <input class="col-md-3 form-control databaseCollectionValue" type="text" placeholder="Collection, e.g. 'Retweets'" style="margin-left:10px">
+                                                <input class="col-md-3 form-control databaseDocumentAttribute" type="text" placeholder="Attribute, e.g. 'age'" style="margin-left:10px">
+                                                <select class="col-md-1 form-control custom-select databaseDocumentAttributeComparator" style="margin-left:10px">
+                                                    <option><</option>
+                                                    <option>></option>
+                                                    <option><=</option>
+                                                    <option>>=</option>
+                                                    <option>!=</option>
+                                                    <option>==</option>
+                                                    <option>IN</option>
+                                                    <option>NOT IN</option>
+                                                    <option>LIKE</option>
+                                                </select>
+                                                <input class="col-md-3 form-control databaseDocumentAttributeValue" type="text" placeholder="Some value, e.g. '15'" style="margin-left:10px">
+                                                <div class="col-md-1" style="margin-left:10px">
+                                                    <div>
+                                                        <button name="submit"  class="btn" onclick="addDatabaseQueryElement('databaseEdgeQueryRules')" style="background-color:#74c40f;width:30px;height:30px;margin-top:4px;padding: 3px 3px 3px 3px">
+                                                            <img class="submitIcon" src="IMG/open-iconic/svg/plus.svg" alt="Add Query" height=75% style="margin-bottom:6px">
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" style="margin-top:5px">
+                                            <!-- Input Date attribute -->
+                                            <div id="dateAttributeStr" class="col-md-auto" hidden>
+                                                <label for="dateAttribute" class="col-form-label">Date Attribute to use to determine timeframe (leave unedited if unsure):</label>
+                                                <input id="dateAttribute" class="form-control" type="text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="dateRow" class="row" >
+                                        <!-- Input Start Date -->
+                                        <div id="startDateStr" class="hidden col-md-auto">
+                                          <label for="startDate" class="col-form-label">Start Date:</label>
+                                          <input id="startDate" class="form-control" type="date">
+                                        </div>
+                                        <!-- Input End Date -->
+                                        <div id="endDateStr" class="hidden col-md-auto">
+                                          <label for="endDate" class="col-form-label">End Date:</label>
+                                          <input id="endDate" class="form-control" type="date">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="row">
+                                        <div id="involvedUserURIstr" class="hidden col-md-9" >
+                                            <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
+                                            <input id="involvedUserURIs" class="form-control" type="text" placeholder="Comma separated uri list">
+                                        </div>
+                                        <div id="showUserNamestr" class="hidden col-md-3">
+                                            <label for="showUserNames" class="col-form-label">Show Usernames:</label>
+                                            <input id="showUserNames" class="form-check-input" type="checkbox" placeholder="false" role="switch" style="margin-top:50px;margin-left:-120px">
+                                        </div>
+                                        </div>
+                                    </div>
+                                      <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
+                                      <div id="keytr" class="hidden">
+                                          <label for="key" class="col-form-label">Key:</label>
+                                          <input id="key" type="text" value="" placeholder="empty">
+                                      </div>
+                                      <div id="type1tr" class="hidden">
+                                          <label for="type1" class="col-form-label">Type 1:</label>
+                                          <input id="type1" type="text" value="" placeholder="empty">
+                                      </div>
+                                      <div id="type2tr" class="hidden">
+                                          <label for="type2" class="col-form-label">Type 2:</label>
+                                          <input id="type2" type="text" value="" placeholder="empty">
+                                      </div>
+                                      <div id="type3tr" class="hidden">
+                                          <label for="type3" class="col-form-label">Type 3:</label>
+                                          <input id="type3" type="text" value="" placeholder="empty">
+                                      </div> -->
+                                    <!-- Name for imported object -->
                                 </div>
-                                  <!-- Input Start Date -->
-                                  <div id="startDatetr" class="hidden">
-                                    <label for="startDate" class="col-form-label">Start Date:</label>
-                                    <input id="startDate" type="text" placeholder="YYYY-MM-DD">
-                                  </div>
-                                  <!-- Input End Date -->
-                                  <div id="endDatetr" class="hidden">
-                                    <label for="endDate" class="col-form-label">End Date:</label>
-                                    <input id="endDate" type="text" placeholder="YYYY-MM-DD">
-                                  </div>
-                                <div id="showUserNamestr" class="hidden">
-                                    <label for="showUserNames" class="col-form-label">Show Usernames:</label>
-                                    <input id="showUserNames" type="text" placeholder="false">
-                                </div>
-                                <div id="involvedUserURIstr" class="hidden">
-                                    <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
-                                    <input id="involvedUserURIs" type="text" style="width:240px" placeholder="Comma separated uri list">
-                                </div>
-                                  <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!
-                                  <div id="keytr" class="hidden">
-                                      <label for="key" class="col-form-label">Key:</label>
-                                      <input id="key" type="text" value="" placeholder="empty">
-                                  </div>
-                                  <div id="type1tr" class="hidden">
-                                      <label for="type1" class="col-form-label">Type 1:</label>
-                                      <input id="type1" type="text" value="" placeholder="empty">
-                                  </div>
-                                  <div id="type2tr" class="hidden">
-                                      <label for="type2" class="col-form-label">Type 2:</label>
-                                      <input id="type2" type="text" value="" placeholder="empty">
-                                  </div>
-                                  <div id="type3tr" class="hidden">
-                                      <label for="type3" class="col-form-label">Type 3:</label>
-                                      <input id="type3" type="text" value="" placeholder="empty">
-                                  </div> -->
-                                <!-- Name for imported object -->
                                 <div class="form-group">
                                   <label for="objectName" class="col-form-label">Name</label>
                                   <input id="objectName" type="text" class="form-control">

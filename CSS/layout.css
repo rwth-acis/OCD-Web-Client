@@ -351,7 +351,7 @@ td:last-child {
     text-align: center;
 }
 
-.btn-group button {
+.btn-custom-group button {
     background-color: #6bc15a; /* Green background */
     font-weight: bold;
     border: 1px solid #01a701; /* Green border */
@@ -361,19 +361,19 @@ td:last-child {
     float: left; /* Float the buttons side by side */
 }
 
-.btn-group button:not(:last-child) {
+.btn-custom-group button:not(:last-child) {
     border-right: none; /* Prevent double borders */
 }
 
 /* Clear floats (clearfix hack) */
-.btn-group:after {
+.btn-custom-group:after {
     content: "";
     clear: both;
     display: table;
 }
 
 /* Add a background color on hover */
-.btn-group button:hover {
+.btn-custom-group button:hover {
     background-color: #3e8e41;
 }
 
@@ -381,6 +381,14 @@ td:last-child {
     margin: auto;
     margin-bottom: 3px;
     min-width: 300px; /* most: 958px */
+}
+
+#dropdownInactivityItem {
+    cursor: default;
+}
+
+#dropdownInactivityItem.hover {
+    cursor: pointer;
 }
 
 /* Dropdown Button */

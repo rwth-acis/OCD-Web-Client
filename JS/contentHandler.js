@@ -26,6 +26,7 @@ if(path[path.length - 1] !== "login.html") {
  * Menu
  */
 $(document).ready(function(){
+    let databaseLoginText = localStorage.getItem("arangoUser@WebOCD") !== null ? "Arango User: " + localStorage.getItem("arangoUser@WebOCD") : "ArangoDB Login";
      /*
      * Menu definition.
      */
@@ -51,10 +52,16 @@ $(document).ready(function(){
                         User\
                       </button>\
                       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdownMenuButton">\
-                        <button id="dropdownInactivityItem" class="dropdown-header btn" data-toggle="tooltip" data-placement="left" title="Your content will be deleted after an inactivity period"\
-                                style="color:#eac813;font-family: Arial, Helvetica, sans-serif;font-weight:bold">\
+                        <div id="dropdownInactivityItem" class="dropdown-header" data-toggle="tooltip" data-placement="left" title="Your content will be deleted after an inactivity period"\
+                                style="color:#eac813;font-family: Arial, Helvetica, sans-serif;font-weight:bold" disabled>\
                             Inactivity\
-                        </button>\
+                        </div>\
+                        <span data-toggle="tooltip" data-placement="left" title="Log into an ArangoDB database to import data from and get additional functionalities">\
+                            <button id="databaseLogin" class="dropdown-item btn" data-toggle="modal" data-target="#databaseLoginModal"\
+                                    style="color:#4c830a;font-family: Arial, Helvetica, sans-serif;font-weight:bold">\
+                                ' + databaseLoginText + '\
+                            </button>\
+                        </span>\
                         <div class="dropdown-divider"></div>\
                         <a class="dropdown-item" style="text-align:center" href="logout.html">Logout</a>\
                       </div>\
@@ -65,6 +72,43 @@ $(document).ready(function(){
         ';
 
     $('body').prepend(menuString);
+
+    let defaultDBAddress = localStorage.getItem("arangoAdress@WebOCD") !== null ? localStorage.getItem("arangoAdress@WebOCD") : "127.0.0.1:8529";
+    let defaultDBUser = localStorage.getItem("arangoUser@WebOCD") !== null ? localStorage.getItem("arangoUser@WebOCD") : "root";
+    let defaultDBPassword = localStorage.getItem("arangoPass@WebOCD") !== null ? localStorage.getItem("arangoPass@WebOCD") : "";
+    let databaseLoginModal = '<div class="modal fade" id="databaseLoginModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">\n' +
+        '  <div class="modal-dialog modal-dialog-centered" role="document">\n' +
+        '    <div class="modal-content">\n' +
+        '      <div class="modal-header">\n' +
+        '        <h5 class="modal-title" id="exampleModalLongTitle">ArangoDB Login</h5>\n' +
+        '        <button type="button" class="close" data-dismiss="modal" aria-label="Close">\n' +
+        '          <span aria-hidden="true">&times;</span>\n' +
+        '        </button>\n' +
+        '      </div>\n' +
+        '      <div class="modal-body">\n' +
+        '        <!-- Input Database Address -->\n' +
+        '       <div id="databaseAddressStr" >\n' +
+        '           <label for="databaseAddress" class="col-form-label">Database Address</label>\n' +
+        '           <input id="databaseAddress" class="form-control" type="text" value=' + defaultDBAddress + '>\n' +
+        '       </div>\n' +
+        '       <!-- Input Database Credentials -->\n' +
+        '       <div id="databaseCredentialsStr">\n' +
+        '           <label for="databaseUser" class="col-form-label">Database User</label>\n' +
+        '           <input id="databaseUser" class="form-control" type="text" value=' + defaultDBUser + '>\n' +
+        '           <label for="databasePassword" class="col-form-label">Database Password</label>\n' +
+        '           <input id="databasePassword" class="form-control" type="password" value=' + defaultDBPassword + '>\n' +
+        '       </div>\n' +
+        '      </div>\n' +
+        '      <div class="modal-footer">\n' +
+        '        <button type="button" class="btn btn-success" onclick="logIntoDatabase()">Login</button>\n' +
+        '      </div>\n' +
+        '    </div>\n' +
+        '  </div>\n' +
+        '</div>'
+
+    //data-dismiss="modal"
+
+    $('body').prepend(databaseLoginModal)
 
     if(localStorage.getItem("user") !== null) { //already logged in
         /* Assemble User Dropdown Menu */
@@ -94,6 +138,58 @@ $(document).ready(function(){
     }
 });
 
+function logIntoDatabase() {
+    let databaseUser = document.getElementById("databaseUser").value;
+    let databasePassword = document.getElementById("databasePassword").value;
+    let databaseAddress = document.getElementById("databaseAddress").value;
+    //console.log(databaseUser, databasePassword, databaseAddress);
+
+    if (!databaseAddress.startsWith("http://") && !databaseAddress.startsWith("https://")) { //Add http to address if needed
+        databaseAddress = "http://" + databaseAddress
+    }
+    db_test = new arangojs.Database(databaseAddress);
+    db_test.login(databaseUser,databasePassword).then(
+        (success_data) => {
+            localStorage.setItem("arangoUser@WebOCD",databaseUser);
+            localStorage.setItem("arangoPass@WebOCD",databasePassword);
+            localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
+
+            if(document.getElementById("arangoDBFormatOption") !== null) {
+                document.getElementById("arangoDBFormatOption").innerHTML = "Fetched from ArangoDB Database";
+                document.getElementById("arangoDBFormatOption").disabled = false;
+            }
+
+            document.getElementById("databaseLogin").innerHTML = "Arango User: " + databaseUser;
+        },
+        (error_data)  => {showErrorMessage("Could not log into database: " + error_data)});
+    $("#databaseLoginModal").modal('hide');
+}
+
+function logInAndGetDatabase() {
+    let databaseUser = localStorage.getItem("arangoUser@WebOCD");
+    let databasePassword = localStorage.getItem("arangoPass@WebOCD");
+    let databaseAddress = localStorage.getItem("arangoAdress@WebOCD");
+    let db = new arangojs.Database(databaseAddress);
+    db.login(databaseUser,databasePassword).then(
+        (success_data) => {
+            localStorage.setItem("arangoUser@WebOCD",databaseUser);
+            localStorage.setItem("arangoPass@WebOCD",databasePassword);
+            localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
+
+            if(document.getElementById("arangoDBFormatOption") !== null) {
+                document.getElementById("arangoDBFormatOption").innerHTML = "Fetched from ArangoDB Database";
+                document.getElementById("arangoDBFormatOption").disabled = false;
+            }
+
+            document.getElementById("databaseLogin").innerHTML = "Arango User: " + databaseUser;
+        },
+        (error_data)  => {
+            showErrorMessage("Could not log into database: " + error_data)
+            db = null
+        });
+    return db
+}
+
 /*
  * Displays an error message.
  * @param {type} message A message string.
@@ -113,7 +209,7 @@ function showErrorMessage(message) {
  */
 function showWarning(message) {
     $("#errorMessage").empty();
-    $("#errorMessage").html(writeAlertWarning("Warning!", message));
+    $("#errorMessage").html(writeAlertWarning("Warning!", message.replace(/(?:\r\n|\r|\n)/g, '<br>')));
     $("#errorMessageWrapper").hide();
     $("#errorMessageWrapper").fadeIn(100);
 };
@@ -125,7 +221,7 @@ function showWarning(message) {
  */
 function showInfo(message) {
     $("#errorMessage").empty();
-    $("#errorMessage").html(writeAlertInfo("Info ", message));
+    $("#errorMessage").html(writeAlertInfo("Info ", message.replace(/(?:\r\n|\r|\n)/g, '<br>')));
     $("#errorMessageWrapper").hide();
     $("#errorMessageWrapper").fadeIn(100);
 };
@@ -137,7 +233,7 @@ function showInfo(message) {
  */
 function showSuccess(message) {
     $("#errorMessage").empty();
-    $("#errorMessage").html(writeAlertInfo("Success!", message));
+    $("#errorMessage").html(writeAlertInfo("Success!", message.replace(/(?:\r\n|\r|\n)/g, '<br>')));
     $("#errorMessageWrapper").hide();
     $("#errorMessageWrapper").fadeIn(100);
 };
@@ -192,7 +288,7 @@ function showConnectionErrorMessage(message, errorData) {
     {
         const doc = $.parseXML(errorData.substring(errorData.indexOf("<?xml")));
         $("#errorMessage").html(writeAlertWarning("Service Connection Failure!", message
-            + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text() + "</p>"
+            + "<p style=\"margin-top:12px;margin-bottom:0\">" + $(doc).find("Message").text().replace(/(?:\r\n|\r|\n)/g, '<br>') + "</p>"
             + "<p>Please refresh the page or reexecute the operation.</p>"));
     }
     $("#errorMessageWrapper").hide();
@@ -210,7 +306,7 @@ function showXMLErrorMessage(errorXml) {
     var errMessage = $(errorXml).children("Message").first().text();
     $("#errorMessage").append(
             '<p>Service Error ' + errName + ' (Id ' + errId + '): '
-            + errMessage + '</p>'
+            + errMessage.replace(/(?:\r\n|\r|\n)/g, '<br>') + '</p>'
     );
     $("#errorMessageWrapper").hide();
     $("#errorMessageWrapper").fadeIn(100);

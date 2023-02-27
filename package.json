@@ -7,7 +7,7 @@
     "3d-force-graph": "^1.67.7",
     "arangojs": "6.14.1",
     "bootstrap": "^4.5.3",
-    "bootstrap-select": "^1.13.18",
+    "bootstrap-multiselect": "^1.1.0",
     "chart.js": "^2.9.4",
     "file-saver": "^2.0.5",
     "force-graph": "^1.35.1",
