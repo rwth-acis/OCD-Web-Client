@@ -838,6 +838,32 @@
             }
         }
 
+        //TODO REMOVE
+        /* Delete graph button handler */
+        function closeDatabaseInfo() {
+            console.log("YEET")
+            document.getElementById("DatabaseItemList").hidden = true
+            document.getElementById("DatabaseItemList").removeChild(document.getElementById("dbList"))
+        }
+
+        function openNodeInfo(nodeName, databaseJson) {
+            //Object.keys(databaseJson)[0] works too
+            document.getElementById("DatabaseItemList").hidden = false
+            if(document.getElementById("dbList") != null) {
+                document.getElementById("DatabaseItemList").removeChild(document.getElementById("dbList"))
+            }
+            document.getElementById("DatabaseItemList").insertAdjacentHTML("beforeend", "<ul id='dbList' class='list-group list-group-flush'></ul>")
+            document.getElementById("dbList").insertAdjacentHTML("beforeend", "<li class='list-group-item' style='text-align: center; background: #c5d2ea'><b>" + nodeName + "</b></li>")
+            for (var key in databaseJson) {
+                document.getElementById("dbList").insertAdjacentHTML("beforeend",
+                    "<li class='list-group-item' style='text-align: left'>" +
+                    "<p style='width: 48%; float: left; overflow-wrap: break-word;'><b>" + key + "</b></p>" +
+                    "<p style='width: 48%; float: right; overflow-wrap: break-word;'> " + databaseJson[key] + "</p>" +
+                    "</li>")
+            }
+        }
+        //TODO REMOVE
+
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function(event) {
             if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
@@ -975,6 +1001,14 @@
                         }
                     })
                     .onNodeClick(node => {
+                        jsonTest = '{' +
+                            '"Name": "Matthias Aebischer",' +
+                            '"Date of Birth": "18 October 1967",' +
+                            '"Place of Birth": "Schwarzenburg",' +
+                            '"Occupation": ["Television Presenter", "Politician", "Radio Personality", "Journalist"]' +
+                            '}'
+                        openNodeInfo(node.name, JSON.parse(jsonTest))
+                        /**
                         if (arangoDataBase !== "" && arangoDataBase !== null
                             && arangoUser !== "" && arangoUser !== null
                             && arangoPass !== null
@@ -994,7 +1028,7 @@
                                     nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
                                 }
                             }).catch((err) => console.error(err));
-                        }
+                        }**/
                     })
                     .onNodeRightClick(node => {
                         highlightNodes.clear();
@@ -1625,6 +1659,9 @@
                                 </div>
                                 <div id="forceVisualizationContent" class="forceVisualizationContent">
                                     <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
+                                    <div id="DatabaseItemList" hidden style="z-index: 2; background: #fafafa; border-style: solid; border-left-style: none; border-color: #9a9a9a; border-width: 1px; float: left; position: absolute; top: 0; left: 0; width: 30%">
+                                        <img onclick="closeDatabaseInfo()" id="closeDatabaseInfo" class="icon iconBtn" src="IMG/open-iconic/svg/chevron-left.svg" style="background: #fafafa; border-style: solid; border-right-style: none; border-color: #9a9a9a; border-width: 1px; border-top-left-radius: 6px; border-bottom-left-radius: 6px; position: absolute; top: 50%; right: 0; float: right; z-index: 3;box-sizing: content-box; padding-top: 3px; padding-bottom: 3px; margin: 2px; margin-right: 0">
+                                    </div>
                                 </div>
                             </div>
                         </div>
