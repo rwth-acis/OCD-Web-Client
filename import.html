@@ -352,8 +352,6 @@ Facilitates import / upload of new graphs and covers.
                         if($("#involvedUsers").val() !== "") {
                             restUrl = restUrl + "&involvedUsers=" + $("#involvedUsers").val();
                         }
-                        console.log(document.getElementById("databaseNodeQueryRules"));
-                        console.log(document.getElementById("databaseNodeQueryRules").children, "\n" + document.getElementById("databaseNodeQueryRules"));
                         if($("#databaseNodeQueryRules").childElementCount !== 0) {
                             let nodeQueriesElement = document.getElementById("databaseNodeQueryRules");
                             for (const arangoQueryElement of nodeQueriesElement.children) {
@@ -397,16 +395,20 @@ Facilitates import / upload of new graphs and covers.
                             db.query(edgeDocumentsQuery).then((cursor) => cursor.all()).then(
                                 (docs) => {
                                     let found_doc = false;
+                                    let dateMap =  new Map();
                                     for (const doc of docs[0]) {
                                         if (doc !== null) {
                                             for (const key of Object.keys(doc)) {
                                                 let possibleDateAttr = Date.parse(doc[key])
                                                 if (!isNaN(possibleDateAttr)) {
-                                                    restUrl = restUrl + "&dateAttributeName=" + key;
                                                     //console.log("KEY:" + key + " " + Date.parse(doc[key]))
                                                     //console.log(restUrl)
+                                                    if (!dateMap.has(key)) {
+                                                        dateMap.set(key, 1);
+                                                    } else {
+                                                        dateMap.set(key, dateMap.get(key)+1);
+                                                    }
                                                     found_doc = true;
-                                                    break;
                                                 }
                                             }
                                         }
@@ -414,7 +416,19 @@ Facilitates import / upload of new graphs and covers.
                                             break;
                                         }
                                     }
-                                    sendPostGraphRequest(restUrl, content)
+                                    if (!found_doc && ($("#startDate").val() !== "" || $("#endDate").val() !== "")) {
+                                        showErrorMessage("Could not find a date attribute to use for timeframe. Dont use start/end dates or specify date attribute in advanced mode")
+                                    }
+                                    else {
+                                        let max_occ_key = dateMap.keys().next().value
+                                        for (const entry of dateMap.entries()) {
+                                            if(entry.value > dateMap.get(max_occ_key)) {
+                                                max_occ_key = entry.key
+                                            }
+                                        }
+                                        restUrl = restUrl + "&dateAttributeName=" + max_occ_key
+                                        sendPostGraphRequest(restUrl, content)
+                                    }
                                 },
                                 (errorData) => { showConnectionErrorMessage(errorData) } //TODO: Make this nicer
                             )
@@ -423,6 +437,9 @@ Facilitates import / upload of new graphs and covers.
                     else {
                         sendPostGraphRequest(restUrl, content)
                     }
+                }
+                else {
+                    sendPostGraphRequest(restUrl, content)
                 }
 
                 // !!This Code can only be used when webOCD supports edge types!!
@@ -669,7 +686,7 @@ Facilitates import / upload of new graphs and covers.
                                   <label for="objectFormat" class="col-form-label">Format</label>
                                   <select id="objectFormat" class="form-control custom-select"></select>
                                 </div>
-                                <div style="margin-left: 20px">
+                                <div style="margin-left: 20px; margin-right:25px">
                                     <!-- Input file -->
                                     <div id="objectFileDiv" class="form-group">
                                         <label for="objectFile" class="form-label">File</label>
@@ -689,13 +706,14 @@ Facilitates import / upload of new graphs and covers.
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="row border-top" style="height:1px"></div>
                                         <div class="row form-group">
                                             <div class="col-md-4">
                                                 <label for="nodeCollection" class="col-form-label">Node Collection</label>
                                                 <select id="nodeCollection" class="form-control custom-select"></select>
                                             </div>
                                             <div id="involvedUsersstr" class="col-md-4" >
-                                                <label for="involvedUsers" class="col-form-label">Involved User IDs</label>
+                                                <label for="involvedUsers" class="col-form-label">Involved People/Node IDs</label>
                                                 <input id="involvedUsers" class="form-control" type="text" placeholder="Comma separated user id list">
                                             </div>
                                         </div>
@@ -754,7 +772,8 @@ Facilitates import / upload of new graphs and covers.
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row" style="margin-top:5px">
+                                        <div class="row border-top" style="height:1px;margin-top:5px"></div>
+                                        <div class="row">
                                             <!-- Input Date attribute -->
                                             <div id="dateAttributeStr" class="col-md-auto" hidden>
                                                 <label for="dateAttribute" class="col-form-label">Date Attribute to use to determine timeframe (leave unedited if unsure):</label>
