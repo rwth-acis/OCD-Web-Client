@@ -394,6 +394,7 @@
                     highlightNodes = new Set();
                     highlightLinks = new Set();
 
+                    document.getElementById("visualizationLoadSpinner").hidden = false;
                     if (number === 0) {
                         forceViz.style.display = "none";
 
@@ -883,6 +884,7 @@
                 if(typeof jsonGraph === 'undefined') {
                     sendRequest("get", "visualization/cover/" + coverId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
                         function (response) {
+                            document.getElementById("visualizationLoadSpinner").hidden = true;
                             jsonGraph = response;
                             buildGraph();
                         },
@@ -895,6 +897,7 @@
                         });
                 }
                 else {
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
                     buildGraph();
                 }
             }
@@ -903,6 +906,7 @@
             function visualizationCollapsableHandler() {
                 /* Requests the graph visualization */
                 if (typeof visualization === 'undefined') {
+                    document.getElementById("visualizationLoadSpinner").hidden = false;
                     getVisualization();
                 }
 
@@ -932,6 +936,7 @@
                         + graphId + "/outputFormat/SVG/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
                     /* Response handler */
                     function(response) {
+                        document.getElementById("visualizationLoadSpinner").hidden = true;
                         visualization = response;
                         $('.visualizationGraphic').append(visualization);
                     },
@@ -1129,8 +1134,8 @@
                             </div>
                         </div>
                         <div class="collapsableContent">
-                            <div class="optionRow" style="width:100%">
-                                <div class="dataBaseDropDown" style="width:10%">
+                            <div class="optionRow row">
+                                <div class="dataBaseDropDown col-auto" style="margin-right:2px">
                                     <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
                                     <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
                                         <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
@@ -1140,19 +1145,19 @@
                                         <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
                                     </form>
                                 </div>
-                                <div class="searchDropDown" style="width:8%">
+                                <div class="searchDropDown col-sm-1">
                                     <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
                                     <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button' onSubmit="return false;">
                                         <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
                                         <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
                                     </form>
                                 </div>
-                                <div class="btn-custom-group" style="width:78%">
-                                    <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
-                                    <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
-                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                                <div class="btn-custom-group col-md-9">
+                                    <button class="col-md-4" onclick="buttonClick(0)" >SVG</button>
+                                    <button class="col-sm-4" onclick="buttonClick(1)" >2D Interactive</button>
+                                    <button class="col-sm-4" onclick="buttonClick(2)" >3D Interactive</button>
                                 </div>
-                                <div class="toolsDropDown" style="width:2%">
+                                <div class="toolsDropDown col">
                                     <div class="toolsDropDownDots" onclick="toolsDropDownDots()">
                                         <span class="tool-dot" style="margin-top:4px"></span>
                                         <span class="tool-dot" style="margin-top:3px"></span>
@@ -1171,6 +1176,11 @@
                                     <input id="visualizationZoomer" class="visualizationZoomer" type="range">
                                 </div>
                                 <div id="visualizationContent" class="visualizationContent">
+                                    <div class="text-center">
+                                        <div id="visualizationLoadSpinner" class="spinner-border" role="status" style="margin-top:10px; width: 3rem; height: 3rem;" hidden>
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
                                     <div class="visualizationGraphic"></div>
                                 </div>
                                 <div id="forceVisualizationContent" class="forceVisualizationContent">
