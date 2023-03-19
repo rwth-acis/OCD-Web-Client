@@ -433,6 +433,65 @@ td:last-child {
     float: right;
 }
 
+.closeDatabaseInfo {
+    background: #fafafa;
+    border-style: solid;
+    border-right-style: none;
+    border-color: #9a9a9a;
+    border-width: 1px;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    position: sticky;
+    top: 50%;
+    right: 0;
+    float: right;
+    z-index: 3;
+    box-sizing: content-box;
+    padding: 8px 10px 8px 2px;
+    margin: 2px 0 2px 2px;
+}
+
+.databaseItemList {
+    height:100%;
+    overflow-y:scroll;
+    z-index: 2;
+    background: white;
+    border-style: solid;
+    border-left-style: none;
+    border-color: #9a9a9a;
+    border-width: 1px;
+    float: left;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+}
+
+.databaseItemListCrumb {
+    text-align: center;
+    border-radius: 0;
+    background-color: #c5d2ea;
+}
+
+.hoverCrumb:hover {
+    cursor: pointer;
+}
+
+.jsonListExpandable:hover {
+    cursor: pointer;
+}
+
+.nodeClusterButton {
+    float: left;
+    width: fit-content;
+    height: 50%;
+    padding: 1px;
+    font-size: small;
+    vertical-align: middle;
+    border-radius: 0;
+    background-color: #c5d2ea;
+}
+
 .tool-dot {
     height: 10px;
     width: 10px;

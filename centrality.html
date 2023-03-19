@@ -10,8 +10,11 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="node_modules/d3-octree/dist/d3-octree.min.js"></script>
+    <script src="node_modules/d3-force-3d/dist/d3-force-3d.min.js"></script>
     <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="JS/contentHandler.js"></script>
+    <script src="JS/graphVizContentHandler.js"></script>
     <script src="node_modules/js-base64/base64.js"></script>
     <script src="JS/ServiceAPI/moduleHelper.js"></script>
     <script src="JS/ServiceAPI/serviceAPI.js"></script>
@@ -39,6 +42,7 @@
         var jsonGraph;
         var forceGraph;
         var visualizationType = "NODE_SIZE";
+        let nodeSizeMin = Number.MAX_VALUE;
         var visualizationTypeChange = true;
         var have3D;
         var haveNodeNames = false;
@@ -534,16 +538,16 @@
             let graph = JSON.parse(jsonGraph);
             let sizes = new Map();
             let colors = new Map();
-            let size_min = Number.MAX_VALUE;
+            nodeSizeMin = Number.MAX_VALUE;
             for (let node of graph.nodes) {
                 sizes[node.id] = node.size;
-                if (node.size < size_min) {
-                    size_min = node.size;
+                if (node.size < nodeSizeMin) {
+                    nodeSizeMin = node.size;
                 }
 
                 colors[node.id] = node.color;
             }
-            //console.log(size_min);
+            //console.log(nodeSizeMin);
 
             if (have3D === false) {
                 forceGraph = ForceGraph()
@@ -559,31 +563,32 @@
                         }
                     })
                     .onNodeClick(node => {
-                        if (arangoDataBase !== "" && arangoDataBase !== null
-                            && arangoUser !== "" && arangoUser !== null
-                            && arangoPass !== null
-                            && arangoCollection !== "" && arangoCollection !== null) {
-
-                            db.useDatabase(arangoDataBase);
-                            db.useBasicAuth(arangoUser, arangoPass);
-                            const docCollection = db.collection(arangoCollection);
-                            docCollection.document(node.name, true).then(function (doc) {
-                                let nodeWindow = window.open("", '_blank');
-
-                                if (doc != null) {
-                                    //console.log(JSON.stringify(doc, null, '    '));
-                                    let docStr = JSON.stringify(doc, null, '    ');
-                                    docStr = docStr.replace(/\n/g, "<br />");
-                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                                } else {
-                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                                }
-                            }).catch((err) => console.error(err));
-                        }
+                        getNodeInfo(node);
+                        // if (arangoDataBase !== "" && arangoDataBase !== null
+                        //     && arangoUser !== "" && arangoUser !== null
+                        //     && arangoPass !== null
+                        //     && arangoCollection !== "" && arangoCollection !== null) {
+                        //
+                        //     db.useDatabase(arangoDataBase);
+                        //     db.useBasicAuth(arangoUser, arangoPass);
+                        //     const docCollection = db.collection(arangoCollection);
+                        //     docCollection.document(node.name, true).then(function (doc) {
+                        //         let nodeWindow = window.open("", '_blank');
+                        //
+                        //         if (doc != null) {
+                        //             //console.log(JSON.stringify(doc, null, '    '));
+                        //             let docStr = JSON.stringify(doc, null, '    ');
+                        //             docStr = docStr.replace(/\n/g, "<br />");
+                        //             nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                        //         } else {
+                        //             nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                        //         }
+                        //     }).catch((err) => console.error(err));
+                        // }
                     })
                     .nodeVal(function (node) {
                         if (visualizationType === "NODE_SIZE") {
-                            return sizes[node.id] - size_min + 1;
+                            return sizes[node.id] - nodeSizeMin + 1;
                         } else {
                             return 2;
                         }
@@ -644,31 +649,32 @@
                         }
                     })
                     .onNodeClick(node => {
-                        if (arangoDataBase !== "" && arangoDataBase !== null
-                            && arangoUser !== "" && arangoUser !== null
-                            && arangoPass !== null
-                            && arangoCollection !== "" && arangoCollection !== null) {
-
-                            db.useDatabase(arangoDataBase);
-                            db.useBasicAuth(arangoUser, arangoPass);
-                            const docCollection = db.collection(arangoCollection);
-                            docCollection.document(node.name, true).then(function (doc) {
-                                let nodeWindow = window.open("", '_blank');
-
-                                if (doc != null) {
-                                    //console.log(JSON.stringify(doc, null, '    '));
-                                    let docStr = JSON.stringify(doc, null, '    ');
-                                    docStr = docStr.replace(/\n/g, "<br />");
-                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                                } else {
-                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                                }
-                            }).catch((err) => console.error(err));
-                        }
+                        getNodeInfo(node);
+                        // if (arangoDataBase !== "" && arangoDataBase !== null
+                        //     && arangoUser !== "" && arangoUser !== null
+                        //     && arangoPass !== null
+                        //     && arangoCollection !== "" && arangoCollection !== null) {
+                        //
+                        //     db.useDatabase(arangoDataBase);
+                        //     db.useBasicAuth(arangoUser, arangoPass);
+                        //     const docCollection = db.collection(arangoCollection);
+                        //     docCollection.document(node.name, true).then(function (doc) {
+                        //         let nodeWindow = window.open("", '_blank');
+                        //
+                        //         if (doc != null) {
+                        //             //console.log(JSON.stringify(doc, null, '    '));
+                        //             let docStr = JSON.stringify(doc, null, '    ');
+                        //             docStr = docStr.replace(/\n/g, "<br />");
+                        //             nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                        //         } else {
+                        //             nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                        //         }
+                        //     }).catch((err) => console.error(err));
+                        // }
                     })
                     .nodeVal(function (node) {
                         if (visualizationType === "NODE_SIZE") {
-                            return sizes[node.id] - size_min + 1;
+                            return node.size - nodeSizeMin + 1;
                         } else {
                             return 2;
                         }
@@ -725,6 +731,127 @@
             forceGraph.width($('.forceVisualizationContent').width());
             forceGraph.height($('.forceVisualizationContent').height());
 
+        }
+
+        function applyClusterLayout() {
+            if(!have3D) {
+                forceGraph
+                    .nodeCanvasObject((node, ctx, globalScale) => {
+                        if (clusterNodes.get(node.key) !== undefined) {
+                            const fontSize = 15 / globalScale;
+                            ctx.font = `bold ${fontSize}px Sans-Serif`;
+                            let label = node.label
+                            if (node.label.length >= 50) {//Reduce length of node label to make cluster names less giant
+                                label = node.label.slice(0, 70) + "..."
+                            }
+
+                            const textWidth = ctx.measureText(label).width;
+                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
+
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = node.color;
+                            ctx.fillText(label, node.x, node.y);
+
+                            node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
+                        }
+                        else if (haveNodeNames === true && node.key !== "CLUSTER_CENTER_NODE") {
+                            const fontSize = 15 / globalScale;
+                            ctx.font = `${fontSize}px Sans-Serif`;
+                            let label = node.label
+                            if (node.label.length >= 50) {//Reduce length of node label to make cluster names less giant
+                                label = node.label.slice(0, 70) + "..."
+                            }
+
+                            const textWidth = ctx.measureText(label).width;
+                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
+
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = node.color;
+                            ctx.fillText(label, node.x, node.y);
+
+                            node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
+                        }
+                    })
+                    .nodeVal(function (node) {
+                        if (node.key === "CLUSTER_CENTER_NODE") { //TODO: Change where the center node positions are set.
+                            node.x = 0
+                            node.y = 0
+                            node.z = 0
+                            //return 0.0000001
+                            return 0.0001
+                        }
+                        if (clusterNodes.get(node.key) !== undefined) {
+                            return 0.0001
+                        }
+                        else {
+                            if (visualizationType === "NODE_SIZE") {
+                                return node.size - nodeSizeMin + 1;
+                            } else {
+                                return 2;
+                            }
+                        }
+                    })
+                    .linkVisibility(function (link) {
+                        if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
+                            return false
+                        }
+                    }); //Update the graph
+            }
+            else {
+                forceGraph
+                    .nodeThreeObject(node => {
+                        if(clusterNodes.get(node.key) !== undefined) {
+                            const nodeEl = document.createElement('div');
+                            if (node.label.length >= 50) {//Reduce length of node label to make cluster names less giant
+                                label = node.label.slice(0, 70) + "..."
+                            }
+                            nodeEl.textContent = node.label;
+                            nodeEl.style.color = "#e3c302";//node.color;
+                            nodeEl.style.fontWeight = "bold";
+                            nodeEl.className = 'node-label';
+                            return new THREE.CSS2DObject(nodeEl);
+                        }
+                        else if(haveNodeNames === true && node.key !== "CLUSTER_CENTER_NODE") {
+                            const nodeEl = document.createElement('div');
+                            nodeEl.textContent = node.name;
+                            nodeEl.style.color = "#ffffff";//node.color;
+                            nodeEl.className = 'node-label';
+                            return new THREE.CSS2DObject(nodeEl);
+                        }
+                    })
+                    .nodeVal(function (node) {
+                        if (node.key === "CLUSTER_CENTER_NODE") { //TODO: Change where the center node positions are set.
+                            node.x = 0
+                            node.y = 0
+                            node.z = 0
+                            //return 0.0000001
+                            return 0.0001
+                        }
+                        if (clusterNodes.get(node.key) !== undefined) {
+                            return 0.0001
+                        }
+                        else {
+                            if (visualizationType === "NODE_SIZE") {
+                                return sizes[node.id] - nodeSizeMin + 1;
+                            } else {
+                                return 2;
+                            }
+                        }
+                    })
+                    .linkVisibility(function (link) {
+                        if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
+                            //return false
+                        }
+                    }); //Update the graph
+            }
         }
 
         /* Requests and stores a JSON representation of the graph and builds it */
@@ -1029,6 +1156,12 @@
                         </div>
                         <div id="forceVisualizationContent" class="forceVisualizationContent">
                             <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
+                            <div id="DatabaseItemList"  class="databaseItemList" hidden>
+                                <nav aria-label="breadcrumb">
+                                    <ol id="DatabaseItemListCrumb" class="databaseItemListCrumb breadcrumb"></ol>
+                                </nav>
+                                <img onclick="closeDatabaseInfo()" id="closeDatabaseInfo" class="icon iconBtn closeDatabaseInfo" src="IMG/open-iconic/svg/chevron-left.svg">
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -483,6 +483,23 @@ function getParameterXml(paramDivId) {
     return parametersXml;
 }
 
+/* Transforms a parameter list into xml format */
+function getParameterXmlFromList(paramList) {
+    var parametersXml = "<Parameters>";
+    for (const param in paramList) {
+        const name = paramList[param][0]
+        const val = paramList[param][1]
+        if(val !== "") {
+            parametersXml += '<Parameter>'
+                + '<Name>' + name + '</Name>'
+                + '<Value>' + val + '</Value>'
+                + '</Parameter>';
+        }
+    }
+    parametersXml += '</Parameters>';
+    return parametersXml;
+}
+
 /* Add parameters from an xml file to a table */
 function addParameters(element, tableid) {
     var parameterName = element.find('ParameterName');
