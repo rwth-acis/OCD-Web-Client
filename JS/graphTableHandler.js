@@ -71,6 +71,10 @@ function appendGraphRow(table, graphElt, cells) {
     if($.inArray("R", cells) > -1) {
         row += createGraphDeleteCell();
     }
+    /* Save graph */
+    if($.inArray(".txt", cells) > -1) {
+        row += createSaveGraphCell();
+    }
     /* Select graph */
     if($.inArray("Select", cells) > -1) {
         row += createSelectGraphCell(id);
@@ -87,7 +91,7 @@ function createGraphTableCell(value) {
 
 /* Creates graph name cell */
 function createGraphNameCell(name, id) {
-    return '<td><a href="graph.html?id='+ id + '">' + name + '</a></td>';
+    return '<td class="graphNameCell"><a href="graph.html?id='+ id + '">' + name + '</a></td>';
 }
 
 /* Creates graph id cell */
@@ -99,6 +103,13 @@ function createGraphIdCell(value) {
 function createGraphDeleteCell() {
     return '<td>'
         + '<img class="icon iconBtn delGraph" src="IMG/open-iconic/svg/trash.svg" alt="r">'
+        + '</td>';
+}
+
+/* Creates save graph cell */
+function createSaveGraphCell() {
+    return '<td>'
+        + '<img class="icon iconBtn saveGraph" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
         + '</td>';
 }
 
@@ -165,6 +176,28 @@ function deleteGraph(id) {
 }
 
 /*
+ * Saves a graph in weighted edge list format.
+ */
+function saveGraph(graphId, graphName, type) {
+    
+    /* Save request */
+    sendRequest("get", "graphs/" + graphId.text() + "?outputFormat=" + type, "",
+        /* Response handler */
+        function(response) {
+			const trimmedName = graphName.text().trim() == "" ? "graph" : graphName.text().trim();
+            if(type === "WEIGHTED_EDGE_LIST") {
+                const blob = new Blob([response.replace(/,/g,".")],
+                    { type: "text/plain;charset=utf-8" });
+                saveAs(blob, trimmedName + ".txt");
+            } 
+        },
+        /* Error handler */
+        function(errorData) {
+            showConnectionErrorMessage("Graph Weighted Edge List Was not Received!");
+        }, "text");
+}
+
+/*
  * Shows a graph.
  */
 function showGraph(id) {
@@ -207,6 +240,12 @@ function registerGraphTable() {
     $('.delGraph').click(function(){
         var id = $(this).parent().siblings().filter('.graphId');
         deleteGraph(id);
+    });
+    /* Save Graph button handler */
+    $('.saveGraph').click(function(){
+        var graphId = $(this).parent().siblings().filter('.graphId');
+        var graphName = $(this).parent().siblings().filter('.graphNameCell');
+        saveGraph(graphId, graphName, "WEIGHTED_EDGE_LIST");
     });
     /* Show graph button handler */
     $('.showGraph').click(function(){
