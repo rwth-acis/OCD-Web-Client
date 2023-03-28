@@ -22,3 +22,19 @@ Finally, change the values of _baseUrl_ to the [services](https://github.com/rwt
 Finally, dont forget to run ``npm install`` to get all the needed packages. 
 
 You can then for example use the http-server package dependency of the web client to have the server running: Do ``./node_modules/.bin/http-server -p <your-port>`` (or ``npx http-server -p <your-port>``) from the root directory of the project and optionally add ``-c-1`` to disable caching. Now, the web client should be able to communicate with the OCD service and be reachable under ``http://localhost:<your-port>``.
+
+Now, the web client should be able to communicate with the OCD service.
+
+# Quickstart with a Docker Container
+To build a docker image for the OCD-Web-Client that connects to the WebOCD Service running locally with the default parameters, you can navigate to the OCD-Web-Client directory and execute 
+```
+docker build -t <image_name> .
+```
+
+To run a docker container interactively, based on the above created image that connects to the default address of ``http://localhost:<your-port>`` you can execute
+
+```
+docker run -it -p <your-port>:8090 <image_name> 
+```
+
+Now you should be able to navigate to ``http://localhost:<your-port>`` and communicate with the service as you would without docker 

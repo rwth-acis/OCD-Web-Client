@@ -192,7 +192,7 @@
           var coopEval = obj.cooperationEvaluation;
           var payoffEval = obj.payoffEvaluation;
           var genEval = obj.generationEvaluation;
-          var graphId = parameters.graphId;
+          var graphId = obj.graphKey;
           var parameterString = '\
               <div class="row">\
                   <div class="col-sm-4">\
@@ -202,9 +202,9 @@
                     <div>Network</div>\
                   </div>\
                   <div class="col-sm-8">\
-                    <div>' + parameters.game + '</div>\
-                    <div>' + parameters.dynamic + '</div>\
-                    <div>' + parameters.condition + '</div>\
+                    <div>' + obj.simulationSeriesParameters.game + '</div>\
+                    <div>' + obj.simulationSeriesParameters.dynamic + '</div>\
+                    <div>' + obj.simulationSeriesParameters.condition + '</div>\
                     <div id="NetworkDiv"></div>\
                   </div>\
               </div>';
@@ -224,10 +224,10 @@
           <td>Deviation</td><td>'+ coopEval.deviation +'</td><td>'+ payoffEval.deviation +'</td>\
           </tr>\
           <tr>\
-          <td>Maximum</td><td>'+ coopEval.max +'</td><td>'+ payoffEval.max +'</td>\
+          <td>Maximum</td><td>'+ coopEval.maximum +'</td><td>'+ payoffEval.maximum +'</td>\
           </tr>\
           <tr>\
-          <td>Minimum</td><td>'+ coopEval.min +'</td><td>'+ payoffEval.min +'</td>\
+          <td>Minimum</td><td>'+ coopEval.minimum +'</td><td>'+ payoffEval.minimum +'</td>\
           </tr>\
           ';
 
@@ -236,7 +236,6 @@
         } catch(error) {
           showWarning(error);
         }
-
 
           var dataArrayCoop = new Array(datasets.length);
           var dataArrayPayoff = new Array(datasets.length);
@@ -249,6 +248,7 @@
           generatePayoffChart(dataArrayPayoff);
 
           textFileDownload(getParameterByName('seriesId'));
+          deleteButtonHandler(getParameterByName('seriesId'));
 
           sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
             /* Response handler */
@@ -260,7 +260,7 @@
               var nodes = $(graphMeta).find("NodeCount").text();
               var edges = $(graphMeta).find("EdgeCount").text();
               var row = writeNetworkMeta(graphId, name, nodes, edges)
-              $("#NetworkDiv").html('<a href="/OCD-Web-Client/graph.html?id=' + graphId + '">'+ name +'</a>');
+              $("#NetworkDiv").html('<a href="graph.html?id=' + graphId + '">'+ name +'</a>');
             },
             /* Error handler */
             function(errorData) {
@@ -272,28 +272,10 @@
           showConnectionErrorMessage("Request failed.", errorData);
         }, "");
 
-      sendRequest("get", "mapping/simulation/" + seriesId, "",
-        /* Response handler */
-        function(response) {
-          console.log(response);
-
-
-          //window.location.href = 'index.html';
-        },
-        /* Error handler */
-        function(errorData) {
-          //window.location.href = 'index.html';
-          /*
-           * GraphIds request failed
-           */
-          //showConnectionErrorMessage("Benchmark request failed.", errorData);
-        }, "");
-
 
 
 
     });
-
     function writeNetworkMeta(id, name, nodes, edges) {
       var string =
         '<div class="col-md-12"><a href="/OCD-Web-Client/graph.html?id=' + id + '">'+ name +'</a></div>\
@@ -302,6 +284,30 @@
 
       return string;
     }
+
+    function deleteButtonHandler(simulationId) {
+    deleteButton.addEventListener('click', function() {
+      deleteButton.disabled="disabled";
+      $("#errorMessage").empty();
+      $("#errorMessage").html(writeAlertInfo("Info ", "delete Simulation"));
+      $("#errorMessageWrapper").show();
+      sendRequest("delete", "simulation/" + simulationId, "",
+        /* Response handler */
+        function(response) {
+
+          $("#errorMessage").empty();
+          $("#errorMessage").html(writeAlertSuccess("Simulation Series", "Successfully Deleted!"));
+          $("#errorMessageWrapper").show();
+
+        },
+        /* Error handler */
+        function(errorData) {
+          showErrorMessage(errorData);
+        }, "");
+
+
+    }, false);
+  };
 
     function getChartData(dataArray) {
 

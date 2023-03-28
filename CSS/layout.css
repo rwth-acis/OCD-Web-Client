@@ -32,6 +32,10 @@ body {
     height: 100%;
 }
 
+.removecaret.dropdown-toggle::after {
+    display: none;
+}
+
 #content {
 /*     height: 100%; */
     overflow: auto;
@@ -94,7 +98,7 @@ body {
 .tableWrapper {
   margin: auto auto;
   padding: auto auto;
-  max-width: 820px;
+  max-width: 1020px;
 }
 
 .buttonWrapper {

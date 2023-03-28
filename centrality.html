@@ -114,9 +114,9 @@
             });
             $('#showTopKButton').click(function () {
                 modalAnswered = true;
-                var k = $('#topNodesInput').val();
+                var k = Number($('#topNodesInput').val());
                 if (k != "") {
-                    var graphSize = $(mapMetaXml).find('GraphSize').text();
+                    var graphSize = Number($(mapMetaXml).find('GraphSize').text());
                     if (k <= graphSize) {
                         getDefaultXmlTopNodesOnly(true, k, function () {
                             initValuesTable(mapDefaultXml, "#valuesTable", false);
