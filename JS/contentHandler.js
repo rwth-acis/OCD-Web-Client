@@ -155,15 +155,18 @@ function logIntoDatabase() {
     document.getElementById("modalArangoDbLoginButton").querySelector(".submitSpinner").hidden = false;
     db_test.login(databaseUser,databasePassword).then(
         (success_data) => {
+            //db.useBearerAuth(success_data) TODO: make this work
             localStorage.setItem("arangoUser@WebOCD",databaseUser);
             localStorage.setItem("arangoPass@WebOCD",databasePassword);
             localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
 
             if(document.getElementById("objectFormat") !== null) {
                 const arangoDBFormatOption = document.getElementById("objectFormat").querySelector("option[value='ARANGODB']")
-                arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
-                arangoDBFormatOption.disabled = false;
-                populateArangoDBImportFields()
+                if (arangoDBFormatOption !== null) {
+                    arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
+                    arangoDBFormatOption.disabled = false;
+                    populateArangoDBImportFields()
+                }
             }
 
             document.getElementById("databaseLogin").innerHTML = "Arango User: " + databaseUser;
@@ -190,14 +193,17 @@ function logInAndGetDatabase() {
     let db = new arangojs.Database(databaseAddress);
     db.login(databaseUser,databasePassword).then(
         (success_data) => {
+            //db.useBearerAuth(success_data) TODO: make this work
             localStorage.setItem("arangoUser@WebOCD",databaseUser);
             localStorage.setItem("arangoPass@WebOCD",databasePassword);
             localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
 
             if(document.getElementById("objectFormat") !== null) {
                 const arangoDBFormatOption = document.getElementById("objectFormat").querySelector("option[value='ARANGODB']")
-                arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
-                arangoDBFormatOption.disabled = false;
+                if (arangoDBFormatOption !== null) {
+                    arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
+                    arangoDBFormatOption.disabled = false;
+                }
             }
 
             document.getElementById("databaseLogin").innerHTML = "Arango User: " + databaseUser;

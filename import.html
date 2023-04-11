@@ -272,7 +272,10 @@ Facilitates import / upload of new graphs and covers.
             });
 
             function populateArangoDBImportFields() {
-                let db = logInAndGetDatabase();
+                let db = logInAndGetDatabase()
+                let databaseUser = localStorage.getItem("arangoUser@WebOCD");
+                let databasePassword = localStorage.getItem("arangoPass@WebOCD");
+                db.useBasicAuth(databaseUser, databasePassword)
                 db.listDatabases().then(
                     (databaseNames) => {
                         $("#databaseName").empty()
@@ -289,6 +292,9 @@ Facilitates import / upload of new graphs and covers.
             function getDatabaseCollections() {
                 let db = logInAndGetDatabase();
                 db = db.useDatabase($("#databaseName").val());
+                let databaseUser = localStorage.getItem("arangoUser@WebOCD");
+                let databasePassword = localStorage.getItem("arangoPass@WebOCD");
+                db.useBasicAuth(databaseUser, databasePassword)
 
                 $("#nodeCollection").empty()
                 $("#edgeCollections").empty()
