@@ -22,6 +22,7 @@ Facilitates import / upload of new graphs and covers.
         <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
         <script src="JS/graphTableHandler.js"></script>
         <script src="node_modules/arangojs/lib/web.js"></script>
+        <script src="node_modules/arangojs/web.js"></script>
         <script src="node_modules/bootstrap-multiselect/dist/js/bootstrap-multiselect.min.js"></script>
         <script type="text/javascript">
             /* Names of all input formats */
@@ -273,11 +274,18 @@ Facilitates import / upload of new graphs and covers.
 
             function populateArangoDBImportFields() {
                 let db = logInAndGetDatabase()
+                let databaseAddress = localStorage.getItem("arangoAdress@WebOCD");
                 let databaseUser = localStorage.getItem("arangoUser@WebOCD");
                 let databasePassword = localStorage.getItem("arangoPass@WebOCD");
-                db.useBasicAuth(databaseUser, databasePassword)
-                db.listDatabases().then(
+                db = new arangojs.Database({
+                    url: databaseAddress,
+                    databaseName: $("#databaseName").val(),
+                    auth: { username: databaseUser, password: databasePassword },
+                });
+
+                db.listUserDatabases().then(
                     (databaseNames) => {
+                        console.log(databaseNames)
                         $("#databaseName").empty()
                         for (const databaseName of databaseNames) {
                             if (databaseName !== "_system") { //Ignore system database if available. Wont have any useful collections
@@ -291,10 +299,15 @@ Facilitates import / upload of new graphs and covers.
 
             function getDatabaseCollections() {
                 let db = logInAndGetDatabase();
-                db = db.useDatabase($("#databaseName").val());
+                let databaseAddress = localStorage.getItem("arangoAdress@WebOCD");
                 let databaseUser = localStorage.getItem("arangoUser@WebOCD");
                 let databasePassword = localStorage.getItem("arangoPass@WebOCD");
-                db.useBasicAuth(databaseUser, databasePassword)
+                db = new arangojs.Database({
+                    url: databaseAddress,
+                    databaseName: $("#databaseName").val(),
+                    auth: { username: databaseUser, password: databasePassword },
+                });
+                //db.useBasicAuth(databaseUser, databasePassword)
 
                 $("#nodeCollection").empty()
                 $("#edgeCollections").empty()
@@ -565,8 +578,11 @@ Facilitates import / upload of new graphs and covers.
             }
             /* Gets ArangoDB database names  */
             function getDatabaseInfo(callback) {
+                let databaseUser = localStorage.getItem("arangoUser@WebOCD");
+                let databasePassword = localStorage.getItem("arangoPass@WebOCD");
+                db_server.useBasicAuth(databaseUser, databasePassword)
                 if (db_server !== null) {
-                    db_server.listDatabases().then(
+                    db_server.listUserDatabases().then(
                         (databases) => {
                             databases = response;
                             if(typeof callback !== 'undefined') {

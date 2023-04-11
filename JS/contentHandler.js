@@ -193,6 +193,7 @@ function logInAndGetDatabase() {
     let db = new arangojs.Database(databaseAddress);
     db.login(databaseUser,databasePassword).then(
         (success_data) => {
+            db = db.useBasicAuth(databaseUser, databasePassword)
             //db.useBearerAuth(success_data) TODO: make this work
             localStorage.setItem("arangoUser@WebOCD",databaseUser);
             localStorage.setItem("arangoPass@WebOCD",databasePassword);
