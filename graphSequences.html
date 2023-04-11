@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<!-- Displays basic / meta information on multiple graph sequences -->
+<head>
+    <title>OCD - Graphs</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="JS/contentHandler.js"></script>
+    <script src="node_modules/js-base64/base64.js"></script>
+    <script src="JS/ServiceAPI/moduleHelper.js"></script>
+    <script src="JS/ServiceAPI/serviceAPI.js"></script>
+    <script src="JS/requestHandler.js"></script>
+    <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+    <script src="JS/graphSequenceTableHandler.js"></script>
+    <script src="node_modules/arangojs/lib/web.js"></script>
+    <script type="text/javascript">
+        /*
+         * Defines current page and page size.
+         */
+        let SEQUENCES_PER_PAGE = 20;
+        let pageNumber = 0;
+        /* Executed after page loading */
+        $(document).ready(function() {
+            /* Number of the graph table page to be displayed */
+            pageNumber = getUrlVar("page");
+            if(!pageNumber) {
+                pageNumber = 0;
+            }
+            $('.pageNumWrapper').append(pageNumber);
+            let firstIndex = SEQUENCES_PER_PAGE * pageNumber;
+            /* Identifiers for the graph information to be displayed */
+            let cells = ["Name", "GraphCount", "Time Ordered", "CreationMethod", "Gr", "R"];
+            /* Requests the graph meta information */
+            sendRequest("get", "sequences?includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + SEQUENCES_PER_PAGE , "",
+                /* Response handler */
+                function(graphSequencesXML) {
+                    console.log(graphSequencesXML)
+                    /*
+                     * GraphMetas request succeeded
+                     */
+                    if($(graphSequencesXML).find("GraphSequence").length === 0 && pageNumber > 0) {
+                        pageNumber--;
+                        var newUrl = "graphSequences.html?page=" + pageNumber;
+                        window.location.href = newUrl;
+                    }
+                    /* Adds meta information to the graph table */
+                    $(graphSequencesXML).find("GraphSequence").each(function() {
+                        appendGraphSequenceRow($('#graphSequenceTable'), $(this), cells);
+                    });
+                    /*
+                     * Sort Table
+                     */
+                    try {
+                        $("#graphSequenceTable").tablesorter({sortList: [[0,0]],
+                            headers: { 5: { sorter: false}, 6: {sorter: false}, 7: {sorter: false}, 8: {sorter: false},
+                                9: {sorter: false}, 10: {sorter: false}, 11: {sorter: false}, 12: {sorter: false}}});
+                    } catch(err) { /* table empty */ }
+                    /*
+                     * Register event handlers
+                     */
+                    registerGraphSequenceTable();
+                },
+                function(errorData) {
+                    /*
+                     * GraphIds request failed
+                     */
+                    showConnectionErrorMessage("Graph sequences were not received.", errorData);
+                });
+            /* Listeners for the table page control */
+            $('.pageLeft').click(function(){
+                if(pageNumber > 0) {
+                    pageNumber--;
+                    var newUrl = "graphSequences.html?page=" + pageNumber;
+                    window.location.href = newUrl;
+                }
+            });
+            $('.pageRight').click(function(){
+                pageNumber++;
+                var newUrl = "graphSequences.html?page=" + pageNumber;
+                window.location.href = newUrl;
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="wrapper">
+    <div id="contentWrapper">
+        <div id="content" style="margin:auto">
+            <!-- Container for displaying error messages -->
+            <div id="errorMessageWrapper">
+                <div id="errorMessage"></div>
+            </div>
+            <div  style="display:block; z-index:3; height:fit-content">
+                <button class="btn btn-success" style="height:fit-content" onclick="window.location.href = 'graphSequenceBuilder.html';">Create Sequence</button>
+            </div>
+            <!-- Page control for the graph sequence table -->
+            <div class = "pageControlWrapper">
+                <div class="pageControl">
+                    <div class="pageLeftWrapper">
+                        <img class="icon iconBtn pageLeft" src="IMG/open-iconic/svg/chevron-left.svg" alt="r">
+                    </div>
+                    <div class = "pageNumWrapper">
+                    </div>
+                    <div class="pageRightWrapper">
+                        <img class="icon iconBtn pageRight" src="IMG/open-iconic/svg/chevron-right.svg" alt="r">
+                    </div>
+                </div>
+            </div>
+            <!-- Graph Sequence table -->
+            <div class="tableWrapper table-responsive">
+                <table id="graphSequenceTable" class = "table table-striped">
+                    <thead>
+                    <tr>
+                        <th class="hidden" title="Id"></th>
+                        <th  title="Graph Sequence Name" class="sortable">
+                            Name
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th  title="Time Ordered" class="sortable">
+                            Time Ordered
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th style='width:20px' title="Show Graphs">
+                            Gr
+                        </th>
+                        <th style='width:20px' title="Remove Sequence">
+                            R
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

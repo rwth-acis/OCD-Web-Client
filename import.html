@@ -184,7 +184,7 @@ Facilitates import / upload of new graphs and covers.
                                 $(inputFormatNames).find('Name').each(function() {
                                     if ($(this).text() === "ARANGODB" && localStorage.getItem("arangoUser@WebOCD") === null) {
                                         $("#objectFormat").append(
-                                            '<option id="arangoDBFormatOption" value="' + $(this).text()
+                                            '<option value="' + $(this).text() + ' class="arangoDBFormatOption"'
                                             + '" disabled>' + $(this).attr("displayName") + '  (LOG INTO YOUR DATABASE AT THE USERMENU TO USE THIS FEATURE)' + '</option>');
                                     }
                                     else {
@@ -241,20 +241,12 @@ Facilitates import / upload of new graphs and covers.
                             $("#objectFileDiv").addClass('hidden');
                         }
                         else if($("#objectFormat").val() === 'ARANGODB') {
+                            $("#showUserNamestr").removeClass('hidden');
                             $("#databaseInput").removeClass('hidden');
                             $("#objectFileDiv").addClass('hidden');
 
-                            let db = logInAndGetDatabase();
-                            db.listDatabases().then(
-                                (databaseNames) => {
-                                    for (const databaseName of databaseNames) {
-                                        if (databaseName !== "_system") { //Ignore system database if available. Wont have any useful collections
-                                            $("#databaseName").append(
-                                                '<option value="' + databaseName + '" >' + databaseName + '</option>');
-                                        }
-                                    }
-                                    getDatabaseCollections();
-                            });
+
+                            populateArangoDBImportFields()
                         }
                 	}
                     // !!This Code can only be used when webOCD supports edge types!!
@@ -279,10 +271,27 @@ Facilitates import / upload of new graphs and covers.
                 });
             });
 
+            function populateArangoDBImportFields() {
+                let db = logInAndGetDatabase();
+                db.listDatabases().then(
+                    (databaseNames) => {
+                        $("#databaseName").empty()
+                        for (const databaseName of databaseNames) {
+                            if (databaseName !== "_system") { //Ignore system database if available. Wont have any useful collections
+                                $("#databaseName").append(
+                                    '<option value="' + databaseName + '" >' + databaseName + '</option>');
+                            }
+                        }
+                        getDatabaseCollections();
+                    });
+            }
+
             function getDatabaseCollections() {
                 let db = logInAndGetDatabase();
                 db = db.useDatabase($("#databaseName").val());
 
+                $("#nodeCollection").empty()
+                $("#edgeCollections").empty()
                 db.listCollections().then(
                     (collections) => {
                         document.getElementById("nodeCollection").options.length = 0
@@ -349,6 +358,9 @@ Facilitates import / upload of new graphs and covers.
                         if($("#nodeCollection").val() !== "") {
                             restUrl = restUrl + "&nodeCollectionName=" + $("#nodeCollection").val();
                         }
+                        if($("#showUserNames").val() !== "") {
+                            restUrl = restUrl + "&showUserNames=" + $("#showUserNames").val();
+                        }
                         if($("#involvedUsers").val() !== "") {
                             restUrl = restUrl + "&involvedUsers=" + $("#involvedUsers").val();
                         }
@@ -361,6 +373,9 @@ Facilitates import / upload of new graphs and covers.
                                         + ":::" + arangoQueryElement.children[2].value;
                                 }
                             }
+                        }
+                        if($("#weighEdges").val()) {
+                            restUrl = restUrl + "&weighEdges=" + $("#weighEdges").val().toString();
                         }
                         if($("#edgeCollections").val() !== null || $("#edgeCollections").val() !== []) {
                             restUrl = restUrl + "&edgeCollectionNames=" + $("#edgeCollections").val().toString();
@@ -375,6 +390,12 @@ Facilitates import / upload of new graphs and covers.
                                         + ":::" + arangoQueryElement.children[3].value;
                                 }
                             }
+                        }
+                        if($("#nameAttribute").val() !== "") {
+                            restUrl = restUrl + "&nameAttributeName=" + $("#nameAttribute").val()
+                        }
+                        else {
+                            restUrl = restUrl + "&nameAttributeName=name"
                         }
                         if($("#dateAttribute").val() !== "") {
                             restUrl = restUrl + "&dateAttributeName=" + $("#dateAttribute").val()
@@ -401,8 +422,6 @@ Facilitates import / upload of new graphs and covers.
                                             for (const key of Object.keys(doc)) {
                                                 let possibleDateAttr = Date.parse(doc[key])
                                                 if (!isNaN(possibleDateAttr)) {
-                                                    //console.log("KEY:" + key + " " + Date.parse(doc[key]))
-                                                    //console.log(restUrl)
                                                     if (!dateMap.has(key)) {
                                                         dateMap.set(key, 1);
                                                     } else {
@@ -417,7 +436,9 @@ Facilitates import / upload of new graphs and covers.
                                         }
                                     }
                                     if (!found_doc && ($("#startDate").val() !== "" || $("#endDate").val() !== "")) {
+                                        buttonSubmitEnd("submitButton");
                                         showErrorMessage("Could not find a date attribute to use for timeframe. Dont use start/end dates or specify date attribute in advanced mode")
+
                                     }
                                     else {
                                         let max_occ_key = dateMap.keys().next().value
@@ -427,8 +448,8 @@ Facilitates import / upload of new graphs and covers.
                                             }
                                         }
                                         restUrl = restUrl + "&dateAttributeName=" + max_occ_key
-                                        sendPostGraphRequest(restUrl, content)
                                     }
+                                    sendPostGraphRequest(restUrl, content)
                                 },
                                 (errorData) => { showConnectionErrorMessage(errorData) } //TODO: Make this nicer
                             )
@@ -713,7 +734,7 @@ Facilitates import / upload of new graphs and covers.
                                                 <select id="nodeCollection" class="form-control custom-select"></select>
                                             </div>
                                             <div id="involvedUsersstr" class="col-md-4" >
-                                                <label for="involvedUsers" class="col-form-label">Involved People/Node IDs</label>
+                                                <label for="involvedUsers" class="col-form-label">Involved Node IDs</label>
                                                 <input id="involvedUsers" class="form-control" type="text" placeholder="Comma separated user id list">
                                             </div>
                                         </div>
@@ -740,6 +761,10 @@ Facilitates import / upload of new graphs and covers.
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div>
+                                            <label for="weighEdges" class="form-label">Use Edge Weights</label>
+                                            <input id="weighEdges" type="checkbox" class="form-control-checkbox">
                                         </div>
                                         <div class="row form-group">
                                             <div class="col-md-4">
@@ -799,10 +824,16 @@ Facilitates import / upload of new graphs and covers.
                                             <label for="involvedUserURIs" class="col-form-label">Involved User URIs:</label>
                                             <input id="involvedUserURIs" class="form-control" type="text" placeholder="Comma separated uri list">
                                         </div>
-                                        <div id="showUserNamestr" class="hidden col-md-3">
-                                            <label for="showUserNames" class="col-form-label">Show Usernames:</label>
-                                            <input id="showUserNames" class="form-check-input" type="checkbox" placeholder="false" role="switch" style="margin-top:50px;margin-left:-120px">
                                         </div>
+                                    </div>
+                                    <div class="row">
+                                        <div id="showUserNamestr" class="hidden col-auto">
+                                            <label for="showUserNames" class="col-form-label" style="display:inline-block">Use names as node labels:</label>
+                                            <input id="showUserNames" class="form-control-checkbox" type="checkbox" placeholder="false" role="switch" style="display:inline-block">
+                                        </div>
+                                        <div id="nameAttributeStr" class="col-md-auto" hidden>
+                                            <label for="nameAttribute" class="col-form-label">Name Attribute to use to determine timeframe (leave unedited if unsure):</label>
+                                            <input id="nameAttribute" class="form-control" type="text">
                                         </div>
                                     </div>
                                       <!-- !!!These parts can only be used once edge types are really supported in webOCD!!!

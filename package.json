@@ -12,6 +12,7 @@
     "file-saver": "^2.0.5",
     "force-graph": "^1.35.1",
     "http-server": "^14.1.0",
+    "jquery-ui": "1.13.2",
     "jquery.mousewheel": "^3.1.9",
     "jquery.panzoom": "^3.2.3",
     "js-base64": "^3.6.0",
