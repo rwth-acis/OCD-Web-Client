@@ -9,11 +9,19 @@
  * Creates a table row for a graph element.
  * Is passed the table, the graph element and the identifiers for the information to be displayed.
  */
-function appendGraphRow(table, graphElt, cells) {
-    var row = "<tr>";
+function appendGraphRow(table, graphElt, cells, graphIds = []) {
+    var row = "<tr name='"  + $(graphElt).find('Id').text() + "'>";
     /* Graph id */
     var id = $(graphElt).find('Id').text();
     row += createGraphIdCell(id);
+    /* Delete graph from sequence */
+    if($.inArray("RS", cells) > -1) {
+        row += createGraphDeleteFromSequenceCell();
+    }
+    /* Graph name  */
+    if($.inArray("Index", cells) > -1) {
+        row += createGraphSequenceIndexCell(graphIds.indexOf(id)+1);
+    }
     /* Graph name  */
     if($.inArray("Name", cells) > -1) {
         row += createGraphNameCell($(graphElt).find('Name').text(), id);
@@ -84,7 +92,9 @@ function appendGraphRow(table, graphElt, cells) {
 function createGraphTableCell(value) {
     return "<td>" + value + "</td>";
 }
-
+function createGraphSequenceIndexCell(index) {
+    return '<td class="graphSequenceIndex">' + index + '</td>';
+}
 /* Creates graph name cell */
 function createGraphNameCell(name, id) {
     return '<td><a href="graph.html?id='+ id + '">' + name + '</a></td>';
@@ -99,6 +109,13 @@ function createGraphIdCell(value) {
 function createGraphDeleteCell() {
     return '<td>'
         + '<img class="icon iconBtn delGraph" src="IMG/open-iconic/svg/trash.svg" alt="r">'
+        + '</td>';
+}
+
+/* Creates delete graph from sequence cell */
+function createGraphDeleteFromSequenceCell() {
+    return '<td>'
+        + '<img class="icon iconBtn delGraphFromSequence" src="IMG/open-iconic/svg/minus.svg" alt="r">'
         + '</td>';
 }
 
@@ -164,6 +181,38 @@ function deleteGraph(id) {
     });
 }
 
+function adjustIndicesAbove(tableId, tableElemIndex) {
+
+    let tableElemList = document.getElementById(tableId).querySelector('tr');
+    for (const tableElemKey in tableElemList) {
+        let currentIndexElem = tableElemList[tableElemKey].querySelector('td[class="graphSequenceIndex"]')[0]
+        if(parseInt(currentIndexElem.innerText) > tableElemIndex) {
+            currentIndexElem.innerText = parseInt(currentIndexElem.innerText) - 1
+        }
+    }
+}
+
+/*
+ * Deletes a graph from a sequence.
+ */
+function deleteGraphFromSequence(id, tableId) {
+    /* Requests deletion */
+    sendRequest("delete", "sequences/" + sequenceId + "graphs/" + id.text() , "",
+        /* Response handler */
+        function(response) {
+            let tableElemList = document.getElementById(tableId).querySelector('tr[name="' + id.text() + '"]');
+            if (tableElemList.length !== 0) {
+                let tableElemIndex = tableElemList[0].querySelector('td[class="graphSequenceIndex"]')[0].innerText;
+                tableElemList[0].remove();
+            }
+            adjustIndicesAbove(tableId, tableElemIndex);
+        },
+        /* Error handler */
+        function(errorData) {
+            showConnectionErrorMessage("Graph could not be deleted from sequence.", errorData);
+        });
+}
+
 /*
  * Shows a graph.
  */
@@ -202,11 +251,16 @@ function showGraphSimulations(id) {
 /*
  * Registers event handlers.
  */
-function registerGraphTable() {
+function registerGraphTable(tableId) {
     /* Delete graph button handler */
     $('.delGraph').click(function(){
         var id = $(this).parent().siblings().filter('.graphId');
         deleteGraph(id);
+    });
+    /* Delete graph from sequence button handler */
+    $('.delGraphFromSequence').click(function(){
+        var id = $(this).parent().siblings().filter('.graphId');
+        deleteGraphFromSequence(id, tableId);
     });
     /* Show graph button handler */
     $('.showGraph').click(function(){

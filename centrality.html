@@ -27,6 +27,7 @@
     <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
     <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
     <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="node_modules/three-spritetext/dist/three-spritetext.min.js"></script>
     <script src="node_modules/arangojs/lib/web.js"></script>
     <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
     <script type="text/javascript">
@@ -46,6 +47,7 @@
         var visualizationTypeChange = true;
         var have3D;
         var haveNodeNames = false;
+        var haveEdgeWeights = false;
         var nodeName = "";
         var keysPressed = new Map();
         var rightClickLink = null;
@@ -64,7 +66,7 @@
         /* SVG for Visualization */
         var visualization;
         /* Names of all visualization types */
-        var visualizationTypeNames;
+        var centralityVizTypeNames;
         /* Maximum ground truth candidates (for metric execution) displayed per page */
         var ENTRIES_PER_PAGE = 20;
         /* Current page of ground truth candidates (for metric execution) */
@@ -240,19 +242,22 @@
 
                     if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
                         have3D = false;
-                        //console.log("2D");
                         if (typeof forceGraph !== "undefined") {
                             forceGraph._destructor();
                         }
                         getJSON();
                     } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
                         have3D = true;
-                        //console.log("3D");
                         if (typeof forceGraph !== "undefined") {
                             forceGraph._destructor();
                         }
                         getJSON();
                     }
+                }
+                if(currentClusterButton != null) {
+                    let nesting = currentClusteringString
+                    currentClusteringString = null
+                    clusterContext(currentClusterButton, nesting)
                 }
             })
         }
@@ -429,7 +434,7 @@
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function(event) {
             if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
-                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.nodeNameDisplayButton')){
+                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.displayButton')){
 
                 var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
                 var i;
@@ -524,334 +529,13 @@
             }
         }
 
-        function NodeNameDisplayHandler () {
-            haveNodeNames = !haveNodeNames;
-            if(have3D === true) {
-                forceGraph
-                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
-                    .nodeThreeObject(forceGraph.nodeThreeObject())
-            }
-        }
-
         /* Builds a force graph from json data */
         function buildGraph() {
-            let graph = JSON.parse(jsonGraph);
-            let sizes = new Map();
-            let colors = new Map();
-            nodeSizeMin = Number.MAX_VALUE;
-            for (let node of graph.nodes) {
-                sizes[node.id] = node.size;
-                if (node.size < nodeSizeMin) {
-                    nodeSizeMin = node.size;
-                }
-
-                colors[node.id] = node.color;
-            }
-            //console.log(nodeSizeMin);
-
-            if (have3D === false) {
-                forceGraph = ForceGraph()
-                (document.getElementById('forceVisualizationGraphic'))
-                    .nodeCanvasObjectMode( () => 'after')
-                    .backgroundColor("#fafafa")
-                    .graphData(graph)
-                    .nodeId('id')
-                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
-                    .onNodeHover(node => {
-                        if (node != null) {
-                            nodeName = node.name;
-                        }
-                    })
-                    .onNodeClick(node => {
-                        getNodeInfo(node);
-                        // if (arangoDataBase !== "" && arangoDataBase !== null
-                        //     && arangoUser !== "" && arangoUser !== null
-                        //     && arangoPass !== null
-                        //     && arangoCollection !== "" && arangoCollection !== null) {
-                        //
-                        //     db.useDatabase(arangoDataBase);
-                        //     db.useBasicAuth(arangoUser, arangoPass);
-                        //     const docCollection = db.collection(arangoCollection);
-                        //     docCollection.document(node.name, true).then(function (doc) {
-                        //         let nodeWindow = window.open("", '_blank');
-                        //
-                        //         if (doc != null) {
-                        //             //console.log(JSON.stringify(doc, null, '    '));
-                        //             let docStr = JSON.stringify(doc, null, '    ');
-                        //             docStr = docStr.replace(/\n/g, "<br />");
-                        //             nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                        //         } else {
-                        //             nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                        //         }
-                        //     }).catch((err) => console.error(err));
-                        // }
-                    })
-                    .nodeVal(function (node) {
-                        if (visualizationType === "NODE_SIZE") {
-                            return sizes[node.id] - nodeSizeMin + 1;
-                        } else {
-                            return 2;
-                        }
-                    })
-                    .nodeColor(function (node) {
-                        if (visualizationType !== "NODE_SIZE") {
-                            return colors[node.id];
-                        } else {
-                            return '#3183ba';
-                        }
-                    })
-                    .nodeCanvasObject((node, ctx, globalScale) => {
-                        if(haveNodeNames === true) {
-                            const label = node.name;
-                            const fontSize = 12/globalScale;
-                            ctx.font = `${fontSize}px Sans-Serif`;
-
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-                            ctx.fillText(label, node.x, node.y);
-                        }
-                    })
-                    .onNodeDragEnd(node => {
-                        node.fx = node.x;
-                        node.fy = node.y;
-                    })
-                    .onNodeRightClick(node => {
-                        //TODO: Seem a bit slow after restoring, check original forces/velocity
-                        node.fx = null;
-                        node.fy = null;
-                    })
-                    .linkSource('source')
-                    .onLinkRightClick(link => {
-                        if (link !== rightClickLink) {
-                            rightClickLink = link;
-                        } else {
-                            rightClickLink = null;
-                        }
-                    })
-                    .linkWidth(link => link === rightClickLink ? 2.5 : 1.5)
-                    .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
-                    .linkDirectionalArrowLength(5)
-                    .linkDirectionalArrowRelPos(1)
-                    .linkTarget('target')
-                    .cooldownTicks(200);
-            } else {
-                forceGraph = ForceGraph3D({
-                    extraRenderers: [new THREE.CSS2DRenderer()]
-                })
-                (document.getElementById('forceVisualizationGraphic'))
-                    .graphData(graph)
-                    .nodeId('id')
-                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
-                    .onNodeHover(node => {
-                        if (node != null) {
-                            nodeName = node.name;
-                        }
-                    })
-                    .onNodeClick(node => {
-                        getNodeInfo(node);
-                        // if (arangoDataBase !== "" && arangoDataBase !== null
-                        //     && arangoUser !== "" && arangoUser !== null
-                        //     && arangoPass !== null
-                        //     && arangoCollection !== "" && arangoCollection !== null) {
-                        //
-                        //     db.useDatabase(arangoDataBase);
-                        //     db.useBasicAuth(arangoUser, arangoPass);
-                        //     const docCollection = db.collection(arangoCollection);
-                        //     docCollection.document(node.name, true).then(function (doc) {
-                        //         let nodeWindow = window.open("", '_blank');
-                        //
-                        //         if (doc != null) {
-                        //             //console.log(JSON.stringify(doc, null, '    '));
-                        //             let docStr = JSON.stringify(doc, null, '    ');
-                        //             docStr = docStr.replace(/\n/g, "<br />");
-                        //             nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                        //         } else {
-                        //             nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                        //         }
-                        //     }).catch((err) => console.error(err));
-                        // }
-                    })
-                    .nodeVal(function (node) {
-                        if (visualizationType === "NODE_SIZE") {
-                            return node.size - nodeSizeMin + 1;
-                        } else {
-                            return 2;
-                        }
-                    })
-                    .nodeThreeObject(node => {
-                        if(haveNodeNames === true) {
-                            const nodeEl = document.createElement('div');
-                            nodeEl.textContent = node.name;
-                            nodeEl.style.color = "#ffffff";//node.color;
-                            nodeEl.className = 'node-label';
-                            return new THREE.CSS2DObject(nodeEl);
-                        }
-                    })
-                    .nodeThreeObjectExtend(true)
-                    .nodeColor(function (node) {
-                        if (visualizationType !== "NODE_SIZE") {
-                            return colors[node.id];
-                        } else {
-                            return '#3183ba';
-                        }
-                    })
-                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
-                    .onNodeDragEnd(node => {
-                        node.fx = node.x;
-                        node.fy = node.y;
-                        node.fz = node.z;
-                    })
-                    .onNodeRightClick(node => {
-                        //TODO: Seem a bit slow after restoring, check original forces/velocity
-                        node.fx = null;
-                        node.fy = null;
-                        node.fz = null;
-                    })
-                    .linkSource('source')
-                    .onLinkRightClick(link => {
-                        if (link !== rightClickLink) {
-                            rightClickLink = link;
-                        } else {
-                            rightClickLink = null;
-                        }
-                        forceGraph
-                            .linkColor(forceGraph.linkColor())
-                            .linkWidth(forceGraph.linkWidth())
-                    })
-                    .linkOpacity(0.35)
-                    .linkColor(link => link === rightClickLink ? "rgba(126,234,10,0.85)" : "#dedede")
-                    .linkWidth(link => link === rightClickLink ? 2 : 0)
-                    .linkDirectionalArrowLength(4)
-                    .linkDirectionalArrowRelPos(1)
-                    .linkTarget('target')
-                    .cooldownTicks(200);
-            }
-
-            forceGraph.width($('.forceVisualizationContent').width());
-            forceGraph.height($('.forceVisualizationContent').height());
-
+            buildGraphCentrality()
         }
 
         function applyClusterLayout() {
-            if(!have3D) {
-                forceGraph
-                    .nodeCanvasObject((node, ctx, globalScale) => {
-                        if (clusterNodes.get(node.key) !== undefined) {
-                            const fontSize = 15 / globalScale;
-                            ctx.font = `bold ${fontSize}px Sans-Serif`;
-                            let label = node.label
-                            if (node.label.length >= 50) {//Reduce length of node label to make cluster names less giant
-                                label = node.label.slice(0, 70) + "..."
-                            }
-
-                            const textWidth = ctx.measureText(label).width;
-                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
-
-                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                            ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
-
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillStyle = node.color;
-                            ctx.fillText(label, node.x, node.y);
-
-                            node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
-                        }
-                        else if (haveNodeNames === true && node.key !== "CLUSTER_CENTER_NODE") {
-                            const fontSize = 15 / globalScale;
-                            ctx.font = `${fontSize}px Sans-Serif`;
-                            let label = node.label
-                            if (node.label.length >= 50) {//Reduce length of node label to make cluster names less giant
-                                label = node.label.slice(0, 70) + "..."
-                            }
-
-                            const textWidth = ctx.measureText(label).width;
-                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
-
-                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                            ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
-
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillStyle = node.color;
-                            ctx.fillText(label, node.x, node.y);
-
-                            node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
-                        }
-                    })
-                    .nodeVal(function (node) {
-                        if (node.key === "CLUSTER_CENTER_NODE") { //TODO: Change where the center node positions are set.
-                            node.x = 0
-                            node.y = 0
-                            node.z = 0
-                            //return 0.0000001
-                            return 0.0001
-                        }
-                        if (clusterNodes.get(node.key) !== undefined) {
-                            return 0.0001
-                        }
-                        else {
-                            if (visualizationType === "NODE_SIZE") {
-                                return node.size - nodeSizeMin + 1;
-                            } else {
-                                return 2;
-                            }
-                        }
-                    })
-                    .linkVisibility(function (link) {
-                        if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
-                            return false
-                        }
-                    }); //Update the graph
-            }
-            else {
-                forceGraph
-                    .nodeThreeObject(node => {
-                        if(clusterNodes.get(node.key) !== undefined) {
-                            const nodeEl = document.createElement('div');
-                            if (node.label.length >= 50) {//Reduce length of node label to make cluster names less giant
-                                label = node.label.slice(0, 70) + "..."
-                            }
-                            nodeEl.textContent = node.label;
-                            nodeEl.style.color = "#e3c302";//node.color;
-                            nodeEl.style.fontWeight = "bold";
-                            nodeEl.className = 'node-label';
-                            return new THREE.CSS2DObject(nodeEl);
-                        }
-                        else if(haveNodeNames === true && node.key !== "CLUSTER_CENTER_NODE") {
-                            const nodeEl = document.createElement('div');
-                            nodeEl.textContent = node.name;
-                            nodeEl.style.color = "#ffffff";//node.color;
-                            nodeEl.className = 'node-label';
-                            return new THREE.CSS2DObject(nodeEl);
-                        }
-                    })
-                    .nodeVal(function (node) {
-                        if (node.key === "CLUSTER_CENTER_NODE") { //TODO: Change where the center node positions are set.
-                            node.x = 0
-                            node.y = 0
-                            node.z = 0
-                            //return 0.0000001
-                            return 0.0001
-                        }
-                        if (clusterNodes.get(node.key) !== undefined) {
-                            return 0.0001
-                        }
-                        else {
-                            if (visualizationType === "NODE_SIZE") {
-                                return sizes[node.id] - nodeSizeMin + 1;
-                            } else {
-                                return 2;
-                            }
-                        }
-                    })
-                    .linkVisibility(function (link) {
-                        if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
-                            //return false
-                        }
-                    }); //Update the graph
-            }
+            applyClusterLayoutCentrality()
         }
 
         /* Requests and stores a JSON representation of the graph and builds it */
@@ -898,9 +582,9 @@
                     document.getElementById("forceVisualizationContent").style.display = "none";
                 }
             });
-            if (typeof visualizationTypeNames === "undefined") {
-                getVisualizationTypeNames(function () {
-                    $(visualizationTypeNames).find('Name').each(function () {
+            if (typeof centralityVizTypeNames === "undefined") {
+                getCentralityVisualizationTypeNames(function () {
+                    $(centralityVizTypeNames).find('Name').each(function () {
                         $("#visualizationType").append(
                             '<option value="' + $(this).text()
                             + '">' + $(this).attr("displayName") + '</option>');
@@ -954,24 +638,6 @@
                      * GraphIds request failed
                      */
                     showConnectionErrorMessage("Visualization was not received.", errorData);
-                });
-        }
-
-        function getVisualizationTypeNames(callback) {
-            sendRequest("get", "visualization/centralityVisualizationTypes/names", "",
-                /* Response handler */
-                function (response) {
-                    visualizationTypeNames = response;
-                    if (typeof callback !== 'undefined') {
-                        callback();
-                    }
-                },
-                /* Error handler */
-                function (errorData) {
-                    /*
-                     * Visualization type name request failed
-                     */
-                    showConnectionErrorMessage("Visualization type names were not received.", errorData);
                 });
         }
     </script>
@@ -1132,7 +798,8 @@
                                 <span class="tool-dot" style="margin-top:3px"></span>
                             </div>
                             <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
-                                <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 nodeNameDisplayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
+                                <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
+                                <button id="edgeWeightDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayHandler()">Show Edge Weights</button>
                                 <input class="saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON" style="width:65%">
                                 <button class="saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
                             </form>

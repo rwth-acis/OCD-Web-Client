@@ -44,6 +44,7 @@ $(document).ready(function(){
                   <li class="nav-item"><a class="nav-link" href="benchmarks.html">Benchmarks</a></li>\
                   <li class="nav-item"><a class="nav-link" href="cooperation_simulations.html">Simulations</a></li>\
     			  <li class="nav-item"><a class="nav-link" href="centralities.html">Centrality</a></li>\
+    			  <li class="nav-item"><a class="nav-link" href="graphSequences.html">Sequences</a></li>\
                 </ul>\
                 <ul class="navbar-nav navbar-right">\
                   <li class="nav-item"><a class="nav-link" href="import.html">Import</a></li>\
@@ -100,7 +101,10 @@ $(document).ready(function(){
         '       </div>\n' +
         '      </div>\n' +
         '      <div class="modal-footer">\n' +
-        '        <button type="button" class="btn btn-success" onclick="logIntoDatabase()">Login</button>\n' +
+        '        <button id="modalArangoDbLoginButton" type="button" class="btn btn-success" onclick="logIntoDatabase()">' +
+        '           <span class=\"submitIcon submitSpinner spinner-border spinner-border-sm\" role=\"status\" style=\"\" hidden></span>' +
+        '           Login' +
+        '       </button>\n' +
         '      </div>\n' +
         '    </div>\n' +
         '  </div>\n' +
@@ -142,27 +146,41 @@ function logIntoDatabase() {
     let databaseUser = document.getElementById("databaseUser").value;
     let databasePassword = document.getElementById("databasePassword").value;
     let databaseAddress = document.getElementById("databaseAddress").value;
-    //console.log(databaseUser, databasePassword, databaseAddress);
 
     if (!databaseAddress.startsWith("http://") && !databaseAddress.startsWith("https://")) { //Add http to address if needed
         databaseAddress = "http://" + databaseAddress
     }
     db_test = new arangojs.Database(databaseAddress);
+    document.getElementById("modalArangoDbLoginButton").disabled = true;
+    document.getElementById("modalArangoDbLoginButton").querySelector(".submitSpinner").hidden = false;
     db_test.login(databaseUser,databasePassword).then(
         (success_data) => {
             localStorage.setItem("arangoUser@WebOCD",databaseUser);
             localStorage.setItem("arangoPass@WebOCD",databasePassword);
             localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
 
-            if(document.getElementById("arangoDBFormatOption") !== null) {
-                document.getElementById("arangoDBFormatOption").innerHTML = "Fetched from ArangoDB Database";
-                document.getElementById("arangoDBFormatOption").disabled = false;
+            if(document.getElementById("objectFormat") !== null) {
+                const arangoDBFormatOption = document.getElementById("objectFormat").querySelector("option[value='ARANGODB']")
+                arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
+                arangoDBFormatOption.disabled = false;
+                populateArangoDBImportFields()
             }
 
             document.getElementById("databaseLogin").innerHTML = "Arango User: " + databaseUser;
+            document.getElementById("modalArangoDbLoginButton").disabled = false;
+            document.getElementById("modalArangoDbLoginButton").querySelector(".submitSpinner").hidden = true;
+
+            showSuccess("Logged into Database")
+            $("#databaseLoginModal").modal('hide');
         },
-        (error_data)  => {showErrorMessage("Could not log into database: " + error_data)});
-    $("#databaseLoginModal").modal('hide');
+        (error_data)  => {
+            showErrorMessage("Could not log into database" + (error_data.message === "" || error_data.message === "[object ProgressEvent]" ? ": Wrong login data!" : ":" + error_data.message))
+            document.getElementById("modalArangoDbLoginButton").disabled = false;
+            document.getElementById("modalArangoDbLoginButton").querySelector(".submitSpinner").hidden = true;
+
+            $("#databaseLoginModal").modal('hide');
+        });
+
 }
 
 function logInAndGetDatabase() {
@@ -176,9 +194,10 @@ function logInAndGetDatabase() {
             localStorage.setItem("arangoPass@WebOCD",databasePassword);
             localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
 
-            if(document.getElementById("arangoDBFormatOption") !== null) {
-                document.getElementById("arangoDBFormatOption").innerHTML = "Fetched from ArangoDB Database";
-                document.getElementById("arangoDBFormatOption").disabled = false;
+            if(document.getElementById("objectFormat") !== null) {
+                const arangoDBFormatOption = document.getElementById("objectFormat").querySelector("option[value='ARANGODB']")
+                arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
+                arangoDBFormatOption.disabled = false;
             }
 
             document.getElementById("databaseLogin").innerHTML = "Arango User: " + databaseUser;

@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<!-- Displays detailed information on a single cover. Allows OCD metric execution. -->
+<html>
+<head>
+    <title>OCD - Sequence</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="node_modules/d3-octree/dist/d3-octree.min.js"></script>
+    <script src="node_modules/d3-force-3d/dist/d3-force-3d.min.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="JS/contentHandler.js"></script>
+    <script src="JS/graphVizContentHandler.js"></script>
+    <script src="node_modules/js-base64/base64.js"></script>
+    <script src="JS/ServiceAPI/moduleHelper.js"></script>
+    <script src="JS/ServiceAPI/serviceAPI.js"></script>
+    <script src="JS/requestHandler.js"></script>
+    <script src="JS/graphTableHandler.js"></script>
+    <script src="JS/graphSequenceTableHandler.js"></script>
+    <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+    <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
+    <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+    <script src="node_modules/three/build/three.min.js"></script>
+    <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
+    <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+    <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="node_modules/three-spritetext/dist/three-spritetext.min.js"></script>
+    <script src="node_modules/arangojs/lib/web.js"></script>
+    <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+    <script type="text/javascript">
+        /* Id of the sequence */
+        let sequenceId = getUrlVar("id");
+        /* Id of the current corresponding graph */
+        let sequenceGraphs = [];
+        let sequenceCoversCentralities = [];
+        let currentGraphIndex = 0;
+        let currentCoverCentralityIndex = 0;
+        let graphKind = "cover";
+        /* Id of the current corresponding graph */
+        let graphId = null;
+        /* Meta Data Xml */
+        var sequenceMetaXml;
+        /* Meta Data Xmls of corresponding ground truth candidates (for metric execution) */
+        var groundTruthMetasXml;
+        //            var coverDefaultXml;
+        /* Graph structure in JSON format */
+        let currentVizNumber = 0;
+        let centralityVizType = "NODE_SIZE";
+        var jsonGraph;
+        var forceGraph;
+        var have3D;
+        var haveNodeNames = false;
+        var haveEdgeWeights = false;
+        var nodeName = "";
+        var keysPressed = new Map();
+        var rightClickLink = null;
+
+        /* Database Information */
+        var arangoUser = localStorage.getItem("arangoUser@WebOCD");
+        var arangoPass = localStorage.getItem("arangoPass@WebOCD");
+        var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
+        var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
+
+        //Testserver: http://ocd-web-client.duckdns.org:7071
+        //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8529
+        const db = new arangojs.Database('http://127.0.0.1:8529');
+
+        /* SVG for Visualization */
+        var visualization;
+        /* Maximum ground truth candidates (for metric execution) displayed per page */
+        var COVERS_PER_PAGE = 20;
+        /* Current page of ground truth candidates (for metric execution) */
+        var pageNumber = 0;
+        /* Default select option value */
+        var selectOptionVal = "SELECT";
+        /* Default select option code */
+        var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
+        $(document).ready(function() {
+            /* Identifiers for meta information to be displayed */
+            var cells = ["Name", "GraphCount", "Time Ordered", "CreationMethod", "Gr", "R"];
+            /* Requests cover meta information */
+            sendRequest("get", "sequences/" + sequenceId + "?outputFormat=META_XML", "",
+                /* Response handler */
+                function(response) {
+                    /*
+                     * Init meta table
+                     */
+                    sequenceMetaXml = response;
+                    appendGraphSequenceRow($('#sequenceMetaTable'), $(sequenceMetaXml)[1], cells); //TODO: Fix not finding the attribute
+                    /*
+                    * Init graphs table
+                    */
+                    let graphIds = []
+                    $(sequenceMetaXml).find("Graph").each(function() {
+                        sequenceGraphs.push([$(this).attr("Id"),$(this).find('GraphName').text()])
+                        graphIds.push($(this).attr("Id"))
+                    });
+
+
+                    sendRequest("get", "graphs/?outputFormat=META_XML&includeMeta=TRUE&graphIds=" + graphIds.toString(), "",
+                        function(graphsMetaXml) {
+                            var graphCells = ["Index", "Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L"]; //"RS",
+                            $(graphsMetaXml).find("Graph").each(function() {
+                                appendGraphRow($('#graphTable'), $(this), graphCells, graphIds)
+                            });
+                            /*
+                             * Register event handlers
+                             */
+                            registerGraphTable("graphTable");
+                        },
+                        function(errorData) {
+                            /*
+                             * Sequence request failed
+                             */
+                            showConnectionErrorMessage("Graph Metas were not received.", errorData);
+                        }, "text");
+
+                        document.getElementById("visualizationRange").max = sequenceGraphs.length-1
+                    /*
+                     * Register events/components
+                     */
+                    registerGraphSequenceTable("#sequenceMetaTable");
+                    registerCollapsable("#graphsCollapsable");
+                    registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                },
+                /* Error handler */
+                function(errorData) {
+                    /*
+                     * Sequence request failed
+                     */
+                    showConnectionErrorMessage("Sequence was not received.", errorData);
+                }, "text");
+        });
+
+        function getNextVisualization() {
+            //let svgVizScroll = document.getElementById("visualizationZoomer");
+            let svgViz = document.getElementById("visualizationContent");
+            let forceViz = document.getElementById("forceVisualizationContent");
+
+            highlightNodes = new Set();
+            highlightLinks = new Set();
+
+            //document.getElementById("visualizationGraphic").innerText = "";
+            //document.getElementById("forceVisualizationContent").style.display = "none";
+            document.getElementById("visualizationLoadSpinner").hidden = false;
+            if (currentVizNumber === 0) {
+                forceViz.style.display = "none";
+
+
+                getVisualization()
+                //svgViz.style.display = "inherit";
+                //svgVizScroll.style.display = "inline";
+            } else if (currentVizNumber === 1 || currentVizNumber === 2) {
+                forceViz.style.display = "inherit";
+                if (typeof forceGraph !== "undefined") {
+                    forceGraph.width($('.forceVisualizationContent').width());
+                    forceGraph.height($('.forceVisualizationContent').height());
+                }
+                svgViz.style.display = "none";
+                //svgVizScroll.style.display = "none";
+
+                if (currentVizNumber === 1) {
+                    if(forceGraph !== undefined) {
+                        forceGraph._destructor();
+                    }
+                    getJSON(true);
+                } else if (currentVizNumber === 2) {
+                    if(forceGraph !== undefined) {
+                        forceGraph._destructor();
+                    }
+                    getJSON(true);
+                }
+            }
+        }
+
+        /* Handles what happens on the visualization type Button presses */
+        function visualizationButtonClick(number) {
+            currentVizNumber = number
+            $(document).ready(function () {
+                //let svgVizScroll = document.getElementById("visualizationZoomer");
+                let svgViz = document.getElementById("visualizationContent");
+                let forceViz = document.getElementById("forceVisualizationContent");
+
+                highlightNodes = new Set();
+                highlightLinks = new Set();
+
+                document.getElementById("visualizationLoadSpinner").hidden = false;
+                if (number === 0) {
+                    forceViz.style.display = "none";
+
+                    svgViz.style.display = "inherit";
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
+                    //svgVizScroll.style.display = "inline";
+                } else if (number === 1 || number === 2) {
+                    forceViz.style.display = "inherit";
+                    if (typeof forceGraph !== "undefined") {
+                        forceGraph.width($('.forceVisualizationContent').width());
+                        forceGraph.height($('.forceVisualizationContent').height());
+                    }
+                    svgViz.style.display = "none";
+                    //svgVizScroll.style.display = "none";
+
+                    if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
+                        have3D = false;
+                        if (typeof forceGraph !== "undefined") {
+                            forceGraph._destructor();
+                        }
+                        getJSON(false);
+                    } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
+                        have3D = true;
+                        if (typeof forceGraph !== "undefined") {
+                            forceGraph._destructor();
+                        }
+                        getJSON(false);
+                    }
+                }
+                if(currentClusterButton != null) {
+                    let nesting = currentClusteringString
+                    currentClusteringString = null
+                    clusterContext(currentClusterButton, nesting)
+                }
+            })
+        }
+
+        /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
+        document.addEventListener('fullscreenchange', (event) => {
+            // document.fullscreenElement will point to the element that
+            // is in fullscreen mode if there is one. If there isn't one,
+            // the value of the property is null.
+            if (typeof document.fullscreenElement !== "undefined") {
+                var elem = document.getElementById('forceVisualizationContent');
+
+                if (typeof forceGraph !== "undefined") {
+                    forceGraph.width($('.forceVisualizationContent').width());
+                    forceGraph.height($('.forceVisualizationContent').height());
+                }
+            }
+        });
+
+        /* Listener for Ctrl+C presses */
+        document.addEventListener('keydown', (e) => {
+            if(e.code === "KeyC" || e.code === "ControlLeft") {
+                keysPressed.set(e.code,true);
+            }
+        });
+
+        /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
+        document.addEventListener('keyup', (e) => {
+            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0 && document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false && document.getElementById("toolsFormDropDown").classList.contains("show") === false)
+            {
+                var elem = document.getElementById('forceVisualizationContent');
+
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                    elem.msRequestFullscreen();
+                }
+
+                if (typeof forceGraph !== "undefined") {
+                    forceGraph.width(screen.width);
+                    forceGraph.height(screen.height);
+                }
+            }
+            else if(e.code === "KeyF" && window.innerHeight === screen.height)
+            {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { /* Firefox */
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE/Edge */
+                    document.msExitFullscreen();
+                }
+            }
+            else if(e.code === "Enter")
+            {
+                if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm")) {
+                    nodeSearch();
+                }
+                else if(document.getElementById("toolsFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("saveJsonForm")) {
+                    saveJSON();
+                }
+            }
+            else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
+            {
+                if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
+                    if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
+                        searchDropDown();
+                    }
+
+                    document.getElementById("nodeSearchForm").value = nodeName;
+                    document.getElementById("nodeSearchForm").select();
+                    document.execCommand("copy", false, document.getElementById("nodeSearchForm").value);
+                }
+                keysPressed.set(e.code, false);
+            }
+        });
+
+        /* Opens the dropdown menu for entering database information */
+        function databaseInfoDropDown() {
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+            dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
+            document.getElementById("dataBaseDropDownContent").classList.toggle("show");
+        }
+
+        /* Opens the search bar for nodes */
+        function searchDropDown() {
+            document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+            document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+            // Close other menu
+            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+            dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
+            document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
+        }
+
+        /* Opens the tool bar(s) */
+        function toolsDropDownDots() {
+            // Close other menus
+            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            let i;
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+            dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+            for (i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+
+            document.getElementById("toolsFormDropDown").classList.toggle("show");
+        }
+
+        function databaseInfoSubmit() {
+            arangoUser = $("#arangoUser").val();
+            arangoPass = $("#arangoPass").val();
+            arangoDataBase = $("#arangoDataBase").val();
+            arangoCollection = $("#arangoCollection").val();
+
+            localStorage.setItem("arangoUser@WebOCD",arangoUser);
+            localStorage.setItem("arangoPass@WebOCD",arangoPass);
+            localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
+            localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+
+            var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
+                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.displayButton')) { //&& !$(event.target).parents('div#DatabaseItemList').length){
+
+                var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+                dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+                dropdowns = document.getElementsByClassName("toolsFormDropDown");
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+
+                // if(document.getElementById("DatabaseItemList").hidden !== true) {
+                //     closeDatabaseInfo();
+                // }
+            }
+        }
+
+        /* Let the camera look at a specified node (if found) */
+        function nodeSearch(){
+            if (typeof forceGraph !== "undefined") {
+                let searchNodeName = $("#nodeSearchForm").val();
+
+                for(let node of forceGraph.graphData().nodes)
+                {
+                    if(node.name === searchNodeName)
+                    {
+                        if(have3D === false) {
+                            forceGraph.centerAt(node.x, node.y);
+                            forceGraph.zoom(9, 200);
+                            searchNodeName = undefined;
+                        } else {
+                            const distance = 40;
+                            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                            forceGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                            searchNodeName = undefined;
+                        }
+                    }
+                }
+                if (typeof searchNodeName !== "undefined" && searchNodeName !== "") {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
+                    document.getElementById("nodeSearchForm").placeholder = "Not found";
+                } else {
+                    document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
+                    document.getElementById("nodeSearchForm").placeholder = "Node Name";
+
+                    let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        let openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+                document.getElementById("nodeSearchForm").value = "";
+            }
+        }
+
+        /* Save the Graph in JSON format */
+        function saveJSON() {
+            let fileName = $("#saveJsonForm").val();
+
+            if(typeof jsonGraph === 'undefined') {
+                sendRequest("get", "visualization/cover/" + sequenceCoversCentralities[currentCoverCentralityIndex][0] + "/sequence/" + sequenceId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    function (response) {
+                        jsonGraph = response;
+                        const blob = new Blob([jsonGraph],
+                            { type: "application/json" });
+                        saveAs(blob, fileName + ".json");
+                    });
+            }
+            else {
+                const blob = new Blob([jsonGraph],
+                    { type: "application/json" });
+                saveAs(blob, fileName + ".json");
+            }
+
+            let  dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            for (let i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+
+        /* Requests and stores a JSON representation of the graph and then builds it */
+        function getJSONCover() {
+            if(typeof jsonGraph === 'undefined') {
+                sendRequest("get", "visualization/cover/" + sequenceCoversCentralities[currentCoverCentralityIndex][0] + "/sequence/" + sequenceId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    function (response) {
+                        document.getElementById("visualizationLoadSpinner").hidden = true;
+                        jsonGraph = response;
+                        buildGraph();
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                     * GraphIds request failed
+                     */
+                        showConnectionErrorMessage("Visualization was not received.", errorData);
+                    });
+            }
+            else {
+                document.getElementById("visualizationLoadSpinner").hidden = true;
+                buildGraph();
+            }
+        }
+
+        /* Handles the collapsable element for the graph visualization */
+        function visualizationCollapsableHandler() {
+            if (typeof centralityVizTypeNames === "undefined") {
+                getCentralityVisualizationTypeNames(function () {
+                    $(centralityVizTypeNames).find('Name').each(function () {
+                        $("#centralityVisualizationTypeSelect").append(
+                            '<option value="' + $(this).text()
+                            + '">' + $(this).attr("displayName") + '</option>');
+                    });
+                });
+            }
+            /* Requests the graph visualization */
+            if (typeof visualization === 'undefined') {
+                document.getElementById("visualizationLoadSpinner").hidden = false;
+                switchSequenceGraph(0)
+            }
+
+            /* Registers the visualization for panzoom */
+            var $panzoom = $('body').find('.visualizationGraphic').panzoom({
+                $zoomRange: $('body').find(".visualizationZoomer"),
+                increment: 0.9,
+                contain: 'invert',
+                maxScale: 10,
+                minScale: 1
+            });
+            $panzoom.on('mousewheel', function (e) {
+                e.preventDefault();
+                var delta = e.delta || e.originalEvent.wheelDelta;
+                var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+                $panzoom.panzoom('zoom', zoomOut, {
+                    increment: 0.1,
+                    animate: false,
+                    focal: e
+                });
+            });
+        }
+
+        /* Requests and stores the visualization of the graph/cover/centrality */
+        function getVisualization() {
+            document.getElementById("visualizationGraphic").innerText = "";
+            if(graphKind === "graph") {
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = true;
+                    /* Requests the visualization */
+                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC", "",
+                        /* Response handler */
+                        function (response) {
+
+                            document.getElementById("visualizationLoadSpinner").hidden = true;
+                            visualization = response;
+                            $('.visualizationGraphic').append(visualization);
+                            toggleDisableGraphSwitches(false)
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            toggleDisableGraphSwitches(false)
+                            /*
+                            * Visualization request failed
+                            */
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
+                        });
+            }
+            else if (graphKind === "centrality") {
+                if(sequenceCoversCentralities.length !== 0) {
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = true;
+                    /* Requests the visualization */
+                    sendRequest("get", "visualization/centralityMap/" + sequenceCoversCentralities[currentCoverCentralityIndex][0] + "/graph/"
+                        + sequenceGraphs[currentGraphIndex][0] + "/outputFormat/SVG/layout/ORGANIC/centralityVisualization/" + centralityVizType, "",
+                        /* Response handler */
+                        function (response) {
+
+                            document.getElementById("visualizationLoadSpinner").hidden = true;
+                            visualization = response;
+                            $('.visualizationGraphic').append(visualization);
+                            toggleDisableGraphSwitches(false)
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            toggleDisableGraphSwitches(false)
+                            /*
+                            * Visualization request failed
+                            */
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
+                        });
+                }
+                else {
+                    toggleDisableGraphSelects(true)
+                    document.getElementById('visualizationGraphicNotAvailableText').innerHTML = "<b>The Graph has no centralities</b>"
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = false
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
+                }
+            }
+            else if (graphKind === "cover") {
+                if(sequenceCoversCentralities.length !== 0) {
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = true;
+                    /* Requests the visualization */
+                    sendRequest("get", "visualization/cover/" + sequenceCoversCentralities[currentCoverCentralityIndex][0] + "/sequence/" + sequenceId + "/graph/"
+                        + sequenceGraphs[currentGraphIndex][0] + "/outputFormat/SVG/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                        /* Response handler */
+                        function (response) {
+
+                            document.getElementById("visualizationLoadSpinner").hidden = true;
+                            visualization = response;
+                            $('.visualizationGraphic').append(visualization);
+                            toggleDisableGraphSwitches(false)
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            toggleDisableGraphSwitches(false)
+                            /*
+                            * Visualization request failed
+                            */
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
+                        });
+                }
+                else {
+
+                    toggleDisableGraphSelects(true)
+                    document.getElementById('visualizationGraphicNotAvailableText').innerHTML ="<b>The Graph has no covers</b>"
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = false
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
+                }
+            }
+        }
+
+        function buildGraph() {
+            if(graphKind === "graph") {
+                buildGraphNormal()
+            }
+            else if (graphKind === "centrality") {
+                buildGraphCentrality()
+            }
+            else if (graphKind === "cover") {
+                buildGraphCover()
+            }
+        }
+
+        function applyClusterLayout() {
+            if(graphKind === "graph") {
+                applyClusterLayoutNormal()
+            }
+            else if (graphKind === "centrality") {
+                applyClusterLayoutCentrality()
+            }
+            else if (graphKind === "cover") {
+                applyClusterLayoutCover()
+            }
+        }
+
+        /* Requests and stores a JSON representation of the graph and then builds it */
+        function getJSON(whileSwitching = false) {
+            if(graphKind === "graph") {
+                if (whileSwitching || typeof jsonGraph === 'undefined') {
+                    sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
+                        function (response) {
+                            document.getElementById("visualizationLoadSpinner").hidden = true;
+                            jsonGraph = response;
+                            buildGraph();
+                            toggleDisableGraphSwitches(false)
+                        },
+                        /* Error handler */
+                        function (errorData) {
+                            toggleDisableGraphSwitches(false)
+                            /*
+                            * GraphIds request failed
+                            */
+                            showConnectionErrorMessage("Visualization was not received.", errorData);
+                        });
+                } else {
+                    toggleDisableGraphSwitches(false)
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
+                    buildGraph();
+                }
+            }
+            else if (graphKind === "centrality") {
+                if(sequenceCoversCentralities.length !== 0) {
+                    if (whileSwitching || typeof jsonGraph === 'undefined') {
+                        sendRequest("get", "visualization/centralityMap/" + sequenceCoversCentralities[currentCoverCentralityIndex][0] + "/graph/"
+                            + sequenceGraphs[currentGraphIndex][0] + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + centralityVizType, "",
+                            function (response) {
+                                document.getElementById("visualizationLoadSpinner").hidden = true;
+                                jsonGraph = response;
+                                buildGraph();
+                                toggleDisableGraphSwitches(false)
+                            },
+                            /* Error handler */
+                            function (errorData) {
+                                toggleDisableGraphSwitches(false)
+                                /*
+                                * GraphIds request failed
+                                */
+                                showConnectionErrorMessage("Visualization was not received.", errorData);
+                            });
+                    } else {
+                        toggleDisableGraphSwitches(false)
+                        document.getElementById("visualizationLoadSpinner").hidden = true;
+                        buildGraph();
+                    }
+                }
+                else {
+                    document.getElementById("visualizationRange").disabled = false
+                    toggleDisableGraphSelects(true)
+                    document.getElementById('visualizationGraphicNotAvailableText').innerHTML = "<b>The Graph has no centralities</b>"
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = false
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
+                }
+            }
+            else if (graphKind === "cover") {
+                if(sequenceCoversCentralities.length !== 0) {
+                    if (whileSwitching || typeof jsonGraph === 'undefined') {
+                        sendRequest("get", "visualization/cover/" + sequenceCoversCentralities[currentCoverCentralityIndex][0] + "/sequence/" + sequenceId + "/graph/" + sequenceGraphs[currentGraphIndex][0] + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                            function (response) {
+                                document.getElementById("visualizationLoadSpinner").hidden = true;
+                                jsonGraph = response;
+                                buildGraph();
+                                toggleDisableGraphSwitches(false)
+                            },
+                            /* Error handler */
+                            function (errorData) {
+                                toggleDisableGraphSwitches(false)
+                                /*
+                                * GraphIds request failed
+                                */
+                                showConnectionErrorMessage("Visualization was not received.", errorData);
+                            });
+                    } else {
+                        toggleDisableGraphSwitches(false)
+                        document.getElementById("visualizationLoadSpinner").hidden = true;
+                        buildGraph();
+                    }
+                }
+                else {
+                    document.getElementById("visualizationRange").disabled = false
+                    toggleDisableGraphSelects(true)
+                    document.getElementById('visualizationGraphicNotAvailableText').innerHTML = "<b>The Graph has no covers</b>"
+                    document.getElementById('visualizationGraphicNotAvailableText').hidden = false
+                    document.getElementById("visualizationLoadSpinner").hidden = true;
+                }
+            }
+        }
+
+        function switchGraphKind (kind) {
+            graphKind = kind
+            if(graphKind === "centrality") {
+                document.getElementById("centralityVisualizationTypeSelect").hidden = false;
+                document.getElementById("visualizationRange").style.width = "80%";
+            }
+            else {
+                document.getElementById("centralityVisualizationTypeSelect").hidden = true;
+                document.getElementById("visualizationRange").style.width = "100%";
+            }
+            document.getElementById("coverSelect").options.length = 0;
+            document.getElementById("visualizationGraphic").innerText = "";
+            document.getElementById("forceVisualizationContent").style.display = "none";
+            document.getElementById('visualizationGraphicNotAvailableText').hidden = true
+            switchSequenceGraph(currentGraphIndex)
+        }
+
+        /* Function to react on actual visualization slider change, not on every small value tick etc. */
+        function switchSequenceGraph(index) {
+            resetClusterButtons();
+            toggleDisableGraphSelects(true)
+            document.getElementById("visualizationGraphicNotAvailableText").innerText = ""
+            document.getElementById("visualizationRange").disabled = true //TODO: Make this nicer, maybe fix value until loaded so that dragging doesnt get cancelled
+            currentGraphIndex = index
+            graphId = sequenceGraphs[currentGraphIndex][0]
+            currentCoverCentralityIndex = 0
+
+            document.getElementById("currentGraphInfo").innerHTML = "<b>" + sequenceGraphs[currentGraphIndex][1] + "</b>"
+            if (graphKind === "graph") {
+                getNextVisualization()
+            }
+            else if(graphKind === "cover") {
+                sendRequest("get", "covers?graphId=" + sequenceGraphs[currentGraphIndex][0] + "&includeMeta=TRUE&executionStatuses=COMPLETED", "",
+                    /* Response handler */
+                    function (coverIdsXml) {
+                        sequenceCoversCentralities = []
+                        document.getElementById("coverSelect").options.length = 0;
+                        let i = 0;
+                        $(coverIdsXml).find("Cover").each(function () {
+                            let coverId = $(this).find('CoverId').text();
+                            let coverName = $(this).children('Name').text();
+                            sequenceCoversCentralities.push([coverId, coverName])
+                            document.getElementById("coverSelect").insertAdjacentHTML("beforeend", "<option value='" + i + "'>" + coverName + "</option>")
+                            i++;
+                        });
+                        if (sequenceCoversCentralities.length !== 0) {
+                            getNextVisualization()
+                        } else {
+                            toggleDisableGraphSwitches(false)
+                            if (currentVizNumber === 1 || currentVizNumber === 2) {
+                                forceGraph._destructor()
+                                document.getElementById("forceVisualizationContent").style.display = "none";
+                            } else {
+                                document.getElementById("visualizationGraphic").innerHTML = "";
+                            }
+
+                            toggleDisableGraphSelects(true)
+                            document.getElementById('visualizationGraphicNotAvailableText').innerHTML = "<b>The Graph has no covers</b>"
+                            document.getElementById('visualizationGraphicNotAvailableText').hidden = false
+                            document.getElementById('visualizationLoadSpinner').hidden = true
+                        }
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /*
+                     * Cover request failed
+                     */
+                        showConnectionErrorMessage("Covers were not received.", errorData);
+                    }, "text");
+            }
+            else if (graphKind === "centrality") {
+                sendRequest("get", "maps?graphId=" + sequenceGraphs[currentGraphIndex][0] +"&includeMeta=TRUE&executionStatuses=COMPLETED", "",
+                    /* Response handler */
+                    function(centralityIdsXml) {
+                        sequenceCoversCentralities = []
+                        document.getElementById("coverSelect").options.length = 0;
+                        let i = 0;
+                        $(centralityIdsXml).find("CentralityMap").each(function() {
+                            let centralityId = $(this).find('CentralityMapId').text();
+                            let centralityName = $(this).children('Name').text();
+                            sequenceCoversCentralities.push([centralityId,centralityName])
+                            document.getElementById("coverSelect").insertAdjacentHTML("beforeend", "<option value='" + i + "'>" + centralityName + "</option>")
+                            i++;
+                        });
+                        if(sequenceCoversCentralities.length !== 0) {
+                            getNextVisualization()
+                        }
+                        else {
+                            toggleDisableGraphSwitches(false)
+                            if (currentVizNumber === 1 || currentVizNumber === 2) {
+                                forceGraph._destructor()
+                                document.getElementById("forceVisualizationContent").style.display = "none";
+                            }
+                            else {
+                                document.getElementById("visualizationGraphic").innerHTML = "";
+                            }
+
+                            toggleDisableGraphSelects(true)
+                            document.getElementById('visualizationGraphicNotAvailableText').innerHTML = "<b>The Graph has no centralities</b>"
+                            document.getElementById('visualizationGraphicNotAvailableText').hidden = false
+                            document.getElementById('visualizationLoadSpinner').hidden = true
+                        }
+                    },
+                    /* Error handler */
+                    function(errorData) {
+                        /*
+                         * Cover request failed
+                         */
+                        showConnectionErrorMessage("Covers were not received.", errorData);
+                    }, "text");
+            }
+        }
+
+        function switchSequenceCentralityViz() {
+            toggleDisableGraphSwitches(true)
+            centralityVizType = $("#centralityVisualizationTypeSelect").val()
+
+            getNextVisualization()
+        }
+
+        function switchSequenceCover() {
+            toggleDisableGraphSwitches(true)
+            currentCoverCentralityIndex = $("#coverSelect").val()
+
+
+            getNextVisualization()
+        }
+
+        function toggleDisableGraphSwitches(value) {
+            if (value === true) {
+                document.getElementById("visualizationRange").disabled = true
+                toggleDisableGraphSelects(value)
+            }
+            else {
+                document.getElementById("visualizationRange").disabled = false
+                toggleDisableGraphSelects(value)
+            }
+        }
+
+        function toggleDisableGraphSelects(value) {
+            if (value === true) {
+                document.getElementById("coverSelect").disabled = true
+                document.getElementById("centralityVisualizationTypeSelect").disabled = true
+            }
+            else {
+                document.getElementById("coverSelect").disabled = false
+                document.getElementById("centralityVisualizationTypeSelect").disabled = false
+            }
+        }
+
+    </script>
+</head>
+<body>
+<div id="wrapper">
+    <div id="contentWrapper">
+        <div id="content">
+            <!-- Container for display of error messages -->
+            <div id="errorMessageWrapper">
+                <div id="errorMessage"></div>
+            </div>
+
+            <!-- Sequence meta information table -->
+            <div id="sequenceHeader" class="col-sm-12 col-md-12 sequenceColor">
+
+            </div>
+
+            <div class="tableWrapper">
+                <table id="sequenceMetaTable">
+                    <thead>
+                    <tr>
+                        <th class="hidden" title="Id"></th>
+                        <th  title="Graph Sequence Name" class="sortable">
+                            Name
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th  title="Time Ordered" class="sortable">
+                            Time Ordered
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th style='width:20px' title="Show Graphs">
+                            Gr
+                        </th>
+                        <th style='width:20px' title="Remove Sequence">
+                            Remove
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <!-- Collapsable element for displaying the graphs of the sequence -->
+            <div id="graphsCollapsable" class="collapsable">
+                <div class="collapsableHeader">
+                    <div class="collapsableTitle">Graphs</div>
+                    <div class="collapsableCollapser">
+                        <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                        <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    </div>
+                </div>
+                <div class="collapsableContent">
+                    <div class="tableWrapper table-responsive">
+                        <table id="graphTable" class = "table table-striped">
+                            <thead>
+                            <tr>
+                                <th class="hidden" title="Id"></th>
+                                <!--<th width="20" title="Remove Graph from Sequence">
+
+                                </th>-->
+                                <th  title="Index" class="sortable">
+                                    Index
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th  title="Graph Name" class="sortable">
+                                    Name
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th  title="Node Count" class="sortable">
+                                    Nodes
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th  title="Edge Count" class="sortable">
+                                    Edges
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th  title="Creation Method" class="sortable">
+                                    Origin
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th width="20" title="Has Directed Edges">
+                                    D
+                                </th>
+                                <th width="20" title="Has Weighted Edges">
+                                    W
+                                </th>
+                                <th width="20" title="Has Zero Edge Weights">
+                                    Z
+                                </th>
+                                <th width="20" title="Has Negative Edge Weights">
+                                    N
+                                </th>
+                                <th width="20" title="Has Self Loops">
+                                    L
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Collapsable for sequence cover visualization -->
+            <div id="visualizationCollapsable" class="collapsable">
+                <div class="collapsableHeader">
+                    <div class="collapsableTitle">Visualization</div>
+                    <div class="collapsableCollapser">
+                        <img class="icon iconBtn collapsableDisplayBtn" src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d">
+                        <img class="icon iconBtn collapsableCollapseBtn" src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    </div>
+                </div>
+                <div class="collapsableContent">
+                    <div class="row btn-group btn-group-toggle vizKindRow" data-toggle="buttons" style="width:100%">
+                        <label class="btn btn-secondary active" style="width:33%">
+                            <input type="radio" name="options" id="visualizeGraphs" autocomplete="off" onclick="switchGraphKind('graph')"> Graphs
+                        </label>
+                        <label class="btn btn-secondary active" style="width:33%">
+                            <input type="radio" name="options" id="visualizeCovers" autocomplete="off" onclick="switchGraphKind('cover')" checked> Covers
+                        </label>
+                        <label class="btn btn-secondary" style="width:33%">
+                            <input type="radio" name="options" id="visualizeCentralities" autocomplete="off" onclick="switchGraphKind('centrality')"> Centralities
+                        </label>
+                    </div>
+                    <div class="optionRow row">
+                        <div class="dataBaseDropDown col-auto" style="margin-right:2px">
+                            <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
+                            <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
+                                <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
+                                <input class="dataBaseDropDownContentForm" id="arangoPass" type="password" name="arangoPass" placeholder="Password">
+                                <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
+                                <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
+                                <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
+                            </form>
+                        </div>
+                        <div class="searchDropDown col-sm-1">
+                            <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
+                            <div id="nodeSearchFormDropDown" class="nodeSearchFormDropDown">
+                                <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name" style="display:inline-block">
+                                <button class="nodeSearchButton btn" onclick="nodeSearch()" type='button' style="display:inline-block">Search</button>
+                            </div>
+                        </div>
+                        <div class="btn-custom-group col-md-9">
+                            <button class="col-md-4" onclick="visualizationButtonClick(0)" >SVG</button>
+                            <button class="col-sm-4" onclick="visualizationButtonClick(1)" >2D Interactive</button>
+                            <button class="col-sm-4" onclick="visualizationButtonClick(2)" >3D Interactive</button>
+                        </div>
+                        <div class="toolsDropDown col-auto">
+                            <div class="toolsDropDownDots" onclick="toolsDropDownDots()">
+                                <span class="tool-dot" style="margin-top:4px"></span>
+                                <span class="tool-dot" style="margin-top:3px"></span>
+                                <span class="tool-dot" style="margin-top:3px"></span>
+                            </div>
+                            <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
+                                <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
+                                <button id="edgeWeightDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayHandler()">Show Edge Weights</button>
+                                <div style="margin-top: 1px">
+                                    <input class="saveJsonForm form-text" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON">
+                                    <button class="saveJsonFormButton btn" onclick="saveJSON()" type='button'>Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Container for graph visualization -->
+                    <div class="visualization">
+                        <div class="visualizationControl" id="visualizationControl">
+                            <div id="currentGraphInfoOuter" class="currentGraphInfoOuter">
+                            <div id="currentGraphInfo" class="currentGraphInfo"></div>
+                            </div>
+                            <div style="display: inline-flex; width:60%; margin-top:5px">
+                                <select id="centralityVisualizationTypeSelect" class="centralityVisualizationTypeSelect custom-select-sm" style="width:18%; margin-left: 2px" onchange="switchSequenceCentralityViz()" hidden></select>
+                                <div style="width:100%; margin-left: 2px">
+                                    <span style="font-size: small; float:left"><b>First Graph</b></span>
+                                    <span style="font-size: small; float:right"><b>Last Graph</b></span>
+                                    <input id="visualizationRange" class="custom-range visualizationRange" type="range" step="1" value="0" min="0" onchange="switchSequenceGraph(this.value)">
+                                </div>
+                            </div>
+                            <select id="coverSelect" class="form-control custom-select coverSelect" onchange="switchSequenceCover()"></select>
+                        </div>
+                        <div id="visualizationGraphicNotAvailableText" style="text-align: center" hidden><b></b></div>
+                        <div id="visualizationContent" class="visualizationContent">
+                            <div class="text-center">
+                                <div id="visualizationLoadSpinner" class="spinner-border" role="status" style="margin-top:10px; width: 3rem; height: 3rem;" hidden>
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="visualizationGraphic" class="visualizationGraphic"></div>
+                        </div>
+                        <div id="forceVisualizationContent" class="forceVisualizationContent">
+                            <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
+                            <div id="DatabaseItemList"  class="databaseItemList" hidden>
+                                <div id='nodeClusterUndoButtonContainer' style='position:absolute; width:100%; display:block; padding-right:15px'></div>
+                                <nav aria-label="breadcrumb">
+                                    <ol id="DatabaseItemListCrumb" class="databaseItemListCrumb breadcrumb"></ol>
+                                </nav>
+                                <img onclick="closeDatabaseInfo()" id="closeDatabaseInfo" class="icon iconBtn closeDatabaseInfo" src="IMG/open-iconic/svg/chevron-left.svg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

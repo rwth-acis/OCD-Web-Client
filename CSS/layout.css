@@ -377,6 +377,11 @@ td:last-child {
     background-color: #3e8e41;
 }
 
+.vizKindRow {
+    margin: auto;
+    margin-bottom: 3px;
+}
+
 .optionRow {
     margin: auto;
     margin-bottom: 3px;
@@ -429,7 +434,7 @@ td:last-child {
 .toolsDropDown {
     position: relative;
     margin: 1px 0.5% 0px 0px;
-    padding: 0;
+    padding: 0 0 0 20px;
     float: right;
 }
 
@@ -454,7 +459,7 @@ td:last-child {
 .databaseItemList {
     height:100%;
     overflow-y:scroll;
-    z-index: 2;
+    z-index: 100000; /* Very high z-index to cope with the z-indexes of 3d graph nodes potentially going as high as the number of nodes */
     background: white;
     border-style: solid;
     border-left-style: none;
@@ -479,6 +484,11 @@ td:last-child {
 
 .jsonListExpandable:hover {
     cursor: pointer;
+    background-color: #598db6;
+}
+
+.displayButton {
+    width: 100%;
 }
 
 .nodeClusterButton {
@@ -490,6 +500,16 @@ td:last-child {
     vertical-align: middle;
     border-radius: 0;
     background-color: #c5d2ea;
+}
+
+.nodeClusterUndoButton {
+    width: fit-content;
+    height: 50%;
+    padding: 1px;
+    font-size: small;
+    vertical-align: middle;
+    border-radius: 0;
+    background-color: #e38d8d;
 }
 
 .tool-dot {
@@ -522,28 +542,38 @@ td:last-child {
     position: absolute;
     top: 48px;
     right: 0px;
+    border-style: solid;
+    border-color: #9a9a9a;
+    border-width: 1px;
     background-color: #f1f1f1;
-    width: 170px;
+    width: 200px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
 }
 
-.nodeNameDisplayButton {
+.saveJsonForm {
+    width: 70%;
+    margin-left: 0;
+    margin-right: 0;
+    float: left;
+}
+
+.saveJsonFormButton {
+    background-color: #d3d3d3;
+    max-height: 90%;
+    width: 28%;
+    margin-left: 0;
+    margin-right: 0;
+    float: right;
+}
+
+.toolsFormDropDownButton {
     width: inherit;
     margin-bottom: 5px;
 }
 
-.nodeNameDisplayButton:hover {
+.toolsFormDropDownButton:hover {
     cursor: pointer;
-}
-
-.saveJsonForm {
-    width: auto;
-    margin: auto;
-}
-
-.saveJsonFormButton {
-    width: auto;
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -560,9 +590,9 @@ td:last-child {
     display: none;
     position: absolute;
     background-color: #f1f1f1;
-    min-width: 4px;
+    min-width: 250px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
+    z-index: 100001; /* Very high z-index to cope with the z-indexes of 3d graph nodes potentially going as high as the number of nodes */
 }
 
 /* Links inside the dropdown */
@@ -581,7 +611,14 @@ td:last-child {
 }
 
 .nodeSearchForm {
-    width: auto;
+    width: 70%;
+    height: 40px;
+    margin: auto;
+}
+
+.nodeSearchButton {
+    width: 28%;
+    height: 38px;
     margin: auto;
 }
 
@@ -624,6 +661,41 @@ td:last-child {
     width: 1px;
     height: 1px;
     left: 30px;
+}
+
+#dragDropGraphs {
+    padding: 20px;
+    background: #eee;
+    margin-bottom: 20px;
+    z-index: 2;
+    border-radius: 10px;
+}
+
+#dragDropDropzone {
+    padding: 20px;
+    background: #eee;
+    min-height: 100px;
+    margin-bottom: 20px;
+    z-index: 0;
+    border-radius: 10px;
+}
+
+.dragDrop-active {
+    outline: 1px solid red;
+}
+
+.dragDrop-hover {
+    outline: 1px solid #74c40f;
+}
+
+.dragDrop-drop-item {
+    cursor: pointer;
+    margin-bottom: 10px;
+    background-color: rgb(255, 255, 255);
+    padding: 5px 10px;
+    border-radius: 3px;
+    border: 1px solid rgb(204, 204, 204);
+    position: relative;
 }
 
 /* The slider */
@@ -674,6 +746,18 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
+.visualizationControl {
+    margin-top: 5px;
+    padding-top: 5px;
+    margin-bottom: 10px;
+    /*border-top-style: solid;
+    border-right-style: none;
+    border-left-style: none;
+    border-bottom-style: none;
+    border-color: #9a9a9a;
+    border-width: 0.02em;*/
+}
+
 .visualizationZoomer {
     width: 50%;
 }
@@ -716,6 +800,10 @@ input:checked + .slider:before {
 .graphColor .jumbotron {
   background-color: #e3f2fd;
   margin-bottom: 1rem;
+}
+
+.sequenceColor {
+    background-color: #ffe7cc;
 }
 
 .coverColor {
@@ -771,4 +859,41 @@ input:checked + .slider:before {
     border-radius: 4px;
     background-color: rgba(0,0,0,0.5);
     user-select: none;
+}
+
+.module h2 {
+    font-size: 1em;
+}
+
+.currentGraphInfoOuter {
+    display: table;
+    width:18%;
+    float:left;
+    margin-left: 4px;
+    margin-right:2px;
+    margin-top:15px;
+
+    border-style: solid;
+    /*border-right-style: none;*/
+    background-color: #c5d2ea;
+    border-color: #9a9a9a;
+    border-width: 1px;
+    /*border-top-left-radius: 6px;*/
+    /*border-bottom-left-radius: 6px;*/
+}
+
+.currentGraphInfo {
+text-align: center;
+font-size: 80%;
+word-wrap: break-word;
+display: table-cell;
+vertical-align: middle;
+}
+
+.coverSelect {
+    width:15%;
+    float:right;
+    margin-left: 10px;
+    margin-right: 20px;
+    margin-top:5px
 }
