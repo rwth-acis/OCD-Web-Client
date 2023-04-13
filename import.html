@@ -192,7 +192,9 @@ Facilitates import / upload of new graphs and covers.
                                             '<option value="' + $(this).text()
                                             + '">' + $(this).attr("displayName") + '</option>');
                                     }
-
+                                    if(localStorage.getItem("arangoUser@WebOCD") !== undefined) {
+                                        logInAndGetDatabase()
+                                    }
                                 });
                             });
                             /* Loads and displays graph table to select a corresponding graph */
@@ -284,7 +286,6 @@ Facilitates import / upload of new graphs and covers.
 
                 db.listUserDatabases().then(
                     (databaseNames) => {
-                        console.log(databaseNames)
                         $("#databaseName").empty()
                         for (const databaseName of databaseNames) {
                             if (databaseName !== "_system") { //Ignore system database if available. Wont have any useful collections
@@ -392,8 +393,8 @@ Facilitates import / upload of new graphs and covers.
                                 }
                             }
                         }
-                        if($("#weighEdges").val()) {
-                            restUrl = restUrl + "&weighEdges=" + $("#weighEdges").val().toString();
+                        if($("#weighEdges").checked) {
+                            restUrl = restUrl + "&weighEdges=" + $("#weighEdges").checked.toString();
                         }
                         if($("#edgeCollections").val() !== null || $("#edgeCollections").val() !== []) {
                             restUrl = restUrl + "&edgeCollectionNames=" + $("#edgeCollections").val().toString();
@@ -419,9 +420,16 @@ Facilitates import / upload of new graphs and covers.
                             restUrl = restUrl + "&dateAttributeName=" + $("#dateAttribute").val()
                             sendPostGraphRequest(restUrl, content)
                         }
-                        else {
+                        else if ($("#startDate").val() !== "" || $("#endDate").val() !== "") {
                             let db = logInAndGetDatabase();
-                            db = db.useDatabase($("#databaseName").val());
+                            let databaseAddress = localStorage.getItem("arangoAdress@WebOCD");
+                            let databaseUser = localStorage.getItem("arangoUser@WebOCD");
+                            let databasePassword = localStorage.getItem("arangoPass@WebOCD");
+                            db = new arangojs.Database({
+                                url: databaseAddress,
+                                databaseName: $("#databaseName").val(),
+                                auth: { username: databaseUser, password: databasePassword },
+                            });
 
                             let edgeDocumentsQuery = "RETURN [";
                             for (const edgeCollectionName of $("#edgeCollections").val()) {
@@ -456,7 +464,6 @@ Facilitates import / upload of new graphs and covers.
                                     if (!found_doc && ($("#startDate").val() !== "" || $("#endDate").val() !== "")) {
                                         buttonSubmitEnd("submitButton");
                                         showErrorMessage("Could not find a date attribute to use for timeframe. Dont use start/end dates or specify date attribute in advanced mode")
-
                                     }
                                     else {
                                         let max_occ_key = dateMap.keys().next().value
@@ -471,6 +478,9 @@ Facilitates import / upload of new graphs and covers.
                                 },
                                 (errorData) => { showConnectionErrorMessage(errorData) } //TODO: Make this nicer
                             )
+                        }
+                        else {
+                            sendPostGraphRequest(restUrl, content)
                         }
                     }
                     else {
