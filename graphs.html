@@ -19,6 +19,7 @@
         <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
         <script src="JS/graphTableHandler.js"></script>
         <script src="node_modules/arangojs/web.js"></script>
+        <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
         <script type="text/javascript">
             /*
              * Defines current page and page size.
@@ -35,7 +36,7 @@
                 $('.pageNumWrapper').append(pageNumber);
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
                 /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R"];
+                var cells = ["Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R", ".txt"];
                 /* Requests the graph meta information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
@@ -155,6 +156,9 @@
                                 </th>
                                 <th width="20" title="Remove Graph">
                                     R
+                                </th>
+                                <th width="30" title="Save Graph">
+                                    .txt
                                 </th>
                             </tr>
                             </thead>
