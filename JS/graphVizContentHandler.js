@@ -206,7 +206,7 @@ function insertJsonAsList(elemId, nodeName, keyNesting, displayMode) {
         document.getElementById(elemId).removeChild(document.getElementById("dbList"))
     }
 
-    document.getElementById(elemId).insertAdjacentHTML("beforeend", "<ul id='dbList' class='list-group list-group-flush' style='overflow-y:scroll'></ul>")
+    document.getElementById(elemId).insertAdjacentHTML("beforeend", "<ul id='dbList' class='list-group list-group-flush'></ul>")
     document.getElementById("DatabaseItemListCrumb").innerHTML = "";
     document.getElementById("DatabaseItemListCrumb").insertAdjacentHTML("beforeend",
         "<li class=\"breadcrumb-item active hoverCrumb\" aria-current=\"page\" onclick='insertJsonAsList(\"DatabaseItemList\", \"" + nodeName + "\", \"\", \"\")'><b>" + nodeName + "</b></li>")

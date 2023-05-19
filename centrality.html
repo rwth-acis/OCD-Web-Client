@@ -42,7 +42,7 @@
         /* Graph structure in JSON format */
         var jsonGraph;
         var forceGraph;
-        var visualizationType = "NODE_SIZE";
+        var centralityVizType = "NODE_SIZE";
         let nodeSizeMin = Number.MAX_VALUE;
         var visualizationTypeChange = true;
         var have3D;
@@ -65,8 +65,6 @@
 
         /* SVG for Visualization */
         var visualization;
-        /* Names of all visualization types */
-        var centralityVizTypeNames;
         /* Maximum ground truth candidates (for metric execution) displayed per page */
         var ENTRIES_PER_PAGE = 20;
         /* Current page of ground truth candidates (for metric execution) */
@@ -506,7 +504,7 @@
             let fileName = $("#saveJsonForm").val();
 
             if(typeof jsonGraph === 'undefined') {
-                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + centralityVizType, "",
                     function (response) {
                         jsonGraph = response;
                         const blob = new Blob([jsonGraph],
@@ -540,9 +538,9 @@
 
         /* Requests and stores a JSON representation of the graph and builds it */
         function getJSON() {
-            visualizationType = "NODE_SIZE";
+            centralityVizType = "NODE_SIZE";
             if ($('#visualizationType').val() !== null) {
-                visualizationType = $('#visualizationType').val();
+                centralityVizType = $('#visualizationType').val();
             }
 
             if (typeof forceGraph !== "undefined") {
@@ -550,7 +548,7 @@
             }
 
             if(typeof jsonGraph === 'undefined' || visualizationTypeChange === true) {
-                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+                sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/centralityVisualization/" + centralityVizType, "",
                     function (response) {
                         document.getElementById("visualizationLoadSpinner").hidden = true;
                         jsonGraph = response;
@@ -621,11 +619,11 @@
             if (typeof visualization !== 'undefined') {
                 $('.visualizationGraphic').empty();
             }
-            visualizationType = "NODE_SIZE";
+            centralityVizType = "NODE_SIZE";
             if ($('#visualizationType').val() !== null) {
-                visualizationType = $('#visualizationType').val();
+                centralityVizType = $('#visualizationType').val();
             }
-            sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC/centralityVisualization/" + visualizationType, "",
+            sendRequest("get", "visualization/centralityMap/" + mapId + "/graph/" + graphId + "/outputFormat/SVG/layout/ORGANIC/centralityVisualization/" + centralityVizType, "",
                 /* Request handler */
                 function (response) {
                     document.getElementById("visualizationLoadSpinner").hidden = true;
