@@ -28,6 +28,7 @@
     <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
     <script src="node_modules/arangojs/lib/web.js"></script>
     <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <script type="text/javascript">
         /* Id of the graph */
         var graphId = getUrlVar("id");
@@ -68,8 +69,9 @@
         var centralitySimulationNames;
         /* Principal eigenvalue of the grapph's adjacency matrix */
         var eigenvalue;
+        var supported_dv_algorithms;
         /* Executed after page loading */
-        $(document).ready(function () {
+        $(document).ready(function () { 
             /* Identifiers for the graph information to be displayed */
             var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
             /* Requests the graph meta information */
@@ -147,6 +149,8 @@
                     var params = getParameterXml("#algorithmParameterDiv");
                     var coverName = $("#coverName").val();
                     var contentWeighting = $("#contentWeighting").is(':checked');
+                    var descriptiveVisualization = $("#descriptiveVisualization").is(':checked');
+
                     if (coverName === "") {
                         showErrorMessage('Please define a cover name.');
                         window.scrollTo(0, 0);
@@ -159,7 +163,7 @@
                     //console.log("post" + " " + "covers/graphs/" + graphId
                     //    + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting + " " + params);
                     sendRequest("post", "covers/graphs/" + graphId
-                        + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
+                        + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting + "&descriptiveVisualization=" + descriptiveVisualization, params,
                         /* Response handler */
                         function (response) {
                             window.location.href = 'index.html';
@@ -1423,7 +1427,7 @@
                                                     class="custom-control-indicator"></span> <span
                                                     class="custom-control-label">Content Weighting</span>
                                             </label>
-                                        </div>
+                                        </div> 
                                     </div>
                                     <div class="form-group">
                                         <button type="submit" name="submit" id="runAlgorithmBtn" class="btn btn-primary">
@@ -1622,6 +1626,61 @@
             </div>
         </div>
     </div>
+    <script> 
+        // Add checkbox for algorithm that supports Descriptive Visualization
+        var availableAlgorithms;
+        sendRequest("get", "getAlgorithmsForDescriptiveVisualization/", "", (res) => {
+                availableAlgorithms = res.split(",");
+            }, (err) => {
+                console.error(err)
+        }, "text");
+
+        // check if the name of the algorithm is in the array of available algorithms
+        const algorithmSelect = document.querySelector("#algorithm"); 
+        algorithmSelect.addEventListener("change", function() {
+            const selectedAlgorithm = this.value;   
+            if (availableAlgorithms.includes(selectedAlgorithm)) {  
+                if(!document.getElementById('descriptiveVisualization')){
+                    const formGroupRows = document.getElementById('runAlgorithmForm');
+                    const formGroupRow = formGroupRows.children[4];
+
+                    const dvCheckbox = document.createElement("div");
+                    dvCheckbox.className = "container";
+
+                    const label = document.createElement("label");
+                    label.className = "custom-control custom-checkbox";
+
+                    const input = document.createElement("input");
+                    input.id = "descriptiveVisualization";
+                    input.type = "checkbox"; 
+                    input.className = "custom-control-input";
+                    label.appendChild(input);
+
+                    const span1 = document.createElement("span");
+                    span1.className = "custom-control-indicator";
+                    label.appendChild(span1);
+
+                    const span2 = document.createElement("span");
+                    span2.className = "custom-control-label";
+                    span2.textContent = "Descriptive Visualization";
+                    label.appendChild(span2);
+
+                    dvCheckbox.appendChild(label);
+
+                    // Add the 'descriptiveVisualization' container as the last element in the 'form-group row'
+                    formGroupRow.appendChild(dvCheckbox);
+                }
+            }
+            else {
+                if(document.getElementById('descriptiveVisualization')){
+                    const groups = document.getElementById('runAlgorithmForm');
+                    const checkboxes = groups.children[4];
+                    const dvCheckbox = checkboxes.children[1];
+                    dvCheckbox.remove();
+                }
+            }
+        });  
+    </script>
 </div>
 </body>
 </html>

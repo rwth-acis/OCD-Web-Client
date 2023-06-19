@@ -1,0 +1,95 @@
+#descriptiveVisualization #currentOperationBox {
+  background-color: white;
+  border: 1px solid black; 
+  padding: 3px;
+  overflow-y: scroll;
+  max-height: 400px; 
+  position: absolute; 
+  left: 0;
+  transform: translateX(14%);
+  text-align: left;
+  width: 14%;
+}
+
+#descriptiveVisualization #activeColorBox {
+  background-color: white;
+  border: 1px solid black; 
+  padding: 3px;
+  overflow-y: scroll;
+  max-height: 400px; 
+  position: absolute; 
+  right: 0;
+  transform: translateX(-14%);
+  text-align: left;
+  width: 14%;
+}
+
+#descriptiveVisualization #operationBoxTitle {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+#descriptiveVisualization #colorBoxTitle {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+#descriptiveVisualization #graph {
+  position: absolute; 
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid black; 
+}
+
+#simulateButton {
+  position: absolute;
+  left: 2%;
+}
+
+#descriptiveVisualization .prevButton {
+  background-image: url('buttons/prev.svg');
+  width: 1.5%;
+  height: 2.7%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: fixed;
+  bottom: 2%;
+  left: 47%;
+  transform: translateX(-47%);
+}
+ 
+#descriptiveVisualization .playButton {
+  background-image: url('buttons/play.svg');
+  width: 1.5%;
+  height: 2.7%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: fixed;
+  bottom: 2%;
+  left: 49%;
+  transform: translateX(-49%);
+}
+
+#descriptiveVisualization .stopButton {
+  background-image: url('buttons/stop.svg');
+  width: 1.5%;
+  height: 2.7%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: fixed;
+  bottom: 2%;
+  left: 51%;
+  transform: translateX(-51%);
+}
+
+#descriptiveVisualization .nextButton {
+  background-image: url('buttons/next.svg');
+  width: 1.5%;
+  height: 2.7%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: fixed;
+  bottom: 2%;
+  left: 53%;
+  transform: translateX(-53%);
+}

@@ -7,6 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+        <link rel="stylesheet" type="text/css" href="descriptiveVisualization.css">        
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
@@ -26,6 +27,13 @@
         <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
         <script src="node_modules/arangojs/lib/web.js"></script>
         <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/1.5/canvg.min.js"></script>
+        <script src="descriptiveVisualization.js"></script>
+
         <script type="text/javascript">
             /* Id of the corresponding graph */
             var graphId = getUrlVar("graphId");
@@ -389,16 +397,20 @@
 
                     let svgVizScroll = document.getElementById("visualizationZoomer");
                     let svgViz = document.getElementById("visualizationContent");
-                    let forceViz = document.getElementById("forceVisualizationContent");
+                    let forceViz = document.getElementById("forceVisualizationContent"); 
 
                     highlightNodes = new Set();
                     highlightLinks = new Set();
 
                     if (number === 0) {
                         forceViz.style.display = "none";
-
+                        if(document.getElementById("descriptiveVisualization")){
+                            let descriptiveViz = document.getElementById("descriptiveVisualization");
+                            descriptiveViz.style.display = "none";
+                        }  
                         svgViz.style.display = "inherit";
                         svgVizScroll.style.display = "inline";
+
                     } else if (number === 1 || number === 2) {
                         forceViz.style.display = "inherit";
                         if (typeof forceGraph !== "undefined") {
@@ -407,6 +419,10 @@
                         }
                         svgViz.style.display = "none";
                         svgVizScroll.style.display = "none";
+                        if(document.getElementById("descriptiveVisualization")){
+                            let descriptiveViz2 = document.getElementById("descriptiveVisualization");
+                            descriptiveViz2.style.display = "none";
+                        }  
 
                         if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
                             have3D = false;
@@ -423,6 +439,36 @@
                             }
                             getJSON();
                         }
+                    }
+                    else if (number === 3){  
+                        svgViz.style.display = "none";
+                        svgVizScroll.style.display = "none";
+                        forceViz.style.display = "none";   
+                        if(document.getElementById("descriptiveVisualization")){ 
+                            let descriptiveViz3 = document.getElementById("descriptiveVisualization");
+                            descriptiveViz3.style.display = "block"; 
+                        }  
+                        // Create a new container element
+                        else { 
+                            // Get the visualization div
+                            const visualizationDiv = document.querySelector('.visualization');
+                            const newContainer = document.createElement('div');
+                            newContainer.id = "descriptiveVisualization";
+                            newContainer.classList.add('descriptiveVisualization');
+
+                            // Load the content of the HTML file into the new container
+                            fetch('descriptiveVisualization.html')
+                              .then(response => response.text())
+                              .then(data => {
+                                newContainer.innerHTML = data;
+                              })
+                              .catch(error => {
+                                console.error(error);
+                              });
+
+                            // Append the new container to the visualization div
+                            visualizationDiv.appendChild(newContainer);
+                        }  
                     }
                 })
             }
@@ -811,6 +857,7 @@
 
                                 db.useDatabase(arangoDataBase);
                                 db.useBasicAuth(arangoUser, arangoPass);
+
                                 const docCollection = db.collection(arangoCollection);
                                 docCollection.document(node.name, true).then(function (doc) {
                                     let nodeWindow = window.open("", '_blank');
@@ -943,6 +990,40 @@
                         showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
             }
+
+            // Connection to ArangoDB - Descriptive Visualization Collection
+            const db_DV = new arangojs.Database({
+              url: "http://127.0.0.1:8529"
+            });
+            db_DV.useBasicAuth("root", "");
+            db_DV.useDatabase("ocdDB");
+
+            const dv_collection = db_DV.collection("descriptiveVisualization");
+            const dv_key = coverId;
+            var graphData;
+
+            // Create DV in Navigationbar if key is available in descriptiveVisualization Collection
+            dv_collection.document(dv_key)
+              .then((document) => {
+                    graphData = document;
+                    createDV();
+              })
+              .catch((err) => {
+                console.error(`Failed to retrieve document with _key=${dv_key}`, err);
+              });
+
+              function createDV() {
+                const newButton = document.createElement('button');
+                newButton.setAttribute('onclick', 'buttonClick(3)');
+                newButton.setAttribute('style', 'width:25%');
+                newButton.innerText = 'DV';
+                document.getElementById('btnGroup').appendChild(newButton); // Add the new button to the container
+                // Set the width of all buttons to 25%
+                const buttons = document.querySelectorAll('#btnGroup button');
+                for (let i = 0; i < buttons.length; i++) {
+                    buttons[i].style.width = '25%';
+                }
+              }
         </script>
     </head>
     <body>
@@ -1147,11 +1228,12 @@
                                         <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
                                     </form>
                                 </div>
-                                <div class="btn-group" style="width:78%">
+                                <div class="btn-group" id="btnGroup" style="width:78%">
                                     <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
                                     <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
-                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button> 
                                 </div>
+
                                 <div class="toolsDropDown" style="width:2%">
                                     <div class="toolsDropDownDots" onclick="toolsDropDownDots()">
                                         <span class="tool-dot" style="margin-top:4px"></span>

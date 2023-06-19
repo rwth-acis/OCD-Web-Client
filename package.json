@@ -9,6 +9,7 @@
     "bootstrap": "^4.5.3",
     "bootstrap-select": "^1.13.18",
     "chart.js": "^2.9.4",
+    "cors": "^2.8.5",
     "file-saver": "^2.0.5",
     "force-graph": "^1.35.1",
     "http-server": "^14.1.0",
