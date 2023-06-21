@@ -35,7 +35,7 @@
             $('.pageNumWrapper').append(pageNumber);
             let firstIndex = SEQUENCES_PER_PAGE * pageNumber;
             /* Identifiers for the graph information to be displayed */
-            let cells = ["Name", "GraphCount", "Time Ordered", "CreationMethod", "Gr", "R"];
+            let cells = ["Name", "GraphCount", "TimeOrdered", "StartDate", "EndDate", "CreationMethod", "Gr", "R"];
             /* Requests the graph meta information */
             sendRequest("get", "sequences?includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + SEQUENCES_PER_PAGE , "",
                 /* Response handler */
@@ -124,6 +124,14 @@
                         </th>
                         <th  title="Time Ordered" class="sortable">
                             Time Ordered
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th  title="StartDate" class="sortable">
+                            Start Date
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th  title="EndDate" class="sortable">
+                            End Date
                             <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                         </th>
                         <th style='width:20px' title="Show Graphs">

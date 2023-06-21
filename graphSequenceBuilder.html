@@ -29,9 +29,17 @@
                     $(graphMetasXml).find("Graph").each(function() {
                         const graphId = $(this).find('Id').text();
                         const graphName = $(this).find('Name').text();
+                        let graphDatesString = ""
+                        if ($(this).find('StartDate').text() !== "") {
+                            graphDatesString += "<br>("
+                                + new Date($(this).find('StartDate').text()).toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'})
+                                + "-"
+                                + new Date($(this).find('EndDate').text()).toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'})
+                                + ")"
+                        }
                         document.getElementById("dragDropGraphs").insertAdjacentHTML("beforeend",
                             "<p class='dragDrop-drag' value='" + graphId + "' style='display: table'>" +
-                            "<a class='btn btn-light' style='display: table-cell' value='" + graphId + "'>" + graphName + "</a>" +
+                            "<a class='btn btn-light' style='display: table-cell' value='" + graphId + "'>" + graphName + graphDatesString + "</a>" +
                             "<button type='button' class='btn btn-default btn-xs dragDropRemove' style='display: table-cell' " +
                                 "onclick='removeFromSortable($(this).parent())' hidden><img src='IMG/open-iconic/svg/trash.svg'/></button>" +
                             "</p>")
@@ -44,7 +52,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Graphs were not received.", errorData);
+                    showConnectionErrorMessage("Graph Metass were not received.", errorData);
                 }, "text");
             });
 

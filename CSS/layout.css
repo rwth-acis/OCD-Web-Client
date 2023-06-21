@@ -488,6 +488,10 @@ td:last-child {
 }
 
 .displayButton {
+
+}
+
+.displayButtonWholeRow {
     width: 100%;
 }
 
@@ -746,10 +750,15 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
-.visualizationControl {
+.visualizationControlSequence {
     margin-top: 5px;
     padding-top: 5px;
+    padding-bottom: 1px;
     margin-bottom: 10px;
+    height: 70px;
+    display: flex;
+    align-items: center; /* Align vertical */
+    justify-content: space-between;
     /*border-top-style: solid;
     border-right-style: none;
     border-left-style: none;
@@ -865,13 +874,23 @@ input:checked + .slider:before {
     font-size: 1em;
 }
 
+.visualizationCentralityAndRangeContainer {
+    display: inline-flex;
+    width: 60%;
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
 .currentGraphInfoOuter {
-    display: table;
-    width:18%;
-    float:left;
-    margin-left: 4px;
+    display: inline-block;
+    justify-content: center;
+    vertical-align: middle;
+    width:17%;
+    /*float:left;*/
+    margin-left: 3px;
     margin-right:2px;
-    margin-top:15px;
+    /*margin-top:8px;*/
 
     border-style: solid;
     /*border-right-style: none;*/
@@ -883,17 +902,17 @@ input:checked + .slider:before {
 }
 
 .currentGraphInfo {
-text-align: center;
-font-size: 80%;
-word-wrap: break-word;
-display: table-cell;
-vertical-align: middle;
+    margin: auto;
+    text-align: center;
+    justify-content: center;
+    font-size: 80%;
+    word-wrap: anywhere;
+    /*display: table-cell;*/
+    vertical-align: middle;
 }
 
 .coverSelect {
     width:15%;
-    float:right;
-    margin-left: 10px;
-    margin-right: 20px;
-    margin-top:5px
+    /*float:right;*/
+    margin: 2px 25px 20px 10px;
 }

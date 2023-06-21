@@ -81,7 +81,7 @@
         var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
         $(document).ready(function() {
             /* Identifiers for meta information to be displayed */
-            var cells = ["Name", "GraphCount", "Time Ordered", "CreationMethod", "Gr", "R"];
+            var cells = ["Name", "GraphCount", "TimeOrdered", "StartDate", "EndDate", "CreationMethod", "Gr", "R"];
             /* Requests cover meta information */
             sendRequest("get", "sequences/" + sequenceId + "?outputFormat=META_XML", "",
                 /* Response handler */
@@ -97,13 +97,20 @@
                     let graphIds = []
                     $(sequenceMetaXml).find("Graph").each(function() {
                         sequenceGraphs.push([$(this).attr("Id"),$(this).find('GraphName').text()])
+                        if($(this).find('GraphStartDate').text() !== "") {
+                            sequenceGraphs[sequenceGraphs.length-1].push(""
+                                + new Date($(this).find('GraphStartDate').text()).toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'})
+                                + " - "
+                                + new Date($(this).find('GraphEndDate').text()).toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'})
+                                + "")
+                        }
                         graphIds.push($(this).attr("Id"))
                     });
 
 
                     sendRequest("get", "graphs/?outputFormat=META_XML&includeMeta=TRUE&graphIds=" + graphIds.toString(), "",
                         function(graphsMetaXml) {
-                            var graphCells = ["Index", "Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L"]; //"RS",
+                            var graphCells = ["Index", "Name", "StartDate", "EndDate", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L"]; //"RS",
                             $(graphsMetaXml).find("Graph").each(function() {
                                 appendGraphRow($('#graphTable'), $(this), graphCells, graphIds)
                             });
@@ -764,11 +771,11 @@
             graphKind = kind
             if(graphKind === "centrality") {
                 document.getElementById("centralityVisualizationTypeSelect").hidden = false;
-                document.getElementById("visualizationRange").style.width = "80%";
+                document.getElementById("visualizationRangeContainer").style.width = "80%";
             }
             else {
                 document.getElementById("centralityVisualizationTypeSelect").hidden = true;
-                document.getElementById("visualizationRange").style.width = "100%";
+                document.getElementById("visualizationRangeContainer").style.width = "100%";
             }
             document.getElementById("coverSelect").options.length = 0;
             document.getElementById("visualizationGraphic").innerText = "";
@@ -787,7 +794,13 @@
             graphId = sequenceGraphs[currentGraphIndex][0]
             currentCoverCentralityIndex = 0
 
-            document.getElementById("currentGraphInfo").innerHTML = "<b>" + sequenceGraphs[currentGraphIndex][1] + "</b>"
+            let currentGraphInfoStr = "<b>" + sequenceGraphs[currentGraphIndex][1] + "</b>"
+            if(sequenceGraphs[currentGraphIndex].length > 2) {
+                currentGraphInfoStr += "<hr style='margin: 0'>" + sequenceGraphs[currentGraphIndex][2]
+            }
+
+            document.getElementById("currentGraphInfo").innerHTML = currentGraphInfoStr
+
             if (graphKind === "graph") {
                 getNextVisualization()
             }
@@ -927,7 +940,7 @@
             </div>
 
             <div class="tableWrapper">
-                <table id="sequenceMetaTable">
+                <table id="sequenceMetaTable" style="border-collapse: separate; border-spacing: 10px 0;">
                     <thead>
                     <tr>
                         <th class="hidden" title="Id"></th>
@@ -937,6 +950,14 @@
                         </th>
                         <th  title="Time Ordered" class="sortable">
                             Time Ordered
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th title="StartDate" class="sortable">
+                            Start Date
+                            <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                        </th>
+                        <th title="EndDate" class="sortable">
+                            End Date
                             <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                         </th>
                         <th style='width:20px' title="Show Graphs">
@@ -974,6 +995,14 @@
                                 </th>
                                 <th  title="Graph Name" class="sortable">
                                     Name
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th  title="Start Date" class="sortable">
+                                    Start
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
+                                <th  title="End Date" class="sortable">
+                                    End
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
                                 <th  title="Node Count" class="sortable">
@@ -1061,24 +1090,27 @@
                                 <span class="tool-dot" style="margin-top:3px"></span>
                             </div>
                             <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
-                                <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
-                                <button id="edgeWeightDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayHandler()">Show Edge Weights</button>
-                                <div style="margin-top: 1px">
-                                    <input class="saveJsonForm form-text" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON">
-                                    <button class="saveJsonFormButton btn" onclick="saveJSON()" type='button'>Save</button>
+                                <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton displayButtonWholeRow" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
+                                <div style="display: table-row">
+                                    <button style="display: table-cell" id="edgeWeightDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayHandler()">Color Edges</button>
+                                    <button style="display: table-cell; width: auto" id="edgeWeightDisplayTextButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayTextHandler()">Show Weights</button>
+                                </div>
+                                <div style="display: table-row; width:inherit">
+                                    <input style="display: table-cell" class="input-group-text saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON">
+                                    <button style="display: table-cell" class="btn btn-secondary saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                     <!-- Container for graph visualization -->
                     <div class="visualization">
-                        <div class="visualizationControl" id="visualizationControl">
+                        <div class="visualizationControlSequence" id="visualizationControl">
                             <div id="currentGraphInfoOuter" class="currentGraphInfoOuter">
                             <div id="currentGraphInfo" class="currentGraphInfo"></div>
                             </div>
-                            <div style="display: inline-flex; width:60%; margin-top:5px">
-                                <select id="centralityVisualizationTypeSelect" class="centralityVisualizationTypeSelect custom-select-sm" style="width:18%; margin-left: 2px" onchange="switchSequenceCentralityViz()" hidden></select>
-                                <div style="width:100%; margin-left: 2px">
+                            <div class="visualizationCentralityAndRangeContainer">
+                                <select id="centralityVisualizationTypeSelect" class="centralityVisualizationTypeSelect custom-select-sm" style="width:18%; margin-left: 2px; margin-top: 10px" onchange="switchSequenceCentralityViz()" hidden></select>
+                                <div id="visualizationRangeContainer" style="width:100%; margin-left: 2px">
                                     <span style="font-size: small; float:left"><b>First Graph</b></span>
                                     <span style="font-size: small; float:right"><b>Last Graph</b></span>
                                     <input id="visualizationRange" class="custom-range visualizationRange" type="range" step="1" value="0" min="0" onchange="switchSequenceGraph(this.value)">
