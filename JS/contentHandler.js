@@ -161,9 +161,9 @@ function logIntoDatabase() {
             localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
 
             if(document.getElementById("objectFormat") !== null) {
-                const arangoDBFormatOption = document.getElementById("objectFormat").querySelector("option[value='ARANGODB']")
+                const arangoDBFormatOption = document.getElementById("arangoDBFormatOption")
                 if (arangoDBFormatOption !== null) {
-                    arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
+                    arangoDBFormatOption.text = "Fetched from ArangoDB Database";
                     arangoDBFormatOption.disabled = false;
                     populateArangoDBImportFields()
                 }
@@ -200,7 +200,7 @@ function logInAndGetDatabase() {
             localStorage.setItem("arangoAdress@WebOCD",databaseAddress);
 
             if(document.getElementById("objectFormat") !== null) {
-                const arangoDBFormatOption = document.getElementById("objectFormat").querySelector("option[value='ARANGODB']")
+                const arangoDBFormatOption = document.getElementById("arangoDBFormatOption")
                 if (arangoDBFormatOption !== null) {
                     arangoDBFormatOption.innerHTML = "Fetched from ArangoDB Database";
                     arangoDBFormatOption.disabled = false;
