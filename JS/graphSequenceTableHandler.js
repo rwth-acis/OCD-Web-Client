@@ -12,17 +12,36 @@
 function appendGraphSequenceRow(table, graphSequenceElt, cells) {
     var row = "<tr>";
     /* Graph id */
-    console.log("SEQUENCE META ELEM:", $(graphSequenceElt))
     var id = $(graphSequenceElt).attr("Id");
     row += createGraphSequenceIdCell(id);
     /* Graph name  */
     if($.inArray("Name", cells) > -1) {
         row += createGraphSequenceNameCell($(graphSequenceElt).find('Name').text(), id);
     }
-
-    /* Creation Method */
-    if($.inArray("CreationMethod", cells) > -1) {
+    /* Time Ordered */
+    if($.inArray("TimeOrdered", cells) > -1) {
         row += createGraphSequenceTableCell(getGraphSequenceTrueOrFalseIcon($(graphSequenceElt).find('TimeOrdered').text()));
+    }
+    /* Start date */
+    if($.inArray("StartDate", cells) > -1) {
+        if ($(graphSequenceElt).find('StartDate').text() !== "") {
+            const startDate = new Date($(graphSequenceElt).find('StartDate').text());
+            console.log(startDate, $(graphSequenceElt).find('StartDate').text(), Intl.DateTimeFormat().resolvedOptions().timeZone)
+            row += createGraphSequenceTableCell(startDate.toLocaleDateString('en-EN', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, year: 'numeric', month: 'numeric', day: 'numeric'}));
+        }
+        else {
+            row += createGraphSequenceTableCell("-");
+        }
+    }
+    /* End date */
+    if($.inArray("EndDate", cells) > -1) {
+        if ($(graphSequenceElt).find('EndDate').text() !== "") {
+            const endDate = new Date($(graphSequenceElt).find('EndDate').text());
+            row += createGraphSequenceTableCell(endDate.toLocaleDateString('en-EN', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, year: 'numeric', month: 'numeric', day: 'numeric'}));
+        }
+        else {
+            row += createGraphSequenceTableCell("-");
+        }
     }
     /* Show corresponding cooperation simulations */
     if($.inArray("Gr", cells) > -1) {

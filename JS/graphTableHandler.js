@@ -26,6 +26,27 @@ function appendGraphRow(table, graphElt, cells, graphIds = []) {
     if($.inArray("Name", cells) > -1) {
         row += createGraphNameCell($(graphElt).find('Name').text(), id);
     }
+    /* Start date */
+    if($.inArray("StartDate", cells) > -1) {
+        if ($(graphElt).find('StartDate').text() !== "") {
+            const startDate = new Date($(graphElt).find('StartDate').text());
+            console.log(startDate, $(graphElt).find('StartDate').text())
+            row += createGraphTableCell(startDate.toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'}));
+        }
+        else {
+            row += createGraphTableCell("-");
+        }
+    }
+    /* End date */
+    if($.inArray("EndDate", cells) > -1) {
+        if ($(graphElt).find('EndDate').text() !== "") {
+            const endDate = new Date($(graphElt).find('EndDate').text());
+            row += createGraphTableCell(endDate.toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'}));
+        }
+        else {
+            row += createGraphTableCell("-");
+        }
+    }
     /* Node count */
     if($.inArray("NodeCount", cells) > -1) {
         row += createGraphTableCell($(graphElt).find('NodeCount').text());
