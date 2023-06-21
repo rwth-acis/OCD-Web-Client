@@ -12,7 +12,7 @@ function toggleClusterForces(doCluster) {
         forceGraph.d3Force('link')
             .strength(function (link) {
                 if (link["source"].key === "CLUSTER_CENTER_NODE") {
-                    return 2
+                    return 0
                 }
                 if (clusterNodes.get(link["source"].key) !== undefined) {
                     return clusterNodes.get(link["target"].key) !== undefined ? 0.7 : 1
@@ -27,12 +27,22 @@ function toggleClusterForces(doCluster) {
                 if (clusterNodes.get(link["source"].key) !== undefined) {
                     return clusterNodes.get(link["target"].key) !== undefined ? (2 * Math.PI * clusterNodes.size * 8) / clusterNodes.size : 5
                 }
-                return 30
+                return 300
             })
+        forceGraph.d3Force('center', null)//d3.forceCenter().strength(0))
+        //forceGraph.zoomToFit();
+        // forceGraph.d3Force('charge')
+        //     .strength(function () {
+        //         return -1
+        //     })
+        // if (have3D) {
+        //     forceGraph._destructor();
+        //     buildGraph()
+        // }
     }
     else {
         forceGraph.linkVisibility(() => true)
-
+        forceGraph.d3Force('center', d3.forceCenter())
         //forceGraph.d3Force('link')
         //    .strength(function (link) {})
         //    .distance(function (link) {})
@@ -53,16 +63,19 @@ function makeTextXmlConform(text) {
 
 let currentClusteringString = null
 let currentClusterButton = null
-
+let currentEdges = null
 function clusterContext(elem, nesting) {
     let jsonGraphParsed = JSON.parse(jsonGraph)
     let jsonGraphNodes = jsonGraphParsed["nodes"]
-    let jsonGraphEdges = jsonGraphParsed["links"]
+    const jsonGraphNodeNumber = jsonGraphParsed["nodes"].length
+    let jsonGraphEdges = []//jsonGraphParsed["links"]
+    currentEdges = jsonGraphParsed["links"]
 
+    const oldOperator = currentClusterButton !== null ? makeTextXmlConform(currentClusterButton.innerText) : ""
     let operator = makeTextXmlConform(elem.innerText)
     currentClusterButton = elem
 
-    if(currentClusteringString === null) {// || currentClusteringString !== nesting+operator) {
+    if(currentClusteringString === null || currentClusteringString+oldOperator !== nesting+operator) {
         //let elementsList = document.getElementsByClassName("nodeClusterButton")
         //for (const checkBoxElementKey in elementsList) {
         //    elementsList[checkBoxElementKey].checked = false
@@ -70,7 +83,7 @@ function clusterContext(elem, nesting) {
         //elementsList = null
         //elem.checked = true
 
-
+        console.log(currentClusteringString, nesting+operator)
 
         currentClusteringString = nesting
         const regex = /:::NESTING_INDEX[^:::]+:::/ig;
@@ -99,6 +112,7 @@ function clusterContext(elem, nesting) {
                     "label": "CLUSTER_CENTER_NODE",
                     "key": "CLUSTER_CENTER_NODE"
                 });
+                let degreeStep = 2*Math.PI/clusterList.length
                 for (const clusterKey in clusterList) {
                     let clusterNode = {
                         "color": "rgba(1,1,1,1)",
@@ -109,8 +123,8 @@ function clusterContext(elem, nesting) {
                         "key": clusterList[clusterKey]
                     }
                     jsonGraphNodes.push(clusterNode);
-                    clusterNodes.set(clusterList[clusterKey], "");
-
+                    const factor = clusterList.length*12 + jsonGraphNodeNumber/clusterList.length * 2
+                    clusterNodes.set(clusterList[clusterKey], [factor * Math.sin(degreeStep*(clusterKey)), factor * Math.cos(degreeStep*(clusterKey))]) // set positions for cluster nodes
                     //Add edge from center node
                     jsonGraphEdges.push(
                         {
@@ -141,13 +155,15 @@ function clusterContext(elem, nesting) {
                 let nodeClusterMappings = responseJson["cluster_nodes"]
                 for (const nodeKey in jsonGraphNodes) {
                     if (clusterNodes.get(jsonGraphNodes[nodeKey].key) === undefined && jsonGraphNodes[nodeKey].key !== "CLUSTER_CENTER_NODE") {
-                        jsonGraphEdges.push(
-                            {
-                                "style": 0,
-                                "source": nodeClusterMappings[jsonGraphNodes[nodeKey].key],
-                                "target": jsonGraphNodes[nodeKey].id,
-                                "isClusterLink": true
-                            });
+                        for (const clusterIndex in nodeClusterMappings[jsonGraphNodes[nodeKey].key]) {
+                            jsonGraphEdges.push(
+                                {
+                                    "style": 0,
+                                    "source": nodeClusterMappings[jsonGraphNodes[nodeKey].key][clusterIndex],
+                                    "target": jsonGraphNodes[nodeKey].id,
+                                    "isClusterLink": false
+                                });
+                        }
                     }
                 }
 
@@ -586,8 +602,11 @@ function buildGraphNormal() {
                     if(link.weight > 0) {
                         return "rgba(145,217,65,0.6)"
                     }
-                    else {
+                    else if(link.weight < 0){
                         return "rgba(255,107,107,0.6)"
+                    }
+                    else {
+                        return "rgba(219,219,219,0.85)"
                     }
                 }
                 else {
@@ -597,10 +616,10 @@ function buildGraphNormal() {
             .linkDirectionalArrowLength(5)
             .linkDirectionalArrowRelPos(1)
             .linkTarget('target')
-            .linkLabel((link) => haveEdgeWeights === true ? link.weight : "")
+            .linkLabel((link) => haveEdgeWeights !== true ? link.weight : "")
             .linkCanvasObjectMode(() => 'after')
             .linkCanvasObject((link, ctx, globalScale) => {
-                if (haveEdgeWeights) {
+                if (haveEdgeWeightsText) {
                     return createLink2DCanvasObject(link,ctx,globalScale)
                 }
             })
@@ -689,8 +708,11 @@ function buildGraphNormal() {
                     if(link.weight > 0) {
                         return "rgba(145,217,65,0.85)"
                     }
-                    else {
+                    else if(link.weight < 0){
                         return "rgba(255,107,107,0.85)"
+                    }
+                    else {
+                        return "#dedede"
                     }
                 }
                 else {
@@ -707,12 +729,10 @@ function buildGraphNormal() {
             })
             .linkThreeObjectExtend(true)
             .linkPositionUpdate((sprite, { start, end }) => {
-                sprite.visible = haveEdgeWeights;
-                if (haveEdgeWeights) {
+                sprite.visible = haveEdgeWeightsText;
+                if (haveEdgeWeightsText) {
                     return updateLink3DTHREEObjectPosition(sprite, {start, end});
                 }
-
-
             })
             .cooldownTicks(800);
 
@@ -797,8 +817,11 @@ function buildGraphCover() {
                     if(link.weight > 0) {
                         return "rgba(145,217,65,0.6)"
                     }
-                    else {
+                    else if(link.weight < 0){
                         return "rgba(255,107,107,0.6)"
+                    }
+                    else {
+                        return "rgba(219,219,219,0.85)"
                     }
                 }
                 else {
@@ -811,7 +834,7 @@ function buildGraphCover() {
             .linkLabel((link) => haveEdgeWeights !== true ? link.weight : "")
             .linkCanvasObjectMode(() => 'after')
             .linkCanvasObject((link, ctx, globalScale) => {
-                if (haveEdgeWeights) {
+                if (haveEdgeWeightsText) {
                     return createLink2DCanvasObject(link,ctx,globalScale)
                 }
             })
@@ -876,8 +899,11 @@ function buildGraphCover() {
                     if(link.weight > 0) {
                         return "rgba(145,217,65,0.85)"
                     }
-                    else {
+                    else if(link.weight < 0){
                         return "rgba(255,107,107,0.85)"
+                    }
+                    else {
+                        return "#dedede"
                     }
                 }
                 else {
@@ -894,8 +920,8 @@ function buildGraphCover() {
                 return createLink3DTHREEObject(link);
             })
             .linkPositionUpdate((sprite, { start, end }) => {
-                sprite.visible = haveEdgeWeights;
-                if (haveEdgeWeights) {
+                sprite.visible = haveEdgeWeightsText;
+                if (haveEdgeWeightsText) {
                     return updateLink3DTHREEObjectPosition(sprite, {start, end});
                 }
             })
@@ -986,8 +1012,11 @@ function buildGraphCentrality() {
                     if(link.weight > 0) {
                         return "rgba(145,217,65,0.6)"
                     }
-                    else {
+                    else if(link.weight < 0){
                         return "rgba(255,107,107,0.6)"
+                    }
+                    else {
+                        return "rgba(219,219,219,0.85)"
                     }
                 }
                 else {
@@ -1000,7 +1029,7 @@ function buildGraphCentrality() {
             .linkLabel((link) => haveEdgeWeights !== true ? link.weight : "")
             .linkCanvasObjectMode(() => 'after')
             .linkCanvasObject((link, ctx, globalScale) => {
-                if (haveEdgeWeights) {
+                if (haveEdgeWeightsText) {
                     return createLink2DCanvasObject(link,ctx,globalScale)
                 }
             })
@@ -1073,8 +1102,11 @@ function buildGraphCentrality() {
                     if(link.weight > 0) {
                         return "rgba(145,217,65,0.85)"
                     }
-                    else {
+                    else if(link.weight < 0){
                         return "rgba(255,107,107,0.85)"
+                    }
+                    else {
+                        return "#dedede"
                     }
                 }
                 else {
@@ -1091,8 +1123,8 @@ function buildGraphCentrality() {
                 return createLink3DTHREEObject(link);
             })
             .linkPositionUpdate((sprite, { start, end }) => {
-                sprite.visible = haveEdgeWeights;
-                if (haveEdgeWeights) {
+                sprite.visible = haveEdgeWeightsText;
+                if (haveEdgeWeightsText) {
                     return updateLink3DTHREEObjectPosition(sprite, {start, end});
                 }
             })
@@ -1137,17 +1169,27 @@ function applyClusterLayoutNormal() {
                     node.x = 0
                     node.y = 0
                     node.z = 0
+                    node.fx = 0
+                    node.fy = 0
+                    node.fz = 0
                     //return 0.0000001
                     return 0.0001
                 }
                 if (clusterNodes.get(node.key) !== undefined) {
+                    node.x = clusterNodes.get(node.key)[0]
+                    node.y = clusterNodes.get(node.key)[1]
+                    node.z = 0
+                    node.fx = clusterNodes.get(node.key)[0]
+                    node.fy = clusterNodes.get(node.key)[1]
+                    node.fz = 0
                     return 0.0001
                 }
             })
             .linkVisibility(function (link) {
-                if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
+                if (link.isClusterLink === true) {//(link.source.key === "CLUSTER_CENTER_NODE" || (clusterNodes.get(link["source"].key) !== undefined && clusterNodes.get(link["target"].key) !== undefined)) {
                     return false
                 }
+                return true
             }); //Update the graph
     }
     else {
@@ -1173,17 +1215,28 @@ function applyClusterLayoutNormal() {
                     node.x = 0
                     node.y = 0
                     node.z = 0
+                    node.fx = 0
+                    node.fy = 0
+                    node.fz = 0
                     //return 0.0000001
                     return 0.0001
                 }
                 if (clusterNodes.get(node.key) !== undefined) {
+                    node.x = clusterNodes.get(node.key)[0]
+                    node.y = clusterNodes.get(node.key)[1]
+                    node.z = 0
+                    node.fx = clusterNodes.get(node.key)[0]
+                    node.fy = clusterNodes.get(node.key)[1]
+                    node.fz = 0
                     return 0.0001
                 }
             })
             .linkVisibility(function (link) {
-                if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
-                    //return false
+                //console.log(Object.keys(link),Object.keys(link["target"]), link["target"]["key"])
+                if (link.isClusterLink === true)  {//(link.source.key === "CLUSTER_CENTER_NODE" || (clusterNodes.get(link["source"].key) !== undefined && clusterNodes.get(link["target"].key) !== undefined)) {
+                    return false
                 }
+                return true
             }); //Update the graph
     }
 }
@@ -1222,20 +1275,30 @@ function applyClusterLayoutCover() {
                     node.x = 0
                     node.y = 0
                     node.z = 0
+                    node.fx = 0
+                    node.fy = 0
+                    node.fz = 0
                     //return 0.0000001
-                    return 0.0001
+                    return 0.00001
                 }
                 if (clusterNodes.get(node.key) !== undefined) {
-                    return 0.0001
+                    node.x = clusterNodes.get(node.key)[0]
+                    node.y = clusterNodes.get(node.key)[1]
+                    node.z = 0
+                    node.fx = clusterNodes.get(node.key)[0]
+                    node.fy = clusterNodes.get(node.key)[1]
+                    node.fz = 0
+                    return 0.00001
                 }
                 else {
                     return Math.log(degree[node.id] + 1)//return node.size - 19 > 0 ? node.size - 19 : 1;
                 }
             })
             .linkVisibility(function (link) {
-                if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
+                if (link.isClusterLink === true) {//(link.source.key === "CLUSTER_CENTER_NODE" || (clusterNodes.get(link["source"].key) !== undefined && clusterNodes.get(link["target"].key) !== undefined)) {
                     return false
                 }
+                return true
             }); //Update the graph
     }
     else {
@@ -1261,10 +1324,19 @@ function applyClusterLayoutCover() {
                     node.x = 0
                     node.y = 0
                     node.z = 0
+                    node.fx = 0
+                    node.fy = 0
+                    node.fz = 0
                     //return 0.0000001
                     return 0.0001
                 }
                 if (clusterNodes.get(node.key) !== undefined) {
+                    node.x = clusterNodes.get(node.key)[0]
+                    node.y = clusterNodes.get(node.key)[1]
+                    node.z = 0
+                    node.fx = clusterNodes.get(node.key)[0]
+                    node.fy = clusterNodes.get(node.key)[1]
+                    node.fz = 0
                     return 0.0001
                 }
                 else {
@@ -1272,9 +1344,10 @@ function applyClusterLayoutCover() {
                 }
             })
             .linkVisibility(function (link) {
-                if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
+                if (link.isClusterLink === true) {//(link.source.key === "CLUSTER_CENTER_NODE" || (clusterNodes.get(link["source"].key) !== undefined && clusterNodes.get(link["target"].key) !== undefined)) {
                     return false
                 }
+                return true
             }); //Update the graph
     }
 }
@@ -1313,10 +1386,19 @@ function applyClusterLayoutCentrality() {
                     node.x = 0
                     node.y = 0
                     node.z = 0
+                    node.fx = 0
+                    node.fy = 0
+                    node.fz = 0
                     //return 0.0000001
                     return 0.0001
                 }
                 if (clusterNodes.get(node.key) !== undefined) {
+                    node.x = clusterNodes.get(node.key)[0]
+                    node.y = clusterNodes.get(node.key)[1]
+                    node.z = 0
+                    node.fx = clusterNodes.get(node.key)[0]
+                    node.fy = clusterNodes.get(node.key)[1]
+                    node.fz = 0
                     return 0.0001
                 }
                 else {
@@ -1328,9 +1410,10 @@ function applyClusterLayoutCentrality() {
                 }
             })
             .linkVisibility(function (link) {
-                if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
+                if (link.isClusterLink === true) {//(link.source.key === "CLUSTER_CENTER_NODE" || (clusterNodes.get(link["source"].key) !== undefined && clusterNodes.get(link["target"].key) !== undefined)) {
                     return false
                 }
+                return true
             }); //Update the graph
     }
     else {
@@ -1356,10 +1439,19 @@ function applyClusterLayoutCentrality() {
                     node.x = 0
                     node.y = 0
                     node.z = 0
+                    node.fx = 0
+                    node.fy = 0
+                    node.fz = 0
                     //return 0.0000001
                     return 0.0001
                 }
                 if (clusterNodes.get(node.key) !== undefined) {
+                    node.x = clusterNodes.get(node.key)[0]
+                    node.y = clusterNodes.get(node.key)[1]
+                    node.z = 0
+                    node.fx = clusterNodes.get(node.key)[0]
+                    node.fy = clusterNodes.get(node.key)[1]
+                    node.fz = 0
                     return 0.0001
                 }
                 else {
@@ -1371,9 +1463,10 @@ function applyClusterLayoutCentrality() {
                 }
             })
             .linkVisibility(function (link) {
-                if (link.source.key === "CLUSTER_CENTER_NODE" || clusterNodes.get(link["source"].key) !== undefined) {
-                    //return false
+                if (link.isClusterLink === true) {//(link.source.key === "CLUSTER_CENTER_NODE" || (clusterNodes.get(link["source"].key) !== undefined && clusterNodes.get(link["target"].key) !== undefined)) {
+                    return false
                 }
+                return true
             }); //Update the graph
     }
 }
@@ -1415,4 +1508,9 @@ function EdgeWeightDisplayHandler () {
         forceGraph
             .linkColor(forceGraph.linkColor())
     }
+}
+
+let haveEdgeWeightsText = false
+function EdgeWeightDisplayTextHandler () {
+    haveEdgeWeightsText = !haveEdgeWeightsText;
 }

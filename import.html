@@ -184,7 +184,7 @@ Facilitates import / upload of new graphs and covers.
                                 $(inputFormatNames).find('Name').each(function() {
                                     if ($(this).text() === "ARANGODB" && localStorage.getItem("arangoUser@WebOCD") === null) {
                                         $("#objectFormat").append(
-                                            '<option value="' + $(this).text() + ' class="arangoDBFormatOption"'
+                                            '<option value="' + $(this).text() + '" id="arangoDBFormatOption"'
                                             + '" disabled>' + $(this).attr("displayName") + '  (LOG INTO YOUR DATABASE AT THE USERMENU TO USE THIS FEATURE)' + '</option>');
                                     }
                                     else {
@@ -192,7 +192,7 @@ Facilitates import / upload of new graphs and covers.
                                             '<option value="' + $(this).text()
                                             + '">' + $(this).attr("displayName") + '</option>');
                                     }
-                                    if(localStorage.getItem("arangoUser@WebOCD") !== undefined) {
+                                    if(localStorage.getItem("arangoUser@WebOCD") !== null) {
                                         logInAndGetDatabase()
                                     }
                                 });
@@ -232,6 +232,7 @@ Facilitates import / upload of new graphs and covers.
                     $("#involvedUserURIstr").addClass('hidden');
                     $("#objectFileDiv").removeClass('hidden');
                     $("#databaseInput").addClass('hidden');
+                    document.getElementById("addToFittingSequenceLabel").hidden = true;
 
                 	if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE' || $("#objectFormat").val() === 'ARANGODB') {
                 		$("#startDateStr").removeClass('hidden');
@@ -246,8 +247,7 @@ Facilitates import / upload of new graphs and covers.
                             $("#showUserNamestr").removeClass('hidden');
                             $("#databaseInput").removeClass('hidden');
                             $("#objectFileDiv").addClass('hidden');
-
-
+                            document.getElementById("addToFittingSequenceLabel").hidden = false;
                             populateArangoDBImportFields()
                         }
                 	}
@@ -266,6 +266,7 @@ Facilitates import / upload of new graphs and covers.
                         $("#involvedUserURIstr").addClass('hidden');
                         $("#objectFileDiv").removeClass('hidden');
                         $("#databaseInput").addClass('hidden');
+                        document.getElementById("addToFittingSequenceLabel").hidden = true;
                 	}
                 });
                 $("#databaseName").change(function() {
@@ -354,15 +355,19 @@ Facilitates import / upload of new graphs and covers.
             function postGraph(content) {
 
                 var doMakeUndirected = $('#doMakeUndirected').prop('checked');
+                var addToFittingSequence = $('#addToFittingSequence').prop('checked');
                 var restUrl = "graphs?name=" + $("#objectName").val() +
-                "&creationType=" + $("#objectCreator").val()
-                + "&inputFormat=" + $("#objectFormat").val()
-                + "&doMakeUndirected=" + doMakeUndirected;
+                        "&creationType=" + $("#objectCreator").val()
+                        + "&inputFormat=" + $("#objectFormat").val()
+                        + "&doMakeUndirected=" + doMakeUndirected
+                        + "&addToFittingSequence=" + addToFittingSequence;
+
                 if($("#objectFormat").val() === 'XML' || $("#objectFormat").val() === 'NODE_CONTENT_EDGE_LIST' || $("#objectFormat").val() === 'LMS_TRIPLESTORE' || $("#objectFormat").val() === 'ARANGODB'){
-                	restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
+                    restUrl = restUrl + "&startDate=" + $("#startDate").val() + "&endDate=" + $("#endDate").val();
+
                     if($("#objectFormat").val() === 'LMS_TRIPLESTORE') {
                         if($("#showUserNames").val() !== "") {
-                            restUrl = restUrl + "&showUserNames=" + $("#showUserNames").val();
+                            restUrl = restUrl + "&showUserNames=" + document.getElementById("showUserNames").checked;
                         }
                         if($("#involvedUserURIs").val() !== "") {
                             restUrl = restUrl + "&involvedUsers=" + $("#involvedUserURIs").val();
@@ -378,7 +383,7 @@ Facilitates import / upload of new graphs and covers.
                             restUrl = restUrl + "&nodeCollectionName=" + $("#nodeCollection").val();
                         }
                         if($("#showUserNames").val() !== "") {
-                            restUrl = restUrl + "&showUserNames=" + $("#showUserNames").val();
+                            restUrl = restUrl + "&showUserNames=" + document.getElementById("showUserNames").checked;
                         }
                         if($("#involvedUsers").val() !== "") {
                             restUrl = restUrl + "&involvedUsers=" + $("#involvedUsers").val();
@@ -393,8 +398,8 @@ Facilitates import / upload of new graphs and covers.
                                 }
                             }
                         }
-                        if($("#weighEdges").checked) {
-                            restUrl = restUrl + "&weighEdges=" + $("#weighEdges").checked.toString();
+                        if(document.getElementById("weighEdges").checked) {
+                            restUrl = restUrl + "&weighEdges=" + document.getElementById("weighEdges").checked;
                         }
                         if($("#edgeCollections").val() !== null || $("#edgeCollections").val() !== []) {
                             restUrl = restUrl + "&edgeCollectionNames=" + $("#edgeCollections").val().toString();
@@ -410,10 +415,10 @@ Facilitates import / upload of new graphs and covers.
                                 }
                             }
                         }
-                        if($("#nameAttribute").val() !== "") {
+                        if($("#nameAttribute").val() !== "" && document.getElementById("showUserNames").checked) {
                             restUrl = restUrl + "&nameAttributeName=" + $("#nameAttribute").val()
                         }
-                        else {
+                        else if(document.getElementById("showUserNames").checked) {
                             restUrl = restUrl + "&nameAttributeName=name"
                         }
                         if($("#dateAttribute").val() !== "") {
@@ -897,17 +902,21 @@ Facilitates import / upload of new graphs and covers.
                                 </div>
                                 <!-- Graph import options (i.e. making graphs undirected) -->
                                 <div class="form-check graphOptionsRow hidden">
-                                  <label for="doMakeUndirected" class="form-check-label">
-                                  <input type="checkbox" class="form-check-input" id="doMakeUndirected">
-                                    make undirected
-                                  </label>
+                                    <label for="doMakeUndirected" class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" id="doMakeUndirected">
+                                        Make Undirected
+                                    </label>
+                                    <label for="addToFittingSequence" id="addToFittingSequenceLabel" data-bs-toggle="tooltip" hidden class="form-check-label" style="margin-left:20px" title="Try to add the timed graph to a sequence, creates a new one if not possible">
+                                        <input type="checkbox" class="form-check-input" id="addToFittingSequence">
+                                        Add to Sequence
+                                    </label>
                                 </div>
                                 <!-- Form submit -->
                                 <div class="submitWrapper form-group">
-                                  <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
-                                      <span class="submitText">Submit</span>
-                                      <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
-                                  </button>
+                                    <button id="submitButton" type="submit" name="submit" class="btn btn-primary">
+                                        <span class="submitText">Submit</span>
+                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                    </button>
                                 </div>
 
                               </div>

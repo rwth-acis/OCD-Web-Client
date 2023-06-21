@@ -74,6 +74,7 @@
             var selectOptionStr = '<option value=' + selectOptionVal + '>--SELECT--</option>';
             /* Metric names */
             var metricNames;
+			
             $(document).ready(function() {
                 /* Identifiers for meta information to be displayed */
                 var cells = ["Name", "Graph", "CreationMethod", "Communities", "R", ".xml", ".txt"];
@@ -1000,11 +1001,14 @@
                                         <span class="tool-dot" style="margin-top:3px"></span>
                                     </div>
                                     <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
-                                        <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
-                                        <button id="edgeWeightDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayHandler()">Show Edge Weights</button>
-                                        <div class="row" style="width:inherit">
-                                            <input class="input-group-text saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON">
-                                            <button class="btn btn-secondary saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
+                                        <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton displayButtonWholeRow" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
+                                        <div style="display: table-row">
+                                            <button style="display: table-cell" id="edgeWeightDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayHandler()">Color Edges</button>
+                                            <button style="display: table-cell; width: auto" id="edgeWeightDisplayTextButton" class="btn btn-primary btn-sm shadow-none active rounded-0 displayButton" data-toggle="button" onclick="EdgeWeightDisplayTextHandler()">Show Weights</button>
+                                        </div>
+                                        <div style="display: table-row; width:inherit">
+                                            <input style="display: table-cell" class="input-group-text saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON">
+                                            <button style="display: table-cell" class="btn btn-secondary saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
                                         </div>
                                     </form>
                                 </div>
