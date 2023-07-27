@@ -6,9 +6,9 @@
   max-height: 400px; 
   position: absolute; 
   left: 0;
-  transform: translateX(14%);
+  transform: translateX(5%);
   text-align: left;
-  width: 14%;
+  width: 18%;
 }
 
 #descriptiveVisualization #activeColorBox {
@@ -19,7 +19,7 @@
   max-height: 400px; 
   position: absolute; 
   right: 0;
-  transform: translateX(-14%);
+  transform: translateX(-5%);
   text-align: left;
   width: 14%;
 }
@@ -48,48 +48,48 @@
 
 #descriptiveVisualization .prevButton {
   background-image: url('buttons/prev.svg');
-  width: 1.5%;
-  height: 2.7%;
+  width: 2.22%;
+  height: 4.0%;
   background-repeat: no-repeat;
   background-size: contain;
   position: fixed;
   bottom: 2%;
-  left: 47%;
-  transform: translateX(-47%);
+  left: 46.21%;
+  transform: translateX(-46.21%);
 }
  
 #descriptiveVisualization .playButton {
   background-image: url('buttons/play.svg');
-  width: 1.5%;
-  height: 2.7%;
+  width: 2.22%;
+  height: 4.0%;
   background-repeat: no-repeat;
   background-size: contain;
   position: fixed;
   bottom: 2%;
-  left: 49%;
-  transform: translateX(-49%);
+  left: 48.93%;
+  transform: translateX(-48.93%);
 }
 
 #descriptiveVisualization .stopButton {
   background-image: url('buttons/stop.svg');
-  width: 1.5%;
-  height: 2.7%;
+  width: 2.22%;
+  height: 4.0%;
   background-repeat: no-repeat;
   background-size: contain;
   position: fixed;
   bottom: 2%;
-  left: 51%;
-  transform: translateX(-51%);
+  left: 51.65%;
+  transform: translateX(-51.65%);
 }
 
 #descriptiveVisualization .nextButton {
   background-image: url('buttons/next.svg');
-  width: 1.5%;
-  height: 2.7%;
+  width: 2.22%;
+  height: 4.0%;
   background-repeat: no-repeat;
   background-size: contain;
   position: fixed;
   bottom: 2%;
-  left: 53%;
-  transform: translateX(-53%);
+  left: 54.37%;
+  transform: translateX(-54.37%);
 }

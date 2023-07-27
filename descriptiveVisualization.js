@@ -647,7 +647,7 @@ function simulate(){
                 operationItem.innerHTML = renderLaTeX(graphData.shortDescription[currentIteration]);
                 operationList.appendChild(operationItem);
 
-                // das Pop-up-Fenster erstellen
+                // Create and append popup
                 var popup = document.createElement("div");
                 popup.style.maxWidth = "55%";
                 popup.id = "description" + currentIteration;
@@ -660,22 +660,37 @@ function simulate(){
                 popup.innerHTML = renderLaTeX(graphData.detailedDescription[currentIteration]);
                 document.body.appendChild(popup);
 
-                // den Text finden und eine Funktion hinzufügen, die das Pop-up-Fenster anzeigt
                 var text = document.getElementById(operationItem.id);
-                text.addEventListener("mouseover", function(event) {
-                    // Position des Pop-up-Fensters auf die Position des Textelements setzen
-                    var rect = text.getBoundingClientRect();
-                    popup.style.left = rect.left + "px";
-                    popup.style.top = rect.bottom + "px";
+                text.addEventListener("click", function(event) {
+                  hidePopups();
+                  // Show the corresponding popup
+                  var rect = text.getBoundingClientRect();
+                  popup.style.left = rect.left + "px";
+                  popup.style.top = rect.bottom + "px"; 
+                  if (popup.style.display === "block") {
+                    popup.style.display = "none";
+                  } else {
                     popup.style.display = "block";
+                  }
                 });
 
-                // eine weitere Funktion hinzufügen, die das Pop-up-Fenster ausblendet, wenn der Mauszeiger den Text verlässt
-                text.addEventListener("mouseout", function() {
-                    popup.style.display = "none";
+                // Event listener for the popup itself to hide it when clicked
+                popup.addEventListener("click", function(event) {
+                  popup.style.display = "none";
+                  event.stopPropagation();
                 });
             }
             renderGraph(currentIteration, graphData.nodes, graphData.edges);
+        }
+    }
+
+    // Function to hide all popups
+    function hidePopups() {
+        for (var i = 0; i < graphData.shortDescription.length; i++) {
+            var popup = document.getElementById("description" + i);
+            if(popup) {
+                popup.style.display = "none";
+            }
         }
     }
 
