@@ -365,7 +365,7 @@ function simulate(){
                 } 
                 else { 
                     return 5 * d.label.length; 
-                }}) // set width based on label length
+                }})
             .attr("height", 15);
 
         nodeLabel
@@ -375,7 +375,7 @@ function simulate(){
                 } 
                 else { 
                     return 5 * d.label.length; 
-                }}) // set width based on label length
+                }}) 
             .attr("height", 15);
 
         simulation.on("tick", ticked);
@@ -526,26 +526,26 @@ function simulate(){
           node.style("opacity", function(d) {
             var color = "rgb(" + d.rgbValue[iteration][0] + ", " + d.rgbValue[iteration][1] + ", " + d.rgbValue[iteration][2] + ")";
             if (allClickedColors.includes(color)) {
-              return 1; // set the node's opacity to 1 to make it opaque again
+              return 1;  
             } else {
-              return 0.05; // set the node's opacity to 0.05 to make it transparent
+              return 0; 
             }
           });
           nodeID.style("opacity", function(d) { return d3.select("#node" + d.id).style("opacity"); });
           nodeStringValue.style("opacity", function(d) {
             var color = "rgb(" + d.rgbValue[iteration][0] + ", " + d.rgbValue[iteration][1] + ", " + d.rgbValue[iteration][2] + ")";
             if (allClickedColors.includes(color)) {
-              return 1; // set the node string value opacity to 1 to make it opaque again
+              return 1;  
             } else {
-              return 0.05; // set the node string value opacity to 0.05 to make it transparent
+              return 0;  
             }
           });
            nodeNumValue.style("opacity", function(d) {
              var color = "rgb(" + d.rgbValue[iteration][0] + ", " + d.rgbValue[iteration][1] + ", " + d.rgbValue[iteration][2] + ")";
              if (allClickedColors.includes(color)) {
-               return 1; // set the node numerical value opacity to 1 to make it opaque again
+               return 1;
              } else {
-               return 0.05; // set the node numerical value opacity to 0.05 to make it transparent
+               return 0; 
              }
            });
 
@@ -580,10 +580,10 @@ function simulate(){
             }
 
             if (allClickedColors.includes(sourceColor) && allClickedColors.includes(targetColor)) {
-                return 1; // set the edge's opacity to 1 to make it opaque again
+                return 1;  
             }
             else {
-                return 0.05; // set the edge's opacity to 0.05 to make it transparent
+                return 0; 
             }
           });
           edgeStringValue.style("opacity", function(d) {
@@ -600,10 +600,10 @@ function simulate(){
             }
 
             if (allClickedColors.includes(sourceColor) && allClickedColors.includes(targetColor)) {
-                return 1; // set the edge's opacity to 1 to make it opaque again
+                return 1; 
             }
             else {
-                return 0.05; // set the edge's opacity to 0.05 to make it transparent
+                return 0; 
             }
           });
           edgeNumValue.style("opacity", function(d) {
@@ -620,10 +620,10 @@ function simulate(){
             }
 
             if (allClickedColors.includes(sourceColor) && allClickedColors.includes(targetColor)) {
-                return 1; // set the edge's opacity to 1 to make it opaque again
+                return 1; 
             }
             else {
-                return 0.05; // set the edge's opacity to 0.05 to make it transparent
+                return 0; 
             }
           });
 
