@@ -83,8 +83,6 @@ function clusterContext(elem, nesting) {
         //elementsList = null
         //elem.checked = true
 
-        console.log(currentClusteringString, nesting+operator)
-
         currentClusteringString = nesting
         const regex = /:::NESTING_INDEX[^:::]+:::/ig;
         nesting = nesting.replaceAll(regex, ":::")

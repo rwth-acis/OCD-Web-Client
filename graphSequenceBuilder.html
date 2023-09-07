@@ -102,11 +102,9 @@
         function saveSequence() {
             let customGraphKeys = [];
             document.getElementById('dragDropDropzone').querySelectorAll("div[value]").forEach(function(elem, currentIndex, listObj) {
-                console.log(elem, currentIndex, listObj)
                 customGraphKeys.push(elem.getAttribute("value"))
             });
             let sequenceName = document.getElementById("sequenceNameInput").value;
-            console.log(customGraphKeys.toString())
             sendRequest("post", "sequences?graphIds=" + customGraphKeys.toString()+ "&sequenceName=" + sequenceName, "",
                 function (response) {
                     var newUrl = "graphSequences.html?page=0";

@@ -26,7 +26,6 @@ function appendGraphSequenceRow(table, graphSequenceElt, cells) {
     if($.inArray("StartDate", cells) > -1) {
         if ($(graphSequenceElt).find('StartDate').text() !== "") {
             const startDate = new Date($(graphSequenceElt).find('StartDate').text());
-            console.log(startDate, $(graphSequenceElt).find('StartDate').text(), Intl.DateTimeFormat().resolvedOptions().timeZone)
             row += createGraphSequenceTableCell(startDate.toLocaleDateString('en-EN', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, year: 'numeric', month: 'numeric', day: 'numeric'}));
         }
         else {
