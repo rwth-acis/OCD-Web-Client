@@ -694,6 +694,7 @@ td:last-child {
 
 .dragDrop-drop-item {
     cursor: pointer;
+    width: fit-content;
     margin-bottom: 10px;
     background-color: rgb(255, 255, 255);
     padding: 5px 10px;

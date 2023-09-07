@@ -21,11 +21,12 @@
         <script src="node_modules/arangojs/web.js"></script>
         <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
         <script type="text/javascript">
-            /*
+             /*
              * Defines current page and page size.
              */
             var GRAPHS_PER_PAGE = 20;
             var pageNumber = 0;
+
             /* Executed after page loading */
             $(document).ready(function() {
                 /* Number of the graph table page to be displayed */
@@ -50,6 +51,7 @@
                             window.location.href = newUrl;
                         }
                         /* Adds meta information to the graph table */
+
                         $(graphMetasXml).find("Graph").each(function() {
                             appendGraphRow($('#graphTable'), $(this), cells);
                         });

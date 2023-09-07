@@ -30,7 +30,6 @@ function appendGraphRow(table, graphElt, cells, graphIds = []) {
     if($.inArray("StartDate", cells) > -1) {
         if ($(graphElt).find('StartDate').text() !== "") {
             const startDate = new Date($(graphElt).find('StartDate').text());
-            console.log(startDate, $(graphElt).find('StartDate').text())
             row += createGraphTableCell(startDate.toLocaleDateString('en-EN', {year: 'numeric', month: 'numeric', day: 'numeric'}));
         }
         else {
@@ -214,7 +213,6 @@ function deleteGraph(id) {
 }
 
 function adjustIndicesAbove(tableId, tableElemIndex) {
-
     let tableElemList = document.getElementById(tableId).querySelector('tr');
     for (const tableElemKey in tableElemList) {
         let currentIndexElem = tableElemList[tableElemKey].querySelector('td[class="graphSequenceIndex"]')[0]
