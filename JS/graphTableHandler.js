@@ -54,7 +54,12 @@ function appendGraphRow(table, graphElt, cells) {
     /* Loops */
     if($.inArray("L", cells) > -1) {
         row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("SELF_LOOPS", types) > -1));
+    /* Multiplex */
     }
+    if($.inArray("M", cells) > -1) {
+        row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("MULTIPLE_EDGES", types) > -1));
+    }
+
     /* Show corresponding covers */
     if($.inArray("Co", cells) > -1) {
         row += createShowGraphCoversCell();

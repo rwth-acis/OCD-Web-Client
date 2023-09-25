@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <!-- Displays detailed information on a single graph. Allows OCD algorithm execution. -->
+
 <head>
     <title>OCD - Graph</title>
     <meta charset="UTF-8">
@@ -35,6 +36,8 @@
         var graphMetaXml;
         /* Graph structure in edge list format */
         var graphProperties;
+        /* Graph types*/
+        var types;
         /* Graph structure in JSON format */
         var jsonGraph;
         var forceGraph;
@@ -71,7 +74,7 @@
         /* Executed after page loading */
         $(document).ready(function () {
             /* Identifiers for the graph information to be displayed */
-            var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
+            var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "M" , "C", "R"];
             /* Requests the graph meta information */
             sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
                 /* Response handler */
@@ -82,7 +85,7 @@
                     var nodes = $(graphMetaXml).find('NodeCount').text();
                     var edges = $(graphMetaXml).find('EdgeCount').text();
                     /* Graph types */
-                    var types = [];
+                    types = [];
                     $(graphMetaXml).children('Types').find('Type').each(function () {
                         types.push($(this).text());
                     });
@@ -95,6 +98,8 @@
                         description += " directed ";
                     if ($.inArray("WEIGHTED", types) > -1)
                         description += " weighted ";
+                    if ($.inArray("MULTIPLE_EDGES", types) > -1)
+                        description += " multiplex ";
                     if (origin[0] !== "UNDEFINED") {
                         description += " " + origin[1] + " ";
                         if (origin[0] !== "REAL_WORLD")
@@ -103,7 +108,7 @@
 
                     description += ' network with ' + nodes + ' nodes and ' + edges + ' links.';
 
-                    if($.inArray("ZERO_WEIGHTS", types) > -1 || $.inArray("NEGATIVE_WEIGHTS", types) > -1 || $.inArray("SELF_LOOPS", types) > -1) {
+                    if ($.inArray("ZERO_WEIGHTS", types) > -1 || $.inArray("NEGATIVE_WEIGHTS", types) > -1 || $.inArray("SELF_LOOPS", types) > -1) {
                         description += " The network has";
                         if ($.inArray("ZERO_WEIGHTS", types) > -1)
                             description += " zero weights,";
@@ -111,8 +116,8 @@
                             description += " negative weights,";
                         if ($.inArray("SELF_LOOPS", types) > -1)
                             description += " self loops";
-                        if(description.endsWith(","))
-                            description = description.slice(0, description.length-1)
+                        if (description.endsWith(","))
+                            description = description.slice(0, description.length - 1)
                         description += "."
                     }
 
@@ -560,7 +565,14 @@
         /* Requests and stores the edge list of the graph.
          * Then executes a callback function */
         function getEdgeList(callback) {
-            sendRequest("get", "graphs/" + graphId + "?outputFormat=WEIGHTED_EDGE_LIST", "",
+            var outputFormat;
+            if ($.inArray("MULTIPLE_EDGES", types) > -1) {
+                outputFormat = "?outputFormat=UNWEIGHTED_EDGE_LIST_MULTIPLEX";
+
+            } else {
+                outputFormat = "?outputFormat=WEIGHTED_EDGE_LIST";
+            }
+            sendRequest("get", "graphs/" + graphId + outputFormat, "",
                 /* Response handler */
                 function (response) {
                     graphEdgeList = response;
@@ -604,6 +616,21 @@
         /* Handles the collapsable element for the edge list. */
         function edgeListCollapsableHandler() {
             if (typeof graphEdgeList === 'undefined') {
+                var column;
+                if ($.inArray("MULTIPLE_EDGES", types) > -1) {
+                    column = '<tr>'
+                        + '<th title="Edge Layer">Layer</th>'
+                        + '<th title="Source Node">Source</th>'
+                        + '<th title="Target Node">Target</th>'
+                        + '</tr>'
+                } else {
+                    column = '<tr>'
+                        + '<th title="Edge Layer">Source</th>'
+                        + '<th title="Target Node">Target</th>'
+                        + '<th title="Edge Weight">Weight</th>'
+                        + '</tr>'
+                }
+                $("#graphEdgeTable thead").append(column);
                 /* Requests the edge list */
                 getEdgeList(function () {
                     /* Adds the edge list information to a table */
@@ -619,7 +646,7 @@
                             $("#graphEdgeTable tbody").append(row);
                         }
                     });
-                    $("#graphEdgeTable").tablesorter({sortList: [[0, 0], [1, 0]]});
+                    $("#graphEdgeTable").tablesorter({ sortList: [[0, 0], [1, 0]] });
                 });
             }
         }
@@ -668,6 +695,16 @@
             })
         }
 
+        function createLayerDropdownButton(layers) {
+            var content = '<h6>Choose a layer</h6>'
+                + '<select id="dropDownLayers">'
+                + '<option value="Multigraph">Multigraph</option>';
+            for (layer of layers) {
+                var content = content + '<option value="' + layer + '">layer : ' + layer + '</option>';
+            }
+            document.getElementById('dropdownLayer').innerHTML = content;
+        }
+
         /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
         document.addEventListener('fullscreenchange', (event) => {
             // document.fullscreenElement will point to the element that
@@ -685,15 +722,14 @@
 
         /* Listener for Ctrl+C presses */
         document.addEventListener('keydown', (e) => {
-            if(e.code === "KeyC" || e.code === "ControlLeft") {
-                keysPressed.set(e.code,true);
+            if (e.code === "KeyC" || e.code === "ControlLeft") {
+                keysPressed.set(e.code, true);
             }
         });
 
         /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
         document.addEventListener('keyup', (e) => {
-            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0 && document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false && document.getElementById("toolsFormDropDown").classList.contains("show") === false)
-            {
+            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0 && document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false && document.getElementById("toolsFormDropDown").classList.contains("show") === false) {
                 var elem = document.getElementById('forceVisualizationContent');
 
                 if (elem.requestFullscreen) {
@@ -711,8 +747,7 @@
                     forceGraph.height(screen.height);
                 }
             }
-            else if(e.code === "KeyF" && window.innerHeight === screen.height)
-            {
+            else if (e.code === "KeyF" && window.innerHeight === screen.height) {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
                 } else if (document.mozCancelFullScreen) { /* Firefox */
@@ -723,19 +758,17 @@
                     document.msExitFullscreen();
                 }
             }
-            else if(e.code === "Enter")
-            {
-                if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm")) {
+            else if (e.code === "Enter") {
+                if (document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm")) {
                     nodeSearch();
                 }
-                else if(document.getElementById("toolsFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("saveJsonForm")) {
+                else if (document.getElementById("toolsFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("saveJsonForm")) {
                     saveJSON();
                 }
             }
-            else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
-            {
-                if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
-                    if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
+            else if ((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0) {
+                if (keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
+                    if (document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
                         searchDropDown();
                     }
 
@@ -822,10 +855,10 @@
             arangoDataBase = $("#arangoDataBase").val();
             arangoCollection = $("#arangoCollection").val();
 
-            localStorage.setItem("arangoUser@WebOCD",arangoUser);
-            localStorage.setItem("arangoPass@WebOCD",arangoPass);
-            localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
-            localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
+            localStorage.setItem("arangoUser@WebOCD", arangoUser);
+            localStorage.setItem("arangoPass@WebOCD", arangoPass);
+            localStorage.setItem("arangoDataBase@WebOCD", arangoDataBase);
+            localStorage.setItem("arangoCollection@WebOCD", arangoCollection);
 
             var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
             var i;
@@ -838,9 +871,9 @@
         }
 
         // Close the dropdown menu if the user clicks outside of it
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
-                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.nodeNameDisplayButton')){
+                && !event.target.matches('.toolsDropDownDots') && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.nodeNameDisplayButton')) {
 
                 var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
                 var i;
@@ -868,22 +901,20 @@
         }
 
         /* Let the camera look at a specified node (if found) */
-        function nodeSearch(){
+        function nodeSearch() {
             if (typeof forceGraph !== "undefined") {
                 let searchNodeName = $("#nodeSearchForm").val();
 
-                for(let node of forceGraph.graphData().nodes)
-                {
-                    if(node.name === searchNodeName)
-                    {
-                        if(have3D === false) {
+                for (let node of forceGraph.graphData().nodes) {
+                    if (node.name === searchNodeName) {
+                        if (have3D === false) {
                             forceGraph.centerAt(node.x, node.y);
                             forceGraph.zoom(9, 200);
                             searchNodeName = undefined;
                         } else {
                             const distance = 40;
-                            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
-                            forceGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
+                            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+                            forceGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, node, 250);
                             searchNodeName = undefined;
                         }
                     }
@@ -895,7 +926,7 @@
                     document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
                     document.getElementById("nodeSearchForm").placeholder = "Node Name";
 
-                    let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
+                    let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
                     for (let i = 0; i < dropdowns.length; i++) {
                         let openDropdown = dropdowns[i];
                         if (openDropdown.classList.contains('show')) {
@@ -911,7 +942,7 @@
         function saveJSON() {
             let fileName = $("#saveJsonForm").val();
 
-            if(typeof jsonGraph === 'undefined') {
+            if (typeof jsonGraph === 'undefined') {
                 sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
                     function (response) {
                         jsonGraph = response;
@@ -926,7 +957,7 @@
                 saveAs(blob, fileName + ".json");
             }
 
-            let  dropdowns = document.getElementsByClassName("toolsFormDropDown");
+            let dropdowns = document.getElementsByClassName("toolsFormDropDown");
             for (let i = 0; i < dropdowns.length; i++) {
                 let openDropdown = dropdowns[i];
                 if (openDropdown.classList.contains('show')) {
@@ -935,9 +966,9 @@
             }
         }
 
-        function NodeNameDisplayHandler () {
+        function NodeNameDisplayHandler() {
             haveNodeNames = !haveNodeNames;
-            if(have3D === true) {
+            if (have3D === true) {
                 forceGraph
                     .nodeOpacity(haveNodeNames === true ? .5 : 1)
                     .nodeThreeObject(forceGraph.nodeThreeObject())
@@ -962,8 +993,8 @@
 
             if (have3D === false) {
                 forceGraph = ForceGraph()
-                (document.getElementById('forceVisualizationGraphic'))
-                    .nodeCanvasObjectMode( () => 'after')
+                    (document.getElementById('forceVisualizationGraphic'))
+                    .nodeCanvasObjectMode(() => 'after')
                     .backgroundColor("#fafafa")
                     .graphData(graph)
                     .nodeId('id')
@@ -1025,9 +1056,9 @@
                         }
                     })
                     .nodeCanvasObject((node, ctx, globalScale) => {
-                        if(haveNodeNames === true) {
+                        if (haveNodeNames === true) {
                             const label = node.name;
-                            const fontSize = 12/globalScale;
+                            const fontSize = 12 / globalScale;
                             ctx.font = `${fontSize}px Sans-Serif`;
 
                             ctx.textAlign = 'center';
@@ -1071,7 +1102,7 @@
                 forceGraph = ForceGraph3D({
                     extraRenderers: [new THREE.CSS2DRenderer()]
                 })
-                (document.getElementById('forceVisualizationGraphic'))
+                    (document.getElementById('forceVisualizationGraphic'))
                     .graphData(graph)
                     .nodeId('id')
                     .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
@@ -1137,7 +1168,7 @@
                         return Math.log(degree[node.id] + 1)
                     })
                     .nodeThreeObject(node => {
-                        if(haveNodeNames === true) {
+                        if (haveNodeNames === true) {
                             const nodeEl = document.createElement('div');
                             nodeEl.textContent = node.name;
                             nodeEl.style.color = "#ffffff";//node.color;
@@ -1189,11 +1220,15 @@
 
         /* Requests and stores a JSON representation of the graph and then builds it */
         function getJSON() {
-            if(typeof jsonGraph === 'undefined') {
+            if (typeof jsonGraph === 'undefined') {
                 sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
                     function (response) {
                         jsonGraph = response;
-                        buildGraph();
+                        if ($.inArray("MULTIPLE_EDGES", types) > -1) {
+                            buildMultiGraph();
+                        } else {
+                            buildGraph();
+                        }
                     },
                     /* Error handler */
                     function (errorData) {
@@ -1204,9 +1239,455 @@
                     });
             }
             else {
-                buildGraph();
+                if ($.inArray("MULTIPLE_EDGES", types) > -1) {
+                    buildMultiGraph();
+                } else {
+                    buildGraph();
+                }
             }
         }
+
+        /* Builds a force graph from json data */
+        function buildMultiGraph() {
+            let graph1 = JSON.parse(jsonGraph);
+            let graph = { ...graph1 };
+            let nodes = graph.nodes;
+            let links = graph.links;
+            let graphLinks;
+            let graphNodes;
+            let degree = new Map();
+            let outgoingNeighbours = new Map();
+            let styles = [];
+            let layers = [];
+            let sameNodesLinks = {};
+            let currentLayer = undefined;
+            let processedComputation = false;
+            let curvatureMinMax = 0.1;
+
+            for (let node of graph.nodes) {
+                degree[node.id] = 0;
+                outgoingNeighbours[node.id] = [];
+            }
+            for (let edge of graph.links) {
+                degree[edge.source] += 1;
+                outgoingNeighbours[edge.source].push(edge.target);
+                styles.push(edge.style);
+
+                if (!layers.includes(edge.layerId)) {
+                    layers.push(edge.layerId);
+                }
+            }
+
+            graph.links.forEach(link => {
+                link.nodePairId = link.source <= link.target ? (link.source + "_" + link.target) : (link.target + "_" + link.source);
+                let map = sameNodesLinks;
+                if (!map[link.nodePairId]) {
+                    map[link.nodePairId] = {};
+                }
+                if (!map[link.nodePairId][link.layerId]) {
+                    map[link.nodePairId][link.layerId] = [];
+                }
+                map[link.nodePairId][link.layerId].push(link);
+            }
+
+
+
+
+            );
+
+            createLayerDropdownButton(layers);
+
+            if (have3D === false) {
+
+
+                Object.keys(sameNodesLinks).filter(nodePairId => Object.keys(sameNodesLinks[nodePairId]).length > 1).forEach(nodePairId => {
+                    let layers = sameNodesLinks[nodePairId];
+                    let numberLayers = Object.keys(sameNodesLinks[nodePairId]).length;
+                    let delta = 2 * curvatureMinMax / (numberLayers - 1);
+                    let j = 0;
+                    Object.keys(layers).forEach(layer => {
+                        let firstLinkSource = sameNodesLinks[nodePairId][layer][0].source;
+                        let links = sameNodesLinks[nodePairId][layer];
+                        for (let i = 0; i < links.length; i++) {
+                            let link = links[i];
+                            link.curvature = - curvatureMinMax + j * delta;
+                            if (link.source !== firstLinkSource) {
+                                link.curvature *= -1;
+                            }
+                        }
+                        j += 1;
+
+                    });
+                });
+
+                forceGraph = ForceGraph()
+                    (document.getElementById('forceVisualizationGraphic'))
+                    .nodeCanvasObjectMode(() => 'after')
+                    .backgroundColor("#fafafa")
+                    .onLinkRightClick((link, event) => {
+                        debugger;
+                        if (currentLayer !== undefined) {
+                            debugger
+                            links = [...graph1.links];
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            currentLayer = undefined;
+                            for (let node of nodes) {
+                                node.fx = undefined;
+                                node.fy = undefined;
+                            }
+                        } else {
+                            currentLayer = link.layerId;
+                            links = links.filter(l => l.layerId === link.layerId);
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            for (let node of nodes) {
+                                node.fx = node.x;
+                                node.fy = node.y;
+                            }
+                        }
+                    })
+                    .graphData(graph)
+                    .linkLabel(l => l.layerId)
+                    .linkCurvature('curvature')
+                    .nodeId('id')
+                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
+                    .onNodeHover(node => {
+                        if (node != null) {
+                            nodeName = node.name;
+                        }
+                    })
+                    .onNodeClick(node => {
+                        if (arangoDataBase !== "" && arangoDataBase !== null
+                            && arangoUser !== "" && arangoUser !== null
+                            && arangoPass !== null
+                            && arangoCollection !== "" && arangoCollection !== null) {
+
+                            db.useDatabase(arangoDataBase);
+                            db.useBasicAuth(arangoUser, arangoPass);
+                            const docCollection = db.collection(arangoCollection);
+                            docCollection.document(node.name, true).then(function (doc) {
+                                let nodeWindow = window.open("", '_blank');
+
+                                if (doc != null) {
+                                    let docStr = JSON.stringify(doc, null, '    ');
+                                    docStr = docStr.replace(/\n/g, "<br />");
+                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                } else {
+                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                }
+                            }).catch((err) => console.error(err));
+                        }
+                    })
+                    .onNodeRightClick(node => {
+                        highlightNodes.clear();
+                        highlightLinks.clear();
+                        if (node !== rightClickNode) {
+                            if (node) {
+                                highlightNodes.add(node.id);
+                                outgoingNeighbours[node.id].forEach(neighbor => highlightNodes.add(neighbor));
+                                graph.links.forEach(link => {
+                                    if (link.source.id === node.id) {
+                                        highlightLinks.add(link)
+                                    }
+                                });
+                            }
+                            rightClickNode = node;
+                        } else {
+                            rightClickNode = null;
+                        }
+                        rightClickLink = null;
+                    })
+                    .nodeVal(function (node) {
+                        return Math.log(degree[node.id] + 1)
+                    } /*<= 14 ? degree[node.id] : 14}*/)
+                    .nodeColor(function (node) {
+                        if (highlightNodes.has(node.id)) {
+                            return ((node === rightClickNode) ? '#f54a06' : '#fd970d');
+                        } else {
+                            return '#3183ba';
+                        }
+                    })
+                    .nodeCanvasObject((node, ctx, globalScale) => {
+                        if (haveNodeNames === true) {
+                            const label = node.name;
+                            const fontSize = 12 / globalScale;
+                            ctx.font = `${fontSize}px Sans-Serif`;
+
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                            ctx.fillText(label, node.x, node.y);
+                        }
+                    })
+                    .linkSource('source')
+                    /* .onLinkRightClick(link => {
+                        //console.log(link);
+                        debugger
+                        highlightNodes.clear();
+                        highlightLinks.clear();
+                        if (link !== rightClickLink) {
+                            if (link) {
+                                highlightLinks.add(link);
+                                highlightNodes.add(link.source.id);
+                                highlightNodes.add(link.target.id);
+                            }
+                            rightClickLink = link;
+                            rightClickNode = null;
+                        } else {
+                            rightClickLink = null;
+                            rightClickNode = null;
+                        }
+                    }) */
+                    .linkLineDash(function (link) {
+                        if (styles[link.index] === 1) {
+                            return [10, 10]
+                        } else if (styles[link.index] === 2) {
+                            return [5, 5]
+                        }
+                    })
+                    .linkWidth(link => highlightLinks.has(link) ? 2.5 : 1.5)
+                    .linkColor(link => link.color)
+                    /* .linkColor(link => highlightLinks.has(link) ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)") */
+                    .linkTarget('target')
+                    .cooldownTicks(200);
+
+
+
+                dropDownLayers.onchange = function () {
+                    debugger
+                    let layer = this.value;
+                    if (layer !== currentLayer) {
+
+                        if (layer === 'Multigraph') {
+
+                            links = [...graph1.links];
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            currentLayer = undefined;
+                            for (let node of nodes) {
+                                node.fx = undefined;
+                                node.fy = undefined;
+                            }
+                        } else {
+                            links = [...graph1.links];
+                            currentLayer = layer;
+                            links = links.filter(l => l.layerId === layer);
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            for (let node of nodes) {
+                                node.fx = node.x;
+                                node.fy = node.y;
+                            }
+                        }
+
+                    }
+                }
+            } else {
+                debugger
+                curvatureMinMax = 0.2;
+                Object.keys(sameNodesLinks).filter(nodePairId => Object.keys(sameNodesLinks[nodePairId]).length > 1).forEach(nodePairId => {
+                    let layers = sameNodesLinks[nodePairId];
+                    let numberLayers = Object.keys(sameNodesLinks[nodePairId]).length;
+                    let delta = 2 * (Math.PI) / (numberLayers);
+                    let deltaBegin = delta / 2;
+                    let j = 1;
+                    Object.keys(layers).forEach(layer => {
+                        /*  let currentLinks = sameNodesLinks[nodePairId][layer];
+                         let link = currentLinks[0];
+                         link.curvature = curvatureMinMax;
+                         link.rotation = j * delta + deltaBegin;
+                         link = currentLinks[1];
+                         link.curvature = curvatureMinMax;
+                         link.rotation = j * delta + deltaBegin;
+                         
+                         j++; */
+                        let currentLinks = sameNodesLinks[nodePairId][layer]
+                        for (let i = 0; i < currentLinks.length; i++) {
+                            let link = currentLinks[i];
+                            if (i > 0) {
+                                links.splice(links.indexOf(link), 1);
+                            } else {
+                                link.curvature = curvatureMinMax;
+                                link.rotation = j * delta + deltaBegin;
+                            }
+                        }
+                        j += 1;
+                    }
+
+                    );
+
+                });
+
+                /*  Object.keys(sameNodesLinks).forEach(nodePairId => {
+                     if (sameNodesLinks[nodePairId].length > 1) {
+                         let layers = sameNodesLinks[nodePairId];
+                         let numberLayers = layers.length;
+                         let delta = (Math.PI * curvatureMinMax * 2) / (numberLayers);
+                         let j = 1;
+                         Object.keys(layers).forEach(layer => {
+                             let currentLinks = 
+                         })
+                     }
+                 }) */
+
+                debugger
+                forceGraph = ForceGraph3D({
+                    extraRenderers: [new THREE.CSS2DRenderer()]
+                })
+
+
+                    (document.getElementById('forceVisualizationGraphic'))
+                    .graphData(graph)
+                    .nodeId('id')
+                    .onLinkRightClick((link, event) => {
+                        debugger;
+                        if (currentLayer !== undefined) {
+                            debugger
+                            links = [...graph1.links];
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            currentLayer = undefined;
+                            for (let node of nodes) {
+                                node.fx = undefined;
+                                node.fy = undefined;
+                                node.fz = undefined;
+                            }
+                        } else {
+                            currentLayer = link.layerId;
+                            links = links.filter(l => l.layerId === link.layerId);
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            for (let node of nodes) {
+                                node.fx = node.x;
+                                node.fy = node.y;
+                                node.fz = node.z;
+                            }
+                        }
+                    })
+                    .linkColor(l => l.color)
+                    .linkCurvature('curvature')
+                    .linkCurveRotation('rotation')
+                    .linkLabel(l => l.layerId)
+                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
+                    .onNodeHover(node => {
+                        if (node != null) {
+                            nodeName = node.name;
+                        }
+                    })
+                    .onNodeClick(node => {
+                        if (arangoDataBase !== "" && arangoDataBase !== null
+                            && arangoUser !== "" && arangoUser !== null
+                            && arangoPass !== null
+                            && arangoCollection !== "" && arangoCollection !== null) {
+
+                            db.useDatabase(arangoDataBase);
+                            db.useBasicAuth(arangoUser, arangoPass);
+                            const docCollection = db.collection(arangoCollection);
+                            docCollection.document(node.name, true).then(function (doc) {
+                                let nodeWindow = window.open("", '_blank');
+
+                                if (doc != null) {
+                                    //console.log(JSON.stringify(doc, null, '    '));
+                                    let docStr = JSON.stringify(doc, null, '    ');
+                                    docStr = docStr.replace(/\n/g, "<br />");
+                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
+                                } else {
+                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
+                                }
+                            }).catch((err) => console.error(err));
+                        }
+                    })
+                    .onNodeRightClick(node => {
+                        highlightNodes.clear();
+                        highlightLinks.clear();
+                        if (node !== rightClickNode) {
+                            if (node) {
+                                highlightNodes.add(node.id);
+                                outgoingNeighbours[node.id].forEach(neighbor => highlightNodes.add(neighbor));
+                                graph.links.forEach(link => {
+                                    if (link.source.id === node.id) {
+                                        highlightLinks.add(link)
+                                    }
+                                });
+                            }
+                            rightClickNode = node;
+                            rightClickLink = null;
+                        } else {
+                            rightClickNode = null;
+                            rightClickLink = null;
+                        }
+
+                        updateHighlight();
+                    })
+                    .nodeColor(function (node) {
+                        if (highlightNodes.has(node.id)) {
+                            return ((node === rightClickNode) ? '#f53e06' : '#f5fd0d');
+                        } else {
+                            return '#3183ba';
+                        }
+                    })
+                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
+                    .nodeVal(function (node) {
+                        return Math.log(degree[node.id] + 1)
+                    })
+                    .nodeThreeObject(node => {
+                        if (haveNodeNames === true) {
+                            const nodeEl = document.createElement('div');
+                            nodeEl.textContent = node.name;
+                            nodeEl.style.color = "#ffffff";//node.color;
+                            nodeEl.className = 'node-label';
+                            return new THREE.CSS2DObject(nodeEl);
+                        }
+                    })
+                    .nodeThreeObjectExtend(true)
+                    .linkSource('source')
+                    .linkOpacity(1)
+                    .linkWidth(l => 1)
+                    .linkTarget('target')
+                    .cooldownTicks(200);
+
+
+                function updateHighlight() {
+                    // trigger update of highlighted objects in scene
+                    forceGraph
+                        .nodeColor(forceGraph.nodeColor())
+                        .linkColor(forceGraph.linkColor())
+                        .linkWidth(forceGraph.linkWidth());
+                }
+
+                dropDownLayers.onchange = function () {
+                    debugger
+                    let layer = this.value;
+                    if (layer !== currentLayer) {
+
+                        if (layer === 'Multigraph') {
+
+                            links = [...graph1.links];
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            currentLayer = undefined;
+                            for (let node of nodes) {
+                                node.fx = undefined;
+                                node.fy = undefined;
+                                node.fz = undefined;
+                            }
+                        } else {
+                            links = [...graph1.links];
+                            currentLayer = layer;
+                            links = links.filter(l => l.layerId === layer);
+                            forceGraph.graphData({ nodes: nodes, links: links });
+                            for (let node of nodes) {
+                                node.fx = node.x;
+                                node.fy = node.y;
+                                node.fz = node.z
+                            }
+                        }
+
+                    }
+                }
+
+
+            }
+
+
+            forceGraph.width($('.forceVisualizationContent').width());
+            forceGraph.height($('.forceVisualizationContent').height());
+        }
+
 
         /* Handles the collapsable element for the graph visualization */
         function visualizationCollapsableHandler() {
@@ -1290,330 +1771,348 @@
         }
     </script>
 </head>
+
 <body>
-<div id="wrapper">
-    <div id="contentWrapper">
-        <div id="content">
-            <!-- Container for error message display -->
-            <div id="errorMessageWrapper">
-                <div id="errorMessage"></div>
-            </div>
-            <!-- Graph meta information and related data -->
-            <div style="margin-bottom: 1em;">
-                <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
+    <div id="wrapper">
+        <div id="contentWrapper">
+            <div id="content">
+                <!-- Container for error message display -->
+                <div id="errorMessageWrapper">
+                    <div id="errorMessage"></div>
+                </div>
+                <!-- Graph meta information and related data -->
+                <div style="margin-bottom: 1em;">
+                    <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
 
+                    </div>
+                    <div class="side-nav d-flex flex-row">
+                        <ul class="nav" style="width: 100%;">
+                            <div class="p-2 coverColor col-md-3 col-sm-6">
+                                <li id="graphCovers" class="nav-item coverColor"></li>
+                            </div>
+                            <div class="p-2 simulationColor col-md-3 col-sm-6">
+                                <li id="graphSimulations" class="nav-item simulationColor"></li>
+                            </div>
+                            <div class="p-2 centralityColor col-md-3 col-sm-6">
+                                <li id="graphCentralities" class="nav-item centralityColor"></li>
+                            </div>
+                            <div class="p-2 deleteColor col-md-3 col-sm-6">
+                                <li id="graphDelete" class="nav-item deleteColor"></li>
+                            </div>
+                        </ul>
+                    </div>
                 </div>
-                <div class="side-nav d-flex flex-row">
-                    <ul class="nav" style="width: 100%;">
-                        <div class="p-2 coverColor col-md-3 col-sm-6">
-                            <li id="graphCovers" class="nav-item coverColor"></li>
-                        </div>
-                        <div class="p-2 simulationColor col-md-3 col-sm-6">
-                            <li id="graphSimulations" class="nav-item simulationColor"></li>
-                        </div>
-                        <div class="p-2 centralityColor col-md-3 col-sm-6">
-                            <li id="graphCentralities" class="nav-item centralityColor"></li>
-                        </div>
-                        <div class="p-2 deleteColor col-md-3 col-sm-6">
-                            <li id="graphDelete" class="nav-item deleteColor"></li>
-                        </div>
-                    </ul>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <!-- Collapsable for graph properties -->
-                    <div id="propertiesCollapsable" class="collapsable col-lg-6">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Properties</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Collapsable for graph properties -->
+                        <div id="propertiesCollapsable" class="collapsable col-lg-6">
+                            <div class="collapsableHeader">
+                                <div class="collapsableTitle">Properties</div>
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                </div>
+                            </div>
+                            <div class="collapsableContent">
+                                <!-- Table for graph properties -->
+                                <div class="tableWrapper table-responsive">
+                                    <table id="graphPropertiesTable" class="table">
+                                        <thead>
+                                            <tr>
+                                                <th title="Property">Property</th>
+                                                <th title="Value">Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                        <div class="collapsableContent">
-                            <!-- Table for graph properties -->
-                            <div class="tableWrapper table-responsive">
-                                <table id="graphPropertiesTable" class="table">
-                                    <thead>
-                                    <tr>
-                                        <th title="Property">Property</th>
-                                        <th title="Value">Value</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                        <!-- Collapsable for graph edge list -->
+                        <div id="edgeListCollapsable" class="collapsable col-sm-12 col-lg-6">
+                            <div class="collapsableHeader">
+                                <div class="collapsableTitle">Edges</div>
+
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                </div>
+                            </div>
+                            <div class="collapsableContent">
+                                <!-- Table for graph edge list -->
+                                <div class="tableWrapper table-responsive">
+                                    <table id="graphEdgeTable" class="table">
+                                        <thead>
+                                            <!--  <tr>
+                                                <th title="Source Node">Source</th>
+                                                <th title="Target Node">Target</th>
+                                                <th title="Edge Weight">Weight</th>
+                                            </tr> -->
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Collapsable for graph edge list -->
-                    <div id="edgeListCollapsable"
-                         class="collapsable col-sm-12 col-lg-6">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Edges</div>
-
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    <div class="row">
+                        <!-- Collapsable for algorithm execution -->
+                        <div id="runAlgorithmCollapsable" class="collapsable col-sm-12">
+                            <div class="collapsableHeader coverColor">
+                                <div class="collapsableTitle">Run OCD Algorithm</div>
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                </div>
                             </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Table for graph edge list -->
-                            <div class="tableWrapper table-responsive">
-                                <table id="graphEdgeTable" class="table">
-                                    <thead>
-                                    <tr>
-                                        <th title="Source Node">Source</th>
-                                        <th title="Target Node">Target</th>
-                                        <th title="Edge Weight">Weight</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                            <div class="collapsableContent">
+                                <div id="ocdContainer" class="container">
+                                    <form id="runAlgorithmForm" action="javascript:void(0); return false;">
+                                        <!-- Cover Name -->
+                                        <div class="form-group row">
+                                            <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
+                                            <div class="col-sm-10">
+                                                <input id="coverName" type="text" class="form-control" name="name"
+                                                    placeholder="name">
+                                            </div>
+                                        </div>
+                                        <!-- Algorithm -->
+                                        <div class="form-group row">
+                                            <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                                            <div class="col-sm-10">
+                                                <select id="algorithm" class="form-control custom-select">
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <!-- Algorithm Graph Types -->
+                                        <div class="col-sm-10" id="algorithmGraphTypeDiv"></div>
+                                        <!-- Algorithm Parameters -->
+                                        <div class="col-sm-10" id="algorithmParameterDiv"></div>
+
+                                        <div class="form-group row">
+                                            <div class="container">
+                                                <label class="custom-control custom-checkbox"> <input
+                                                        id="contentWeighting" type="checkbox"
+                                                        class="custom-control-input"> <span
+                                                        class="custom-control-indicator"></span> <span
+                                                        class="custom-control-label">Content Weighting</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <button type="submit" name="submit" id="runAlgorithmBtn"
+                                                class="btn btn-primary">
+                                                <span class="submitText">Run</span>
+                                                <span class="submitSpinner spinner-border spinner-border-sm"
+                                                    role="status" aria-hidden="true" hidden></span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <!-- Collapsable for algorithm execution -->
-                    <div id="runAlgorithmCollapsable" class="collapsable col-sm-12">
-                        <div class="collapsableHeader coverColor">
-                            <div class="collapsableTitle">Run OCD Algorithm</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    <div class="row">
+                        <!-- Collapsable for simulation execution -->
+                        <div id="runSimulationCollapsable" class="collapsable col-sm-12">
+                            <div class="collapsableHeader simulationColor">
+                                <div class="collapsableTitle">Run Cooperation Simulation</div>
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                </div>
+                            </div>
+                            <div class="collapsableContent">
+                                <!-- Form for simulation execution -->
+                                <div id="simulationContainer" class="container"></div>
                             </div>
                         </div>
-                        <div class="collapsableContent">
-                            <div id="ocdContainer" class="container">
-                                <form id="runAlgorithmForm"
-                                      action="javascript:void(0); return false;">
-                                    <!-- Cover Name -->
+                    </div>
+                    <div class="row">
+                        <!-- Collapsable for centrality calculation execution -->
+                        <div id="runCentralityCalculationCollapsable" class="collapsable col-sm-12">
+                            <div class="collapsableHeader centralityColor">
+                                <div class="collapsableTitle">Run Centrality Calculation</div>
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                </div>
+                            </div>
+                            <div class="collapsableContent">
+                                <!-- Form for centrality calculation execution -->
+                                <form id="runCentralityCalculationForm" class="container">
                                     <div class="form-group row">
-                                        <label for="coverName" class="col-sm-2 col-form-label">Cover</label>
-                                        <div class="col-sm-10">
-                                            <input id="coverName" type="text" class="form-control"
-                                                   name="name" placeholder="name">
+                                        <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality
+                                            Measure</label>
+                                        <div class="col-sm-7">
+                                            <select id="centralityMeasure" class="form-control in-line"></select>
+                                        </div>
+                                        <div class="col-sm-1">
+                                            <button id="centralityInfo" class="btn btn-default in-line" type="button">
+                                                <img src="IMG/open-iconic/svg/info.svg" width="20" />
+                                            </button>
                                         </div>
                                     </div>
-                                    <!-- Algorithm -->
-                                    <div class="form-group row">
-                                        <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
-                                        <div class="col-sm-10">
-                                            <select id="algorithm" class="form-control custom-select">
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <!-- Algorithm Graph Types -->
-                                    <div class="col-sm-10" id="algorithmGraphTypeDiv"></div>
-                                    <!-- Algorithm Parameters -->
-                                    <div class="col-sm-10" id="algorithmParameterDiv"></div>
 
-                                    <div class="form-group row">
-                                        <div class="container">
-                                            <label class="custom-control custom-checkbox"> <input
-                                                    id="contentWeighting" type="checkbox"
-                                                    class="custom-control-input"> <span
-                                                    class="custom-control-indicator"></span> <span
-                                                    class="custom-control-label">Content Weighting</span>
-                                            </label>
-                                        </div>
+                                    <!-- Centrality Measure Graph Types -->
+                                    <div class="col-sm-12" id="centralityMeasureGraphTypeDiv"></div>
+                                    <!-- Centrality Measure Parameters -->
+                                    <div class="form-group col-sm-12" id="centralityMeasureParameterDiv"></div>
+
+                                    <div id="annotationDiv" class="row justify-content-end hidden">
+                                        <div id="annotationText" class="col-12"></div>
                                     </div>
-                                    <div class="form-group">
-                                        <button type="submit" name="submit" id="runAlgorithmBtn" class="btn btn-primary">
+
+                                    <div class="form-group row col-sm-12">
+                                        <button type="submit" id="runCentralityCalculationBtn" class="btn btn-primary">
                                             <span class="submitText">Run</span>
-                                            <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                                            <span class="submitSpinner spinner-border spinner-border-sm" role="status"
+                                                aria-hidden="true" hidden></span>
                                         </button>
                                     </div>
                                 </form>
                             </div>
-
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <!-- Collapsable for simulation execution -->
-                    <div id="runSimulationCollapsable" class="collapsable col-sm-12">
-                        <div class="collapsableHeader simulationColor">
-                            <div class="collapsableTitle">Run Cooperation Simulation</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                    <div class="row">
+                        <!-- Collapsable for centrality simulation execution -->
+                        <div id="runCentralitySimulationCollapsable" class="collapsable col-sm-12">
+                            <div class="collapsableHeader centralityColor">
+                                <div class="collapsableTitle">Run Centrality Simulation</div>
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                                </div>
                             </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Form for simulation execution -->
-                            <div id="simulationContainer" class="container"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <!-- Collapsable for centrality calculation execution -->
-                    <div id="runCentralityCalculationCollapsable"
-                         class="collapsable col-sm-12">
-                        <div class="collapsableHeader centralityColor">
-                            <div class="collapsableTitle">Run Centrality Calculation</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Form for centrality calculation execution -->
-                            <form id="runCentralityCalculationForm" class="container">
-                                <div class="form-group row">
-                                    <label for="centralityMeasure" class="col-sm-4 col-form-label">Centrality
-                                        Measure</label>
-                                    <div class="col-sm-7">
-                                        <select id="centralityMeasure" class="form-control in-line"></select>
-                                    </div>
-                                    <div class="col-sm-1">
-                                        <button id="centralityInfo" class="btn btn-default in-line"
+                            <div class="collapsableContent">
+                                <!-- Form for centrality simulation execution -->
+                                <form id="runCentralitySimulationForm" class="container">
+                                    <div class="form-group row">
+                                        <label for="centralitySimulation"
+                                            class="col-sm-4 col-form-label">Simulation</label>
+                                        <div class="col-sm-7">
+                                            <select id="centralitySimulation" class="form-control in-line"></select>
+                                        </div>
+                                        <div class="col-sm-1">
+                                            <button id="centralitySimulationInfo" class="btn btn-default in-line"
                                                 type="button">
-                                            <img src="IMG/open-iconic/svg/info.svg" width="20"/>
+                                                <img src="IMG/open-iconic/svg/info.svg" width="20" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Centrality Simulation Graph Types -->
+                                    <div class="col-sm-12" id="centralitySimulationGraphTypeDiv"></div>
+                                    <!-- Centrality Simulation Parameters -->
+                                    <div class="form-group col-sm-12" id="centralitySimulationParameterDiv"></div>
+                                    <div class="form-group row col-sm-12" id="centralitySimulationRunsDiv">
+                                        <label><input type="checkbox" id="multipleRuns">
+                                            Multiple Runs</label> <input type="text" class="form-control hidden"
+                                            value="2" id="runsInput">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="submit" id="runCentralitySimulationBtn" class="btn btn-primary">
+                                            <span class="submitText">Run</span>
+                                            <span class="submitSpinner spinner-border spinner-border-sm" role="status"
+                                                aria-hidden="true" hidden></span>
                                         </button>
                                     </div>
-                                </div>
-
-                                <!-- Centrality Measure Graph Types -->
-                                <div class="col-sm-12" id="centralityMeasureGraphTypeDiv"></div>
-                                <!-- Centrality Measure Parameters -->
-                                <div class="form-group col-sm-12" id="centralityMeasureParameterDiv"></div>
-
-                                <div id="annotationDiv" class="row justify-content-end hidden">
-                                    <div id="annotationText" class="col-12"></div>
-                                </div>
-
-                                <div class="form-group row col-sm-12">
-                                    <button type="submit" id="runCentralityCalculationBtn" class="btn btn-primary">
-                                        <span class="submitText">Run</span>
-                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
-                                    </button>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <!-- Collapsable for centrality simulation execution -->
-                    <div id="runCentralitySimulationCollapsable"
-                         class="collapsable col-sm-12">
-                        <div class="collapsableHeader centralityColor">
-                            <div class="collapsableTitle">Run Centrality Simulation</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Form for centrality simulation execution -->
-                            <form id="runCentralitySimulationForm" class="container">
-                                <div class="form-group row">
-                                    <label for="centralitySimulation"
-                                           class="col-sm-4 col-form-label">Simulation</label>
-                                    <div class="col-sm-7">
-                                        <select id="centralitySimulation"
-                                                class="form-control in-line"></select>
-                                    </div>
-                                    <div class="col-sm-1">
-                                        <button id="centralitySimulationInfo"
-                                                class="btn btn-default in-line" type="button">
-                                            <img src="IMG/open-iconic/svg/info.svg" width="20"/>
-                                        </button>
-                                    </div>
-                                </div>
-                                <!-- Centrality Simulation Graph Types -->
-                                <div class="col-sm-12" id="centralitySimulationGraphTypeDiv"></div>
-                                <!-- Centrality Simulation Parameters -->
-                                <div class="form-group col-sm-12" id="centralitySimulationParameterDiv"></div>
-                                <div class="form-group row col-sm-12" id="centralitySimulationRunsDiv">
-                                    <label><input type="checkbox" id="multipleRuns">
-                                        Multiple Runs</label> <input type="text" class="form-control hidden"
-                                                                     value="2" id="runsInput">
-                                </div>
-
-                                <div class="form-group">
-                                    <button type="submit" id="runCentralitySimulationBtn" class="btn btn-primary">
-                                        <span class="submitText">Run</span>
-                                        <span class="submitSpinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <!-- Collapsable for graph visualization -->
-                <div class="row">
-                    <div id="visualizationCollapsable" class="collapsable col-sm-12">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Visualization</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Three Graph type buttons in a group -->
-                            <div class="optionRow" style="width:100%">
-                                <div class="dataBaseDropDown" style="width:10%">
-                                    <button class="dropDownOpenButton" onclick="databaseInfoDropDown()">Database</button>
-                                    <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent" type='button'>
-                                        <input class="dataBaseDropDownContentForm" id="arangoUser" type="text" name="arangoUser" placeholder="User">
-                                        <input class="dataBaseDropDownContentForm" id="arangoPass" type="password" name="arangoPass" placeholder="Password">
-                                        <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text" name="arangoDataBase" placeholder="Database">
-                                        <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text" name="arangoCollection" placeholder="Collection">
-                                        <button class="dropDownCloseButton" onclick="databaseInfoSubmit()" type='button'>Save</button>
-                                    </form>
-                                </div>
-                                <div class="searchDropDown" style="width:8%">
-                                    <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
-                                    <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown" type='button' onSubmit="return false;">
-                                        <input class="nodeSearchForm" id="nodeSearchForm" type="text" name="nodeSearchForm" placeholder="Node Name">
-                                        <button class="nodeSearchButton" onclick="nodeSearch()" type='button'>Search</button>
-                                    </form>
-                                </div>
-                                <div class="btn-group" style="width:78%">
-                                    <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
-                                    <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
-                                    <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
-                                </div>
-                                <div class="toolsDropDown" style="width:2%">
-                                    <div class="toolsDropDownDots" onclick="toolsDropDownDots()">
-                                        <span class="tool-dot" style="margin-top:4px"></span>
-                                        <span class="tool-dot" style="margin-top:3px"></span>
-                                        <span class="tool-dot" style="margin-top:3px"></span>
-                                    </div>
-                                    <form method="post" id="toolsFormDropDown" class="toolsFormDropDown" type='button' onSubmit="return false;">
-                                        <button id="nodeNameDisplayButton" class="btn btn-primary btn-sm shadow-none active rounded-0 nodeNameDisplayButton" data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node Names</button>
-                                        <input class="saveJsonForm" id="saveJsonForm" type="text" name="saveJsonForm" placeholder="Save as JSON" style="width:65%">
-                                        <button class="saveJsonFormButton" onclick="saveJSON()" type='button'>Save</button>
-                                    </form>
+                    <!-- Collapsable for graph visualization -->
+                    <div class="row">
+                        <div id="visualizationCollapsable" class="collapsable col-sm-12">
+                            <div class="collapsableHeader">
+                                <div class="collapsableTitle">Visualization</div>
+                                <div class="collapsableCollapser">
+                                    <img class="icon iconBtn collapsableDisplayBtn"
+                                        src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                        class="icon iconBtn collapsableCollapseBtn"
+                                        src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
                                 </div>
                             </div>
-                            <!-- Container for graph visualization -->
-                            <div class="visualization">
-                                <div class="visualizationControl" id="visualizationControl">
-                                    <input id="visualizationZoomer" class="visualizationZoomer" type="range">
+                            <div class="collapsableContent">
+                                <!-- Three Graph type buttons in a group -->
+                                <div class="optionRow" style="width:100%">
+                                    <div class="dataBaseDropDown" style="width:10%">
+                                        <button class="dropDownOpenButton"
+                                            onclick="databaseInfoDropDown()">Database</button>
+                                        <form method="post" id="dataBaseDropDownContent" class="dataBaseDropDownContent"
+                                            type='button'>
+                                            <input class="dataBaseDropDownContentForm" id="arangoUser" type="text"
+                                                name="arangoUser" placeholder="User">
+                                            <input class="dataBaseDropDownContentForm" id="arangoPass" type="password"
+                                                name="arangoPass" placeholder="Password">
+                                            <input class="dataBaseDropDownContentForm" id="arangoDataBase" type="text"
+                                                name="arangoDataBase" placeholder="Database">
+                                            <input class="dataBaseDropDownContentForm" id="arangoCollection" type="text"
+                                                name="arangoCollection" placeholder="Collection">
+                                            <button class="dropDownCloseButton" onclick="databaseInfoSubmit()"
+                                                type='button'>Save</button>
+                                        </form>
+                                    </div>
+                                    <div class="searchDropDown" style="width:8%">
+                                        <button class="dropDownOpenButton" onclick="searchDropDown()">Search</button>
+                                        <form method="post" id="nodeSearchFormDropDown" class="nodeSearchFormDropDown"
+                                            type='button' onSubmit="return false;">
+                                            <input class="nodeSearchForm" id="nodeSearchForm" type="text"
+                                                name="nodeSearchForm" placeholder="Node Name">
+                                            <button class="nodeSearchButton" onclick="nodeSearch()"
+                                                type='button'>Search</button>
+                                        </form>
+                                    </div>
+                                    <div class="btn-group" style="width:78%">
+                                        <button onclick="buttonClick(0)" style="width:33.3%">SVG</button>
+                                        <button onclick="buttonClick(1)" style="width:33.3%">2D Interactive</button>
+                                        <button onclick="buttonClick(2)" style="width:33.3%">3D Interactive</button>
+                                    </div>
+                                    <div class="toolsDropDown" style="width:2%">
+                                        <div class="toolsDropDownDots" onclick="toolsDropDownDots()">
+                                            <span class="tool-dot" style="margin-top:4px"></span>
+                                            <span class="tool-dot" style="margin-top:3px"></span>
+                                            <span class="tool-dot" style="margin-top:3px"></span>
+                                        </div>
+                                        <form method="post" id="toolsFormDropDown" class="toolsFormDropDown"
+                                            type='button' onSubmit="return false;">
+                                            <button id="nodeNameDisplayButton"
+                                                class="btn btn-primary btn-sm shadow-none active rounded-0 nodeNameDisplayButton"
+                                                data-toggle="button" onclick="NodeNameDisplayHandler()">Show Node
+                                                Names</button>
+                                            <input class="saveJsonForm" id="saveJsonForm" type="text"
+                                                name="saveJsonForm" placeholder="Save as JSON" style="width:65%">
+                                            <button class="saveJsonFormButton" onclick="saveJSON()"
+                                                type='button'>Save</button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div id="visualizationContent" class="visualizationContent">
-                                    <div class="visualizationGraphic"></div>
-                                </div>
-                                <div id="forceVisualizationContent" class="forceVisualizationContent">
-                                    <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
+                                <!-- Container for graph visualization -->
+                                <div class="visualization">
+                                    <div class="visualizationControl" id="visualizationControl">
+                                        <input id="visualizationZoomer" class="visualizationZoomer" type="range">
+                                    </div>
+                                    <div class="dropdownLayer" id="dropdownLayer">
+                                    </div>
+                                    <div id="visualizationContent" class="visualizationContent">
+                                        <div class="visualizationGraphic"></div>
+                                    </div>
+                                    <div id="forceVisualizationContent" class="forceVisualizationContent">
+                                        <div id="forceVisualizationGraphic" class="forceVisualizationGraphic"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1622,6 +2121,6 @@
             </div>
         </div>
     </div>
-</div>
 </body>
+
 </html>

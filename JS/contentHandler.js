@@ -182,8 +182,8 @@ function showConnectionErrorMessage(message, errorData) {
             "              data-name=\"Learning Layers\"\n" +
             "              data-logo=\"http://results.learning-layers.eu/images/learning-layers.svg\"\n" +
             "              data-server=\"https://auth.las2peer.org/o/oauth2\"\n" +
-            "              data-clientid=\"localtestclient\"\n" +
-            "              data-redirecturi=\"http://localhost:8090/login.html\"\n" +
+            "              data-clientid=\"WebOCDTest\"\n" +
+            "              data-redirecturi=\"http://localhost:5000/login.html\"\n" +
             "              data-scope=\"openid email profile\">\n" +
             "        </span>\n" +
             "    </form> </button>"));

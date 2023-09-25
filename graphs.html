@@ -35,7 +35,7 @@
                 $('.pageNumWrapper').append(pageNumber);
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
                 /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R", ".txt"];
+                var cells = ["Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L", "M" , "Co", "Cn", "CS", "R", ".txt"];
                 /* Requests the graph meta information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
@@ -144,6 +144,9 @@
                                 </th>
                                 <th width="20" title="Has Self Loops">
                                     L
+                                </th>
+                                <th width="20" title="Is Multiplex">
+                                    M
                                 </th>
                                 <th width="20" title="Show Covers">
                                     Co

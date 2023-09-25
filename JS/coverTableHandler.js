@@ -12,47 +12,54 @@
  */
 function appendCoverRow(table, coverElt, cells) {
     var row = "<tr>";
-	/* Graph Id */
+    /* Graph Id */
     var graphId = $(coverElt).find('GraphId').text();
     row += createCoverGraphIdCell(graphId);
     /* Cover Id */
     var coverId = $(coverElt).find('CoverId').text();
+    var isMultiplex = $(coverElt).find('IsMultiplex').text();
     row += createCoverIdCell(coverId);
     /* Cover name */
-    if($.inArray("Name", cells) > -1) {
+    if ($.inArray("Name", cells) > -1) {
         row += createCoverNameCell($(coverElt).children('Name').text(), coverId, graphId);
     }
     /* Graph name */
-    if($.inArray("Graph", cells) > -1) {
+    if ($.inArray("Graph", cells) > -1) {
         row += createGraphNameCell($(coverElt).find('Graph').find('Name').text(), graphId);
     }
     /* Creation method */
-    if($.inArray("CreationMethod", cells) > -1) {
+    if ($.inArray("CreationMethod", cells) > -1) {
         var type = $(coverElt).find('CreationMethod').attr("displayName");
         row += createCoverTableCell(type);
     }
     /* Community count */
-    if($.inArray("Communities", cells) > -1) {
-        if($(coverElt).find('Status').first().text() !== "COMPLETED") { //There are two Statuses: the first one is for the cover, the second would be for a metric
+    if ($.inArray("Communities", cells) > -1) {
+        if ($(coverElt).find('Status').first().text() !== "COMPLETED") { //There are two Statuses: the first one is for the cover, the second would be for a metric
             row += createCoverTableCell("PENDING");
         } else {
             row += createCoverTableCell($(coverElt).find('CommunityCount').text());
         }
     }
     /* Delete cover */
-    if($.inArray("R", cells) > -1) {
+    if ($.inArray("R", cells) > -1) {
         row += createDeleteCoverCell();
     }
     /* Save cover XML*/
-    if($.inArray(".xml", cells) > -1) {
-        row += createSaveXMLCoverCell();
-    }
+    if (isMultiplex === "true" && $.inArray(".xml", cells) > -1) {
+        row += createSaveXMLMultiplexCoverCell();
+    } else
+        if ($.inArray(".xml", cells) > -1) {
+            row += createSaveXMLCoverCell();
+        }
     /* Save cover Membership Matrix*/
-    if($.inArray(".txt", cells) > -1) {
-        row += createSaveMatrixCoverCell();
-    }
+    if (isMultiplex === "true" && $.inArray(".txt", cells) > -1) {
+        row += createSaveMatrixMultiplexCoverCell();
+    } else
+        if ($.inArray(".txt", cells) > -1) {
+            row += createSaveMatrixCoverCell();
+        }
     /* Select cover */
-    if($.inArray("Select", cells) > -1) {
+    if ($.inArray("Select", cells) > -1) {
         row += createSelectCoverCell(coverId);
     }
     row += "</tr>";
@@ -70,7 +77,7 @@ function createCoverNameCell(name, coverId, graphId) {
 }
 
 function createGraphNameCell(name, graphId) {
-    return '<td><a href="graph.html?id='+ graphId + '">' + name + '</a> </td>';
+    return '<td><a href="graph.html?id=' + graphId + '">' + name + '</a> </td>';
 }
 
 /*
@@ -105,10 +112,24 @@ function createSaveXMLCoverCell() {
         + '</td>';
 }
 
+/* Creates save XML Multiplex cover cell */
+function createSaveXMLMultiplexCoverCell() {
+    return '<td>'
+        + '<img class="icon iconBtn saveXMLMultiplexCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
+        + '</td>';
+}
+
 /* Creates save Matrix cover cell */
 function createSaveMatrixCoverCell() {
     return '<td>'
         + '<img class="icon iconBtn saveMatrixCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
+        + '</td>';
+}
+
+/* Creates save Matrix Multiplex cover cell */
+function createSaveMatrixMultiplexCoverCell() {
+    return '<td>'
+        + '<img class="icon iconBtn saveMatrixMultiplexCover" src="IMG/open-iconic/svg/data-transfer-download.svg" alt="s">'
         + '</td>';
 }
 
@@ -133,15 +154,15 @@ function deleteCover(coverId, graphId) {
     /* Delete request */
     sendRequest("delete", "covers/" + coverId.text() + "/graphs/" + graphId.text(), "",
         /* Response handler */
-        function(confirmXml) {
+        function (confirmXml) {
             var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
             var newUrl = "covers.html?page=" + page;
             window.location.href = newUrl;
         },
         /* Error handler */
-        function(errorData) {
+        function (errorData) {
             showConnectionErrorMessage("Cover could not be deleted.", errorData);
-    });
+        });
 }
 
 /*
@@ -151,20 +172,29 @@ function saveCover(coverId, graphId, coverName, type) {
     /* Save request */
     sendRequest("get", "covers/" + coverId.text() + "/graphs/" + graphId.text() + "?outputFormat=" + type, "",
         /* Response handler */
-        function(response) {
-			const trimmedName = coverName.text().trim() == "" ? "cover" : coverName.text().trim();
-            if(type === "DEFAULT_XML") {
+        function (response) {
+            const trimmedName = coverName.text().trim() == "" ? "cover" : coverName.text().trim();
+            if (type === "DEFAULT_XML") {
                 const blob = new Blob([response],
-                    {type: "text/xml"});
+                    { type: "text/xml" });
                 saveAs(blob, trimmedName + ".xml");
-            } else if(type === "LABELED_MEMBERSHIP_MATRIX") {
+            }
+            else if (type === "MULTIPLEX_XML") {
+                const blob = new Blob([response],
+                    { type: "text/xml" });
+                saveAs(blob, trimmedName + ".xml");
+            } else if (type === "LABELED_MEMBERSHIP_MATRIX") {
+                const blob = new Blob([response],
+                    { type: "text/plain;charset=utf-8" });
+                saveAs(blob, trimmedName + ".txt");
+            } else if (type === "MULTIPLEX_LABELED_MEMBERSHIP_MATRIX") {
                 const blob = new Blob([response],
                     { type: "text/plain;charset=utf-8" });
                 saveAs(blob, trimmedName + ".txt");
             }
         },
         /* Error handler */
-        function(errorData) {
+        function (errorData) {
             showConnectionErrorMessage("Membership Matrix was not received.");
         }, "text");
 }
@@ -187,37 +217,51 @@ function showCoverGraph(graphId) {
  * Registers event handlers.
  */
 function registerCoverTable(tableid) {
-    if(typeof tableid === 'undefined') {
+    if (typeof tableid === 'undefined') {
         tableid = 'body';
     }
     /* Delete button handler */
-    $(tableid).find('.delCover').click(function(){
+    $(tableid).find('.delCover').click(function () {
         var coverId = $(this).parent().siblings().filter('.coverId');
         var graphId = $(this).parent().siblings().filter('.graphId');
         deleteCover(coverId, graphId);
     });
     /* Save XML button handler */
-    $(tableid).find('.saveXMLCover').click(function(){
+    $(tableid).find('.saveXMLCover').click(function () {
         var coverId = $(this).parent().siblings().filter('.coverId');
         var coverName = $(this).parent().siblings().filter('.coverName');
         var graphId = $(this).parent().siblings().filter('.graphId');
         saveCover(coverId, graphId, coverName, "DEFAULT_XML");
     });
+      /* Save Multiplex XML button handler */
+      $(tableid).find('.saveXMLMultiplexCover').click(function () {
+        var coverId = $(this).parent().siblings().filter('.coverId');
+        var coverName = $(this).parent().siblings().filter('.coverName');
+        var graphId = $(this).parent().siblings().filter('.graphId');
+        saveCover(coverId, graphId, coverName, "MULTIPLEX_XML");
+    });
     /* Save Membership Matrix button handler */
-    $(tableid).find('.saveMatrixCover').click(function(){
+    $(tableid).find('.saveMatrixCover').click(function () {
         var coverId = $(this).parent().siblings().filter('.coverId');
         var coverName = $(this).parent().siblings().filter('.coverName');
         var graphId = $(this).parent().siblings().filter('.graphId');
         saveCover(coverId, graphId, coverName, "LABELED_MEMBERSHIP_MATRIX");
     });
+    /* Save Multiplex Membership Matrix button handler */
+    $(tableid).find('.saveMatrixMultiplexCover').click(function () {
+        var coverId = $(this).parent().siblings().filter('.coverId');
+        var coverName = $(this).parent().siblings().filter('.coverName');
+        var graphId = $(this).parent().siblings().filter('.graphId');
+        saveCover(coverId, graphId, coverName, "MULTIPLEX_LABELED_MEMBERSHIP_MATRIX");
+    });
     /* Show cover button handler */
-    $(tableid).find('.showCover').click(function(){
+    $(tableid).find('.showCover').click(function () {
         var coverId = $(this).parent().siblings().filter('.coverId');
         var graphId = $(this).parent().siblings().filter('.graphId');
         showCover(coverId, graphId);
     });
     /* Show graph button handler */
-    $(tableid).find('.showCoverGraph').click(function(){
+    $(tableid).find('.showCoverGraph').click(function () {
         var graphId = $(this).parent().siblings().filter('.graphId');
         showCoverGraph(graphId);
     });
