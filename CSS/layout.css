@@ -704,3 +704,27 @@ input:checked + .slider:before {
     background-color: rgba(0,0,0,0.5);
     user-select: none;
 }
+
+/* Addional 2D Visualization Options */
+
+
+.settings2dBox {
+    display: none;
+    text-align: center;
+}
+
+.settings2dBoxSpacing {
+    margin: 10px 0px 10px 0px;
+    padding: 5px 0px 5px 0px;
+}
+
+.groupThreshold {
+    vertical-align: bottom;
+}
+
+.maxNodeColors {
+    width: 70px;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    margin-right: 10px;
+}                                 

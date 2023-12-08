@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- Displays detailed information on a single cover. Allows OCD metric execution. -->
 <html>
     <head>
@@ -40,6 +40,9 @@
             var jsonGraph;
             var forceGraph;
             var have3D;
+            var highlightedCommunity;
+            var maxColorCount = 10;
+            var groupThreshold = 0;
             var haveNodeNames = false;
             var nodeName = "";
             var keysPressed = new Map();
@@ -391,6 +394,8 @@
                     let svgViz = document.getElementById("visualizationContent");
                     let forceViz = document.getElementById("forceVisualizationContent");
 
+                    document.getElementById("settings2dBox").style.display = number == 1 ? "block" : "none";
+
                     highlightNodes = new Set();
                     highlightLinks = new Set();
 
@@ -703,6 +708,51 @@
                 }
             }
 
+            function groupNodes(graph) {
+                const mergedNodes = [];
+                const mergedLinks = [];
+                var linkMap = new Map();
+                for (const node of graph.nodes) {
+                    let found = false;
+                    for (const mergedNode of mergedNodes) {
+                        if (compareColors(node.color, mergedNode.color, groupThreshold)) {
+                            mergedNode.size++;
+                            linkMap[node.id] = mergedNode.id;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        node.size = 20;
+                        linkMap[node.id] = node.id;
+                        mergedNodes.push(node);
+                    }
+                }
+                for (const link of graph.links) {
+                    const nSource = linkMap[link.source];
+                    const nTarget = linkMap[link.target];
+                    if (nSource != nTarget && !mergedLinks.some(l => l.source == nSource && l.target == nTarget)) {
+                        mergedLinks.push({
+                            style: link.style,
+                            source: nSource,
+                            target: nTarget,
+                        });
+                    }
+                }
+                return { nodes: mergedNodes, links: mergedLinks };
+            }
+
+            function compareColors(color1, color2, threshold) {
+                const rgba1 = color1.match(/[\d.]+/g);
+                const rgba2 = color2.match(/[\d.]+/g);
+
+                const diff = Math.abs(rgba1[0] - rgba2[0]) +
+                    Math.abs(rgba1[1] - rgba2[1]) +
+                    Math.abs(rgba1[2] - rgba2[2]);
+
+                return diff <= threshold*255*3;
+            }
+
             /* Builds a force graph from json data */
             function buildGraph() {
                 var graph = JSON.parse(jsonGraph);
@@ -710,13 +760,26 @@
                 var colors = new Map();
                 for (let node of graph.nodes) {
                     sizes[node.id] = node.size;
-                    colors[node.id] = node.color;
+                    colors[node.id] = node.color;                    
                 }
-
                 if (have3D === false) {
+                    if (groupThreshold > 0) {
+                        graph = groupNodes(graph);
+                        sizes = new Map();
+                        colors = new Map();
+                        for (let node of graph.nodes) {
+                            sizes[node.id] = node.size;
+                            colors[node.id] = node.color;
+                        }
+                    }
+                    for (let node of graph.nodes) {
+                        if (node.multicolor) {
+                             node["max"] = Object.keys(node.multicolor).reduce((a, b) => node.multicolor[a] > node.multicolor[b] ? a : b);
+                        }
+                    }
                     forceGraph = ForceGraph()
-                    (document.getElementById('forceVisualizationGraphic'))
-                        .nodeCanvasObjectMode( () => 'after')
+                        (document.getElementById('forceVisualizationGraphic'))
+                        .nodeCanvasObjectMode((node) => node.multicolor ? 'replace' : 'after')
                         .backgroundColor("#fafafa")
                         .graphData(graph)
                         .nodeId('id')
@@ -727,6 +790,7 @@
                             }
                         })
                         .onNodeClick(node => {
+                            highlightedCommunity = node.max;
                             if (arangoDataBase !== "" && arangoDataBase !== null
                                 && arangoUser !== "" && arangoUser !== null
                                 && arangoPass !== null
@@ -749,6 +813,9 @@
                                 }).catch((err) => console.error(err));
                             }
                         })
+                        .onBackgroundClick(() => {
+                            highlightedCommunity = "";
+                        })
                         .nodeVal(function (node) {
                             return sizes[node.id] - 19
                         })
@@ -756,9 +823,34 @@
                             return colors[node.id];
                         })
                         .nodeCanvasObject((node, ctx, globalScale) => {
-                            if(haveNodeNames === true) {
+                            if (highlightedCommunity && highlightedCommunity.length > 0) {
+                                ctx.globalAlpha = node.max === highlightedCommunity ? 1 : 0.3;
+                            } else {
+                                ctx.globalAlpha = 1;
+                            }
+                            if (node.multicolor) {
+                                const keys = Object.keys(node.multicolor);
+                                const totalPercentage = keys.reduce((sum, key) => sum + node.multicolor[key], 0);
+
+                                let startAngle = 0;
+
+                                keys.forEach((key, i) => {
+                                    const percentage = node.multicolor[key];
+                                    const endAngle = startAngle + (percentage / totalPercentage) * (2 * Math.PI);
+
+                                    ctx.fillStyle = key;
+                                    ctx.beginPath();
+                                    ctx.moveTo(node.x, node.y);
+                                    ctx.arc(node.x, node.y, Math.sqrt(sizes[node.id] - 19) * 4, startAngle, endAngle);
+                                    ctx.lineTo(node.x, node.y);
+                                    ctx.fill();
+
+                                    startAngle = endAngle;
+                                });
+                            }
+                            if (haveNodeNames === true) {
                                 const label = node.name;
-                                const fontSize = 12/globalScale;
+                                const fontSize = 12 / globalScale;
                                 ctx.font = `${fontSize}px Sans-Serif`;
 
                                 ctx.textAlign = 'center';
@@ -788,8 +880,8 @@
                         .linkColor(link => link === rightClickLink ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
                         .linkDirectionalArrowLength(5)
                         .linkDirectionalArrowRelPos(1)
-                        .linkTarget('target')
-                        .cooldownTicks(200);
+                        .linkTarget('target');
+                        //.cooldownTicks(200);
                 } else {
                     forceGraph = ForceGraph3D({
                         extraRenderers: [new THREE.CSS2DRenderer()]
@@ -881,7 +973,7 @@
             /* Requests and stores a JSON representation of the graph and then builds it */
             function getJSON() {
                 if(typeof jsonGraph === 'undefined') {
-                    sendRequest("get", "visualization/cover/" + coverId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS", "",
+                    sendRequest("get", "visualization/cover/" + coverId + "/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC/paint/PREDEFINED_COLORS?maxColorCount=" + maxColorCount, "",
                         function (response) {
                             jsonGraph = response;
                             buildGraph();
@@ -942,6 +1034,23 @@
                          */
                         showConnectionErrorMessage("Visualization was not received.", errorData);
                 });
+            }
+            /* Requests new JSON graph data when Max Node Color is changed */
+            function maxColorChanged(value) {
+                value = parseInt(value);
+                if (value != maxColorCount && !isNaN(value) && value >= 2) {
+                    maxColorCount = value;
+                    jsonGraph = undefined;
+                    getJSON();
+                }
+            }
+            /* Rebuilds the Forcegraph when the Group Threshold changes */
+            function groupThresholdChanged(value) {
+                value = Math.pow((+value) / 100,3);
+                if (!isNaN(value) && value >= 0 && value <= 1 && value != groupThreshold) {
+                    groupThreshold = value;
+                    buildGraph();
+                }
             }
         </script>
     </head>
@@ -1169,6 +1278,12 @@
                             <div class="visualization">
                                 <div class="visualizationControl" id="visualizationControl">
                                     <input id="visualizationZoomer" class="visualizationZoomer" type="range">
+                                </div>
+                                <div class="settings2dBox" id="settings2dBox">                                    
+                                    <label class="settings2dBoxSpacing" for="maxNodeColors" title="Determines the number of distinct colors per Node. Access colors are mixed together. Minimum value of 2.">Max Node Colors:</label>
+                                    <input class="settings2dBoxSpacing maxNodeColors" type="number" id="maxNodeColors" value="10" oninput="maxColorChanged(this.value)">                                   
+                                    <label class="settings2dBoxSpacing" for="groupThreshold" title="Specifies the degree of similarity required for Nodes to be grouped together. A value of 0 implies no grouping of nodes.">Group Threshold:</label>
+                                    <input class="settings2dBoxSpacing groupThreshold" type="range" id="groupThreshold" value="0" oninput="groupThresholdChanged(this.value)">                                    
                                 </div>
                                 <div id="visualizationContent" class="visualizationContent">
                                     <div class="visualizationGraphic"></div>
