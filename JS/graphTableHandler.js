@@ -26,6 +26,12 @@ function appendGraphRow(table, graphElt, cells) {
     if($.inArray("EdgeCount", cells) > -1) {
         row += createGraphTableCell($(graphElt).find('EdgeCount').text());
     }
+    /* Layer count */
+    if($.inArray("LayerCount", cells) > -1) {
+        row += createGraphTableCell($(graphElt).find('LayerCount').text());
+    }else{
+        row += createGraphTableCell('<img class="icon" src="IMG/open-iconic/svg/x.svg" alt="n">');
+    }
     /* Creation Method */
     if($.inArray("CreationMethod", cells) > -1) {
         row += createGraphTableCell($(graphElt).find('CreationMethod').find('Type').attr('DisplayName'));
@@ -54,6 +60,10 @@ function appendGraphRow(table, graphElt, cells) {
     /* Loops */
     if($.inArray("L", cells) > -1) {
         row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("SELF_LOOPS", types) > -1));
+    }
+    /* Multiplex */
+    if($.inArray("M", cells) > -1) {
+        row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("MULTIPLEX", types) > -1));
     }
     /* Show corresponding covers */
     if($.inArray("Co", cells) > -1) {

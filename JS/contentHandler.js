@@ -170,19 +170,19 @@ function showConnectionErrorMessage(message, errorData) {
             + "<p>Log-In expired. Please log into the service again.</p>"
             + "<button type=\"button\" class=\"btn btn-light\"><form class=\"oidc_button\">\n" +
             "        <!-- OpenID Connect Information -->\n" +
-            "        <!-- for local host: data-clientid=\"15cdbd81-f6c1-4862-bb7a-7344deed3aaa\" -->\n" +
-            "        <!-- for server host: data-clientid=\"9c04fe4a-2b6b-436b-9896-83383377c497\" -->\n" +
-            "        <!-- for testserver host: data-clientid=\"95bb04f6-122a-475d-8eed-209d7449a048\" -->\n" +
-            "        <!-- for ginkgo host: data-clientid=\"59b76233-35fc-47f1-a54b-101f4fcef4d9\" -->\n" +
+            "        <!-- for local host: data-clientid=\"ocdClient\" -->\n" +
+            "        <!-- for server host: data-clientid=\"ocdClient\" -->\n" +
+            "        <!-- for testserver host: data-clientid=\"ocdClient\" -->\n" +
+            "        <!-- for ginkgo host: data-clientid=\"ocdClient\" -->\n" +
             "        <!-- http://learning-layers.eu/wp-content/themes/learninglayers/images/logo.png\" -->\n" +
-            "        <!-- Testserver: data-redirecturi=\"http://ocd-web-client.duckdns.org/login.html\" -->\n" +
+            "        <!-- Testserver: data-redirecturi=\"http://localhost:8090/login.html\" -->\n" +
             "        <!-- Server ginkgo from rwth: https://ginkgo.informatik.rwth-aachen.de/OCDWebClient/login.html -->\n" +
             "        <span class=\"oidc-signin\"\n" +
             "              data-callback=\"signinCallback\"\n" +
             "              data-name=\"Learning Layers\"\n" +
             "              data-logo=\"http://results.learning-layers.eu/images/learning-layers.svg\"\n" +
             "              data-server=\"https://auth.las2peer.org/o/oauth2\"\n" +
-            "              data-clientid=\"localtestclient\"\n" +
+            "              data-clientid=\"ocdClient\"\n" +
             "              data-redirecturi=\"http://localhost:8090/login.html\"\n" +
             "              data-scope=\"openid email profile\">\n" +
             "        </span>\n" +

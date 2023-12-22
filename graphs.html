@@ -25,6 +25,8 @@
              */
             var GRAPHS_PER_PAGE = 20;
             var pageNumber = 0;
+            /* Identifiers for the graph information to be displayed */
+            var cells = ["Name", "NodeCount", "EdgeCount", "Layer_Count", "CreationMethod", "D", "W", "Z", "N", "L", "M", "Co", "Cn", "CS", "R", ".txt"];
             /* Executed after page loading */
             $(document).ready(function() {
                 /* Number of the graph table page to be displayed */
@@ -34,8 +36,7 @@
                 }
                 $('.pageNumWrapper').append(pageNumber);
                 var firstIndex = GRAPHS_PER_PAGE * pageNumber;
-                /* Identifiers for the graph information to be displayed */
-                var cells = ["Name", "NodeCount", "EdgeCount", "CreationMethod", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R", ".txt"];
+                
                 /* Requests the graph meta information */
                 sendRequest("get", "graphs?executionStatuses=COMPLETED&includeMeta=TRUE&firstIndex=" + firstIndex + "&length=" + GRAPHS_PER_PAGE , "",
                     /* Response handler */
@@ -48,10 +49,15 @@
                             var newUrl = "graphs.html?page=" + pageNumber;
                             window.location.href = newUrl;
                         }
+                        var numReceivedGraphs = 0;
                         /* Adds meta information to the graph table */
                         $(graphMetasXml).find("Graph").each(function() {
                             appendGraphRow($('#graphTable'), $(this), cells);
+                            numReceivedGraphs++;
                         });
+                        if(numReceivedGraphs < GRAPHS_PER_PAGE) {
+                            fetchMultiplexGraphs(0, GRAPHS_PER_PAGE - numReceivedGraphs);
+                        }
                             /*
                              * Sort Table
                              */
@@ -71,6 +77,7 @@
                          */
                         showConnectionErrorMessage("Graphs metas were not received.", errorData);
                 });
+
                 /* Listeners for the table page control */
                 $('.pageLeft').click(function(){
                     if(pageNumber > 0) {
@@ -85,6 +92,18 @@
                     window.location.href = newUrl;
                 });
             });
+            function fetchMultiplexGraphs(firstIndex, length) {
+                sendRequest("get", "multiplexgraphs?executionStatuses=COMPLETED&firstIndex=" + firstIndex + "&length=" + length, "",
+                    function(multiplexGraphMetasXml) {
+                        $(multiplexGraphMetasXml).find("Graph").each(function() {
+                            appendGraphRow($('#graphTable'), $(this), cells);
+                        });
+                    },
+                    function(errorData) {
+                        showConnectionErrorMessage("Multiplex Graphs metas were not received.", errorData);
+                    }
+                );
+            }
         </script>
     </head>
     <body>
@@ -126,6 +145,10 @@
                                     Edges
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
                                 </th>
+                                <th  title="Layer Count" class="sortable">
+                                    Layers
+                                    <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                </th>
                                 <th  title="Creation Method" class="sortable">
                                     Origin
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
@@ -144,6 +167,9 @@
                                 </th>
                                 <th width="20" title="Has Self Loops">
                                     L
+                                </th>
+                                <th width="20" title="Is Multiplex">
+                                    M
                                 </th>
                                 <th width="20" title="Show Covers">
                                     Co
