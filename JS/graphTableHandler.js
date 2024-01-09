@@ -9,14 +9,43 @@
  * Creates a table row for a graph element.
  * Is passed the table, the graph element and the identifiers for the information to be displayed.
  */
-function appendGraphRow(table, graphElt, cells) {
-    var row = "<tr>";
+function appendGraphRow(table, graphElt, cells, idMultiplex) {
     /* Graph id */
     var id = $(graphElt).find('Id').text();
-    row += createGraphIdCell(id);
+    if (idMultiplex) {
+        var row = "<tr data-graphid='" + id + "' data-parentgraphid='" + idMultiplex + "' class='customGraph hidden'>";
+        var row = "<tr data-idmultiplex='" + + idMultiplex + "  class=hidden>";
+    }else{
+        var row = "<tr>";
+    }
+    var row = "<tr data-graphid='" + id + "' ";
+
+    /* Graph types */
+    var types = [];
+    $(graphElt).children('Types').find('Type').each(function() {
+        types.push($(this).text());
+    });
+    var isMultiplex = $.inArray("MULTIPLEX", types) > -1;
+
+    if (isMultiplex) {                                                    // if multiplex
+        row += "class='multiplexGraph'>";
+    } else if ($.inArray("MULTIPLEX_LAYER", types) > -1) {                // if customgraph that is layer of multiplex graph
+        row += "class='customGraph hidden'>";
+    } else {                                                              // if "normal" customgraph                       
+        row += "class='customGraph'>";
+    }
+
+    /* Dropdown for Multiplex Graphs */
+    if($.inArray(" ", cells) > -1) {
+        if(isMultiplex) {
+            row += '<td><img class="icon" src="IMG/open-iconic/svg/caret-right.svg" showLayers data-graphid="' + id + '"></td>';
+        }else{
+            row += '<td></td>';
+        }
+    }
     /* Graph name  */
     if($.inArray("Name", cells) > -1) {
-        row += createGraphNameCell($(graphElt).find('Name').text(), id);
+        row += createGraphNameCell($(graphElt).find('Name').text(), id, isMultiplex);
     }
     /* Node count */
     if($.inArray("NodeCount", cells) > -1) {
@@ -28,19 +57,16 @@ function appendGraphRow(table, graphElt, cells) {
     }
     /* Layer count */
     if($.inArray("LayerCount", cells) > -1) {
-        row += createGraphTableCell($(graphElt).find('LayerCount').text());
-    }else{
-        row += createGraphTableCell('<img class="icon" src="IMG/open-iconic/svg/x.svg" alt="n">');
+        if(isMultiplex) {
+            row += createGraphTableCell($(graphElt).find('LayerCount').text());
+        }else{
+            row += createGraphTableCell('<img class="icon" src="IMG/open-iconic/svg/x.svg" alt="n">');
+        }
     }
     /* Creation Method */
     if($.inArray("CreationMethod", cells) > -1) {
         row += createGraphTableCell($(graphElt).find('CreationMethod').find('Type').attr('DisplayName'));
     }
-    /* Graph types */
-    var types = [];
-    $(graphElt).children('Types').find('Type').each(function() {
-        types.push($(this).text());
-    });
     /* Directed */
     if($.inArray("D", cells) > -1) {
         row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("DIRECTED", types) > -1));
@@ -63,7 +89,7 @@ function appendGraphRow(table, graphElt, cells) {
     }
     /* Multiplex */
     if($.inArray("M", cells) > -1) {
-        row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("MULTIPLEX", types) > -1));
+        row += createGraphTableCell(getGraphTrueOrFalseIcon(isMultiplex));
     }
     /* Show corresponding covers */
     if($.inArray("Co", cells) > -1) {
@@ -92,6 +118,45 @@ function appendGraphRow(table, graphElt, cells) {
     row += "</tr>";
     $(table).children('tbody').append(row);
 }
+
+$(document).on('click', 'img[showLayers]', function() {
+    var graphId = $(this).data('graphid');
+    var icon = $(this);
+    var caretRight = "IMG/open-iconic/svg/caret-right.svg";
+    var caretBottom = "IMG/open-iconic/svg/caret-bottom.svg";
+    var alreadyFetched = $('tr[data-parentgraphid="' + multiplexGraphId + '"]').length > 0;
+
+    if (icon.attr('src')===caretRight) { // hidden to visible
+        icon.attr('src', caretBottom);
+        if (alreadyFetched) { 
+            //$('tr.customGraph[data-parentgraphid="' + graphId + '"]').removeClass('hidden');
+            $('tr[data-parentgraphid="' + multiplexGraphId + '"]').toggleClass('hidden', !show);
+        } else {
+            fetchGraphLayers(graphId);
+        }  
+    } else {                            // visible to hidden
+        icon.attr('src', caretRight);
+        //$('tr.customGraph[data-parentgraphid="' + graphId + '"]').addClass('hidden');
+        $('tr[data-parentgraphid="' + multiplexGraphId + '"]').toggleClass('hidden', !show);
+    }
+});
+
+function fetchGraphLayers(idMultiplex) {
+    sendRequest("get", "multiplexlayers?keyMultiplex=" + idMultiplex, "",
+        function(GraphMetasXml) {
+            var cells = [" ", "Name", "NodeCount", "EdgeCount", "LayerCount", "CreationMethod", "D", "W", "Z", "N", "L", "M", "Co", "Cn", "CS", "R", ".txt"];
+            $(GraphMetasXml).find("Graph").each(function() {
+                appendGraphRow($('#graphTable'), $(this), cells, idMultiplex);
+            });
+            var customGraphs = $('tr.customGraph').filter(`[data-parentgraphid='${multiplexGraphId}']`).detach();
+            $(`tr.multiplexGraph[data-graphid='${multiplexGraphId}']`).after(customGraphs).removeClass('hidden');
+        },
+        function(errorData) {
+            showConnectionErrorMessage("Graphs metas of multiplex layers were not received.", errorData);
+        }
+    );
+}
+
 /*
  * Creates standard table cell
  */
@@ -100,8 +165,12 @@ function createGraphTableCell(value) {
 }
 
 /* Creates graph name cell */
-function createGraphNameCell(name, id) {
-    return '<td class="graphNameCell"><a href="graph.html?id='+ id + '">' + name + '</a></td>';
+function createGraphNameCell(name, id, isMultiplex) {
+    if (isMultiplex) {
+        return '<td class="graphNameCell"><a href="multiplexgraph.html?id='+ id + '">' + name + '</a></td>';
+    } else {
+        return '<td class="graphNameCell"><a href="graph.html?id='+ id + '">' + name + '</a></td>';
+    }
 }
 
 /* Creates graph id cell */
@@ -211,7 +280,9 @@ function saveGraph(graphId, graphName, type) {
  * Shows a graph.
  */
 function showGraph(id) {
+
     window.location.href = "graph.html?id=" + id.text();
+    
 }
 
 /*

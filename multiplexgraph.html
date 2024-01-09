@@ -73,7 +73,7 @@
             /* Identifiers for the graph information to be displayed */
             var cells = ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "C", "R"];
             /* Requests the graph meta information */
-            sendRequest("get", "graphs/" + graphId + "?outputFormat=META_XML", "",
+            sendRequest("get", "multiplexgraphs/" + graphId + "?outputFormat=MULTIPLEX_META_XML", "",
                 /* Response handler */
                 function (response) {
                     /* Stores graph meta information and adds it to the graph header */
@@ -81,6 +81,7 @@
                     var name = $(graphMetaXml).find('Name').text();
                     var nodes = $(graphMetaXml).find('NodeCount').text();
                     var edges = $(graphMetaXml).find('EdgeCount').text();
+                    var layers = $(graphMetaXml).find('LayerCount').text();
                     /* Graph types */
                     var types = [];
                     $(graphMetaXml).children('Types').find('Type').each(function () {
@@ -118,18 +119,12 @@
 
                     $('#graphHeader').html(getHeadLine(name, description));
                     $('#graphCovers').html('<a href="covers.html?graphId=' + graphId + '">Covers</a>');
-                    $('#graphSimulations').html('<a href="cooperation_simulations.html?graphId=' + graphId + '">Simulations</a>');
-                    $('#graphCentralities').html('<a href="centralities.html?graphId=' + graphId + '">Centralities</a>');
                     $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
 
                     /* Registers components and event handlers */
-                    registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
-                    registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
-                    registerCollapsable("#visualizationCollapsable", visualizationCollapsableHandler);
+                    //registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
+                    //registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
                     registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
-                    registerCollapsable("#runSimulationCollapsable", runSimulationCollapsableHandler);
-                    registerCollapsable("#runCentralityCalculationCollapsable", runCentralityCalculationCollapsableHandler);
-                    registerCollapsable("#runCentralitySimulationCollapsable", runCentralitySimulationCollapsableHandler);
                 },
                 /* Error handler */
                 function (errorData) {
@@ -156,8 +151,6 @@
                     buttonSubmitStart("runAlgorithmBtn");
 
                     /* Requests an algorithm execution  */
-                    //console.log("post" + " " + "covers/graphs/" + graphId
-                    //    + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting + " " + params);
                     sendRequest("post", "covers/graphs/" + graphId
                         + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
                         /* Response handler */
@@ -175,8 +168,8 @@
                 }
                 return false;
             });
-        });   
-        
+        });    
+
         /* Requests the names of all OCD algorithms.
          * Then executes a callback function */
         function getAlgorithmNames(callback) {
@@ -196,8 +189,6 @@
                     showConnectionErrorMessage("Algorithm names were not received.", errorData);
                 });
         }
-
-        
 
         /* Requests all parameter names for a given algorithm.
          * Then executes a calllback function */
@@ -237,6 +228,7 @@
                 });
         }
 
+        
         /* Handles the collapsable element for the algorithm execution. */
         function runAlgorithmCollapsableHandler() {
             if (typeof algorithmNames === 'undefined') {
@@ -254,93 +246,6 @@
                 registerGraphTypes("#algorithm", "#algorithmGraphTypeDiv", getAlgorithmCompatibleGraphTypes);
                 /* Registers the parameter component for the contentHandler */
                 registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
-            }
-        }
-
-        /* Requests and stores the properties of the graph.
-         * Then executes a callback function */
-        function getProperties(callback) {
-            sendRequest("get", "graphs/" + graphId + "?outputFormat=PROPERTIES_XML", "",
-                /* Response handler */
-                function (response) {
-                    graphProperties = response;
-                    if (typeof callback !== 'undefined') {
-                        callback();
-                    }
-                },
-                /* Error handler */
-                function (errorData) {
-                    /*
-                     * GraphIds request failed
-                     */
-                    showConnectionErrorMessage("Graph Properties was not received.", errorData);
-                }, "text");
-        }
-
-        /* Requests and stores the edge list of the graph.
-         * Then executes a callback function */
-        function getEdgeList(callback) {
-            sendRequest("get", "graphs/" + graphId + "?outputFormat=WEIGHTED_EDGE_LIST", "",
-                /* Response handler */
-                function (response) {
-                    graphEdgeList = response;
-                    if (typeof callback !== 'undefined') {
-                        callback();
-                    }
-                },
-                /* Error handler */
-                function (errorData) {
-                    /*
-                     * GraphIds request failed
-                     */
-                    showConnectionErrorMessage("Graph was not received.", errorData);
-                }, "text");
-        }
-
-        /* Handles the collapsable element for the properties. */
-        function propertiesCollapsableHandler() {
-            if (typeof graphProperties === 'undefined') {
-                /* Requests the edge list */
-                getProperties(function () {
-                    /* Adds properties information to a table */
-                    var properties = $(graphProperties).children();
-                    for (let i = 0; i < properties.length; i++) {
-                        var name = $(properties)[i].nodeName;
-                        var value = $(graphProperties).find($(properties)[i].nodeName).text();
-                        if (name !== 'ID' && name !== 'NAME') {
-                            name = name.replace("_", " ");
-                            var row = '<tr>'
-                                + '<td>' + name + '</td>'
-                                + '<td>' + value + '</td>'
-                                + '</tr>';
-                            $("#graphPropertiesTable tbody").append(row);
-                        }
-                    }
-                });
-
-            }
-        }
-
-        /* Handles the collapsable element for the edge list. */
-        function edgeListCollapsableHandler() {
-            if (typeof graphEdgeList === 'undefined') {
-                /* Requests the edge list */
-                getEdgeList(function () {
-                    /* Adds the edge list information to a table */
-                    var lines = graphEdgeList.split('\n');
-                    $.each(lines, function (key, line) {
-                        var parts = line.split(' ');
-                        if ($(parts).length === 3) {
-                            var row = '<tr>'
-                                + '<td>' + parts[0] + '</td>'
-                                + '<td>' + parts[1] + '</td>'
-                                + '<td>' + parts[2] + '</td>'
-                                + '</tr>';
-                            $("#graphEdgeTable tbody").append(row);
-                        }
-                    });
-                    $("#graphEdgeTable").tablesorter({sortList: [[0, 0], [1, 0]]});
-                });
             }
         }
 
@@ -388,131 +293,12 @@
             })
         }
 
-        /* Resizes the graph canvas on fullscreen close. Done in own eventListener to do it after the automatic resize of the containing div*/
-        document.addEventListener('fullscreenchange', (event) => {
-            // document.fullscreenElement will point to the element that
-            // is in fullscreen mode if there is one. If there isn't one,
-            // the value of the property is null.
-            if (typeof document.fullscreenElement !== "undefined") {
-                var elem = document.getElementById('forceVisualizationContent');
-
-                if (typeof forceGraph !== "undefined") {
-                    forceGraph.width($('.forceVisualizationContent').width());
-                    forceGraph.height($('.forceVisualizationContent').height());
-                }
-            }
-        });
-
         /* Listener for Ctrl+C presses */
         document.addEventListener('keydown', (e) => {
             if(e.code === "KeyC" || e.code === "ControlLeft") {
                 keysPressed.set(e.code,true);
             }
         });
-
-        /* Handles fullscreen events on press of the F key over a force graph and pressing enter for search, nodeSearch on enter, and nodeName copy on Ctrl+C */
-        document.addEventListener('keyup', (e) => {
-            if (e.code === "KeyF" && window.innerHeight !== screen.height && $('#forceVisualizationGraphic:hover').length !== 0 && document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false && document.getElementById("toolsFormDropDown").classList.contains("show") === false)
-            {
-                var elem = document.getElementById('forceVisualizationContent');
-
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen();
-                } else if (elem.mozRequestFullScreen) { /* Firefox */
-                    elem.mozRequestFullScreen();
-                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-                    elem.webkitRequestFullscreen();
-                } else if (elem.msRequestFullscreen) { /* IE/Edge */
-                    elem.msRequestFullscreen();
-                }
-
-                if (typeof forceGraph !== "undefined") {
-                    forceGraph.width(screen.width);
-                    forceGraph.height(screen.height);
-                }
-            }
-            else if(e.code === "KeyF" && window.innerHeight === screen.height)
-            {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.mozCancelFullScreen) { /* Firefox */
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE/Edge */
-                    document.msExitFullscreen();
-                }
-            }
-            else if(e.code === "Enter")
-            {
-                if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("nodeSearchForm")) {
-                    nodeSearch();
-                }
-                else if(document.getElementById("toolsFormDropDown").classList.contains("show") && document.activeElement === document.getElementById("saveJsonForm")) {
-                    saveJSON();
-                }
-            }
-            else if((e.code === "KeyC" || e.code === "ControlLeft") && $('#forceVisualizationGraphic:hover').length !== 0)
-            {
-                if(keysPressed.get("KeyC") === true && keysPressed.get("ControlLeft") === true) {
-                    if(document.getElementById("nodeSearchFormDropDown").classList.contains("show") === false) {
-                        searchDropDown();
-                    }
-
-                    document.getElementById("nodeSearchForm").value = nodeName;
-                    document.getElementById("nodeSearchForm").select();
-                    document.execCommand("copy", false, document.getElementById("nodeSearchForm").value);
-                }
-                keysPressed.set(e.code, false);
-            }
-        });
-
-        /* Opens the dropdown menu for entering database information */
-        function databaseInfoDropDown() {
-            // Close other menu
-            let dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
-            let i;
-            for (i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-            dropdowns = document.getElementsByClassName("toolsFormDropDown");
-            for (i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-
-            document.getElementById("dataBaseDropDownContent").classList.toggle("show");
-        }
-
-        /* Opens the search bar for nodes */
-        function searchDropDown() {
-            document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
-            document.getElementById("nodeSearchForm").placeholder = "Node Name";
-
-            // Close other menu
-            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
-            let i;
-            for (i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-            dropdowns = document.getElementsByClassName("toolsFormDropDown");
-            for (i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-
-            document.getElementById("nodeSearchFormDropDown").classList.toggle("show");
-        }
 
         /* Opens the tool bar(s) */
         function toolsDropDownDots() {
@@ -587,46 +373,6 @@
             }
         }
 
-        /* Let the camera look at a specified node (if found) */
-        function nodeSearch(){
-            if (typeof forceGraph !== "undefined") {
-                let searchNodeName = $("#nodeSearchForm").val();
-
-                for(let node of forceGraph.graphData().nodes)
-                {
-                    if(node.name === searchNodeName)
-                    {
-                        if(have3D === false) {
-                            forceGraph.centerAt(node.x, node.y);
-                            forceGraph.zoom(9, 200);
-                            searchNodeName = undefined;
-                        } else {
-                            const distance = 40;
-                            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
-                            forceGraph.cameraPosition({ x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, node, 250);
-                            searchNodeName = undefined;
-                        }
-                    }
-                }
-                if (typeof searchNodeName !== "undefined" && searchNodeName !== "") {
-                    document.getElementById("nodeSearchForm").style.backgroundColor = "#e58c8c";
-                    document.getElementById("nodeSearchForm").placeholder = "Not found";
-                } else {
-                    document.getElementById("nodeSearchForm").style.backgroundColor = "#f1f1f1";
-                    document.getElementById("nodeSearchForm").placeholder = "Node Name";
-
-                    let  dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
-                    for (let i = 0; i < dropdowns.length; i++) {
-                        let openDropdown = dropdowns[i];
-                        if (openDropdown.classList.contains('show')) {
-                            openDropdown.classList.remove('show');
-                        }
-                    }
-                }
-                document.getElementById("nodeSearchForm").value = "";
-            }
-        }
-
         /* Save the Graph in JSON format */
         function saveJSON() {
             let fileName = $("#saveJsonForm").val();
@@ -655,279 +401,6 @@
             }
         }
 
-        function NodeNameDisplayHandler () {
-            haveNodeNames = !haveNodeNames;
-            if(have3D === true) {
-                forceGraph
-                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
-                    .nodeThreeObject(forceGraph.nodeThreeObject())
-            }
-        }
-
-        /* Builds a force graph from json data */
-        function buildGraph() {
-            let graph = JSON.parse(jsonGraph);
-            let degree = new Map();
-            let outgoingNeighbours = new Map();
-            let styles = []
-            for (let node of graph.nodes) {
-                degree[node.id] = 0;
-                outgoingNeighbours[node.id] = [];
-            }
-            for (let edge of graph.links) {
-                degree[edge.source] += 1;
-                outgoingNeighbours[edge.source].push(edge.target);
-                styles.push(edge.style);
-            }
-
-            if (have3D === false) {
-                forceGraph = ForceGraph()
-                (document.getElementById('forceVisualizationGraphic'))
-                    .nodeCanvasObjectMode( () => 'after')
-                    .backgroundColor("#fafafa")
-                    .graphData(graph)
-                    .nodeId('id')
-                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
-                    .onNodeHover(node => {
-                        if (node != null) {
-                            nodeName = node.name;
-                        }
-                    })
-                    .onNodeClick(node => {
-                        if (arangoDataBase !== "" && arangoDataBase !== null
-                            && arangoUser !== "" && arangoUser !== null
-                            && arangoPass !== null
-                            && arangoCollection !== "" && arangoCollection !== null) {
-
-                            db.useDatabase(arangoDataBase);
-                            db.useBasicAuth(arangoUser, arangoPass);
-                            const docCollection = db.collection(arangoCollection);
-                            docCollection.document(node.name, true).then(function (doc) {
-                                let nodeWindow = window.open("", '_blank');
-
-                                if (doc != null) {
-                                    let docStr = JSON.stringify(doc, null, '    ');
-                                    docStr = docStr.replace(/\n/g, "<br />");
-                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                                } else {
-                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                                }
-                            }).catch((err) => console.error(err));
-                        }
-                    })
-                    .onNodeRightClick(node => {
-                        highlightNodes.clear();
-                        highlightLinks.clear();
-                        if (node !== rightClickNode) {
-                            if (node) {
-                                highlightNodes.add(node.id);
-                                outgoingNeighbours[node.id].forEach(neighbor => highlightNodes.add(neighbor));
-                                graph.links.forEach(link => {
-                                    if (link.source.id === node.id) {
-                                        highlightLinks.add(link)
-                                    }
-                                });
-                            }
-                            rightClickNode = node;
-                        } else {
-                            rightClickNode = null;
-                        }
-                        rightClickLink = null;
-                    })
-                    .nodeVal(function (node) {
-                        return Math.log(degree[node.id] + 1)
-                    } /*<= 14 ? degree[node.id] : 14}*/)
-                    .nodeColor(function (node) {
-                        if (highlightNodes.has(node.id)) {
-                            return ((node === rightClickNode) ? '#f54a06' : '#fd970d');
-                        } else {
-                            return '#3183ba';
-                        }
-                    })
-                    .nodeCanvasObject((node, ctx, globalScale) => {
-                        if(haveNodeNames === true) {
-                            const label = node.name;
-                            const fontSize = 12/globalScale;
-                            ctx.font = `${fontSize}px Sans-Serif`;
-
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-                            ctx.fillText(label, node.x, node.y);
-                        }
-                    })
-                    .linkSource('source')
-                    .onLinkRightClick(link => {
-                        //console.log(link);
-                        highlightNodes.clear();
-                        highlightLinks.clear();
-                        if (link !== rightClickLink) {
-                            if (link) {
-                                highlightLinks.add(link);
-                                highlightNodes.add(link.source.id);
-                                highlightNodes.add(link.target.id);
-                            }
-                            rightClickLink = link;
-                            rightClickNode = null;
-                        } else {
-                            rightClickLink = null;
-                            rightClickNode = null;
-                        }
-                    })
-                    .linkLineDash(function (link) {
-                        if (styles[link.index] === 1) {
-                            return [10, 10]
-                        } else if (styles[link.index] === 2) {
-                            return [5, 5]
-                        }
-                    })
-                    .linkWidth(link => highlightLinks.has(link) ? 2.5 : 1.5)
-                    .linkColor(link => highlightLinks.has(link) ? "rgba(145,217,65,0.6)" : "rgba(219,219,219,0.85)")
-                    .linkDirectionalArrowLength(5)
-                    .linkDirectionalArrowRelPos(1)
-                    .linkTarget('target')
-                    .cooldownTicks(200);
-            } else {
-                forceGraph = ForceGraph3D({
-                    extraRenderers: [new THREE.CSS2DRenderer()]
-                })
-                (document.getElementById('forceVisualizationGraphic'))
-                    .graphData(graph)
-                    .nodeId('id')
-                    .nodeLabel((node) => haveNodeNames !== true ? node.name : "")
-                    .onNodeHover(node => {
-                        if (node != null) {
-                            nodeName = node.name;
-                        }
-                    })
-                    .onNodeClick(node => {
-                        if (arangoDataBase !== "" && arangoDataBase !== null
-                            && arangoUser !== "" && arangoUser !== null
-                            && arangoPass !== null
-                            && arangoCollection !== "" && arangoCollection !== null) {
-
-                            db.useDatabase(arangoDataBase);
-                            db.useBasicAuth(arangoUser, arangoPass);
-                            const docCollection = db.collection(arangoCollection);
-                            docCollection.document(node.name, true).then(function (doc) {
-                                let nodeWindow = window.open("", '_blank');
-
-                                if (doc != null) {
-                                    //console.log(JSON.stringify(doc, null, '    '));
-                                    let docStr = JSON.stringify(doc, null, '    ');
-                                    docStr = docStr.replace(/\n/g, "<br />");
-                                    nodeWindow.document.write("<pre>" + docStr + "</pre>");
-                                } else {
-                                    nodeWindow.document.write("<pre>" + "Object was not found" + "</pre>");
-                                }
-                            }).catch((err) => console.error(err));
-                        }
-                    })
-                    .onNodeRightClick(node => {
-                        highlightNodes.clear();
-                        highlightLinks.clear();
-                        if (node !== rightClickNode) {
-                            if (node) {
-                                highlightNodes.add(node.id);
-                                outgoingNeighbours[node.id].forEach(neighbor => highlightNodes.add(neighbor));
-                                graph.links.forEach(link => {
-                                    if (link.source.id === node.id) {
-                                        highlightLinks.add(link)
-                                    }
-                                });
-                            }
-                            rightClickNode = node;
-                            rightClickLink = null;
-                        } else {
-                            rightClickNode = null;
-                            rightClickLink = null;
-                        }
-
-                        updateHighlight();
-                    })
-                    .nodeColor(function (node) {
-                        if (highlightNodes.has(node.id)) {
-                            return ((node === rightClickNode) ? '#f53e06' : '#f5fd0d');
-                        } else {
-                            return '#3183ba';
-                        }
-                    })
-                    .nodeOpacity(haveNodeNames === true ? .5 : 1)
-                    .nodeVal(function (node) {
-                        return Math.log(degree[node.id] + 1)
-                    })
-                    .nodeThreeObject(node => {
-                        if(haveNodeNames === true) {
-                            const nodeEl = document.createElement('div');
-                            nodeEl.textContent = node.name;
-                            nodeEl.style.color = "#ffffff";//node.color;
-                            nodeEl.className = 'node-label';
-                            return new THREE.CSS2DObject(nodeEl);
-                        }
-                    })
-                    .nodeThreeObjectExtend(true)
-                    .linkSource('source')
-                    .onLinkRightClick(link => {
-                        //console.log(link);
-                        highlightNodes.clear();
-                        highlightLinks.clear();
-                        if (link !== rightClickLink) {
-                            if (link) {
-                                highlightLinks.add(link);
-                                highlightNodes.add(link.source.id);
-                                highlightNodes.add(link.target.id);
-                            }
-                            rightClickLink = link;
-                            rightClickNode = null;
-                        } else {
-                            rightClickLink = null;
-                            rightClickNode = null;
-                        }
-
-                        updateHighlight();
-                    })
-                    .linkOpacity(0.35)
-                    .linkColor(link => highlightLinks.has(link) ? "rgba(126,234,10,0.85)" : "#dedede")
-                    .linkWidth(link => highlightLinks.has(link) ? 2 : 0)
-                    .linkDirectionalArrowLength(4)
-                    .linkDirectionalArrowRelPos(1)
-                    .linkTarget('target')
-                    .cooldownTicks(200);
-
-                function updateHighlight() {
-                    // trigger update of highlighted objects in scene
-                    forceGraph
-                        .nodeColor(forceGraph.nodeColor())
-                        .linkColor(forceGraph.linkColor())
-                        .linkWidth(forceGraph.linkWidth());
-                }
-            }
-
-            forceGraph.width($('.forceVisualizationContent').width());
-            forceGraph.height($('.forceVisualizationContent').height());
-        }
-
-        /* Requests and stores a JSON representation of the graph and then builds it */
-        function getJSON() {
-            if(typeof jsonGraph === 'undefined') {
-                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
-                    function (response) {
-                        jsonGraph = response;
-                        buildGraph();
-                    },
-                    /* Error handler */
-                    function (errorData) {
-                        /*
-                        * GraphIds request failed
-                        */
-                        showConnectionErrorMessage("Visualization was not received.", errorData);
-                    });
-            }
-            else {
-                buildGraph();
-            }
-        }
-
         function deleteGraph() {
             sendRequest("delete", "graphs/" + graphId, "",
                 /* Request handler */
@@ -940,24 +413,6 @@
                      * GraphIds request failed
                      */
                     showConnectionErrorMessage("Graph deletion failed.", errorData);
-                });
-        }
-
-        /* Request and display the principal eigenvalue of the graph's adjacency matrix */
-        function displayEigenvalue() {
-            sendRequest("get", "centrality/graphs/" + graphId
-                + "/eigenvalue", "",
-                /* Response handler */
-                function (response) {
-                    if (response !== 'undefined') {
-                        eigenvalue = $(response).filter('Value').text();
-                        $('#annotationText').append("<p>Alpha should be smaller than " + 1 / eigenvalue + ".</p>");
-                        $('#annotationDiv').show();
-                    }
-                },
-                /* Error handler */
-                function (errorData) {
-                    showErrorMessage("The eigenvalue of the adjacency matrix could not be calculated.");
                 });
         }
     </script>
@@ -980,12 +435,6 @@
                         <div class="p-2 coverColor col-md-3 col-sm-6">
                             <li id="graphCovers" class="nav-item coverColor"></li>
                         </div>
-                        <div class="p-2 simulationColor col-md-3 col-sm-6">
-                            <li id="graphSimulations" class="nav-item simulationColor"></li>
-                        </div>
-                        <div class="p-2 centralityColor col-md-3 col-sm-6">
-                            <li id="graphCentralities" class="nav-item centralityColor"></li>
-                        </div>
                         <div class="p-2 deleteColor col-md-3 col-sm-6">
                             <li id="graphDelete" class="nav-item deleteColor"></li>
                         </div>
@@ -993,63 +442,6 @@
                 </div>
             </div>
             <div class="container-fluid">
-                <div class="row">
-                    <!-- Collapsable for graph properties -->
-                    <div id="propertiesCollapsable" class="collapsable col-lg-6">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Properties</div>
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Table for graph properties -->
-                            <div class="tableWrapper table-responsive">
-                                <table id="graphPropertiesTable" class="table">
-                                    <thead>
-                                    <tr>
-                                        <th title="Property">Property</th>
-                                        <th title="Value">Value</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Collapsable for graph edge list -->
-                    <div id="edgeListCollapsable"
-                         class="collapsable col-sm-12 col-lg-6">
-                        <div class="collapsableHeader">
-                            <div class="collapsableTitle">Edges</div>
-
-                            <div class="collapsableCollapser">
-                                <img class="icon iconBtn collapsableDisplayBtn"
-                                     src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
-                                    class="icon iconBtn collapsableCollapseBtn"
-                                    src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
-                            </div>
-                        </div>
-                        <div class="collapsableContent">
-                            <!-- Table for graph edge list -->
-                            <div class="tableWrapper table-responsive">
-                                <table id="graphEdgeTable" class="table">
-                                    <thead>
-                                    <tr>
-                                        <th title="Source Node">Source</th>
-                                        <th title="Target Node">Target</th>
-                                        <th title="Edge Weight">Weight</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="row">
                     <!-- Collapsable for algorithm execution -->
                     <div id="runAlgorithmCollapsable" class="collapsable col-sm-12">
@@ -1108,7 +500,6 @@
 
                         </div>
                     </div>
-                </div>
             </div>
         </div>
     </div>

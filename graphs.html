@@ -26,7 +26,7 @@
             var GRAPHS_PER_PAGE = 20;
             var pageNumber = 0;
             /* Identifiers for the graph information to be displayed */
-            var cells = ["Name", "NodeCount", "EdgeCount", "Layer_Count", "CreationMethod", "D", "W", "Z", "N", "L", "M", "Co", "Cn", "CS", "R", ".txt"];
+            var cells = [" ", "Name", "NodeCount", "EdgeCount", "LayerCount", "CreationMethod", "D", "W", "Z", "N", "L", "M", "Co", "Cn", "CS", "R", ".txt"];
             /* Executed after page loading */
             $(document).ready(function() {
                 /* Number of the graph table page to be displayed */
@@ -56,7 +56,8 @@
                             numReceivedGraphs++;
                         });
                         if(numReceivedGraphs < GRAPHS_PER_PAGE) {
-                            fetchMultiplexGraphs(0, GRAPHS_PER_PAGE - numReceivedGraphs);
+                            var indexMultiplex = 0;
+                            fetchMultiplexGraphs(indexMultiplex, GRAPHS_PER_PAGE - numReceivedGraphs);
                         }
                             /*
                              * Sort Table
@@ -93,7 +94,7 @@
                 });
             });
             function fetchMultiplexGraphs(firstIndex, length) {
-                sendRequest("get", "multiplexgraphs?executionStatuses=COMPLETED&firstIndex=" + firstIndex + "&length=" + length, "",
+                sendRequest("get", "multiplexgraphs?executionStatuses=COMPLETED&firstIndex=" + 0 + "&length=" + length, "",
                     function(multiplexGraphMetasXml) {
                         $(multiplexGraphMetasXml).find("Graph").each(function() {
                             appendGraphRow($('#graphTable'), $(this), cells);
@@ -133,6 +134,7 @@
                             <thead>
                             <tr>
                                 <th class="hidden" title="Id"></th>
+                                <th width="1" title="Dropdown for Multiplex Graphs"></th>
                                 <th  title="Graph Name" class="sortable">
                                     Name
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
