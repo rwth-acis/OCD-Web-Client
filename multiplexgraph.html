@@ -81,7 +81,7 @@
                     var name = $(graphMetaXml).find('Name').text();
                     var nodes = $(graphMetaXml).find('NodeCount').text();
                     var edges = $(graphMetaXml).find('EdgeCount').text();
-                    var layers = $(graphMetaXml).find('LayerCount').text();
+                    //var layers = $(graphMetaXml).find('LayerCount').text();
                     /* Graph types */
                     var types = [];
                     $(graphMetaXml).children('Types').find('Type').each(function () {
@@ -133,6 +133,7 @@
                      */
                     showConnectionErrorMessage("Graph was not received.", errorData);
                 }, "text");
+
             /*
             * Run algorithm form listener.
             */

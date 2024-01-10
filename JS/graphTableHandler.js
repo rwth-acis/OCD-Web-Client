@@ -320,6 +320,8 @@ function registerGraphTable() {
     /* Delete graph button handler */
     $('.delGraph').click(function(){
         var id = $(this).parent().siblings().filter('.graphId');
+        //var isMultiplex = $(this).data('ismultiplex');
+        //deleteGraph(id, isMultiplex);
         deleteGraph(id);
     });
     /* Save Graph button handler */
