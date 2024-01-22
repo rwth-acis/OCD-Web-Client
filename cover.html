@@ -723,7 +723,7 @@
                         }
                     }
                     if (!found) {
-                        node.size = 20;
+                        node.size = 25;
                         linkMap[node.id] = node.id;
                         mergedNodes.push(node);
                     }
@@ -817,7 +817,7 @@
                             highlightedCommunity = "";
                         })
                         .nodeVal(function (node) {
-                            return sizes[node.id] - 19
+                            return sizes[node.id] - 19;
                         })
                         .nodeColor(function (node) {
                             return colors[node.id];
