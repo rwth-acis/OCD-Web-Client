@@ -105,7 +105,7 @@ function appendGraphRow(table, graphElt, cells, idMultiplex) {
     }
     /* Delete graph */
     if($.inArray("R", cells) > -1) {
-        row += createGraphDeleteCell(isMultiplex);
+        row += createGraphDeleteCell();
     }
     /* Save graph */
     if($.inArray(".txt", cells) > -1) {
@@ -179,9 +179,9 @@ function createGraphIdCell(value) {
 }
 
 /* Creates delete graph cell */
-function createGraphDeleteCell(isMultiplex) {
+function createGraphDeleteCell() {
     return '<td>'
-        + '<img class="icon iconBtn delGraph" src="IMG/open-iconic/svg/trash.svg" data-ismultiplex="' + isMultiplex + '" alt="r">'
+        + '<img class="icon iconBtn delGraph" src="IMG/open-iconic/svg/trash.svg" alt="r">'
         + '</td>';
 }
 
@@ -239,36 +239,20 @@ function getGraphTrueOrFalseIcon(isTrue) {
 /*
  * Deletes a graph.
  */
-function deleteGraph(id, isMultiplex) {
-    if(isMultiplex) {
-        /* Requests deletion */
-        sendRequest("delete", "multiplexgraph/" + id.text() , "",
-            /* Response handler */
-            function(confirmXml) {
-                var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
-                var newUrl = "graphs.html?page=" + page;
-               window.location.href = newUrl;
-            },
-            /* Error handler */
-            function(errorData) {
-                showConnectionErrorMessage("MultiplexGraph could not be deleted.", errorData);
-        });
-    } else {
-        /* Requests deletion */
-        sendRequest("delete", "graphs/" + id.text() , "",
-            /* Response handler */
-            function(confirmXml) {
-                var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
-                var newUrl = "graphs.html?page=" + page;
-               window.location.href = newUrl;
-            },
-            /* Error handler */
-            function(errorData) {
-                showConnectionErrorMessage("Graph could not be deleted.", errorData);
-        });
-    }
+function deleteGraph(id) {
+    /* Requests deletion */
+    sendRequest("delete", "graphs/" + id.text() , "",
+        /* Response handler */
+        function(confirmXml) {
+            var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;
+            var newUrl = "graphs.html?page=" + page;
+            window.location.href = newUrl;
+        },
+        /* Error handler */
+        function(errorData) {
+            showConnectionErrorMessage("Graph could not be deleted.", errorData);
+    });
 }
-
 
 /*
  * Saves a graph in weighted edge list format.
@@ -336,8 +320,9 @@ function registerGraphTable() {
     /* Delete graph button handler */
     $('.delGraph').click(function(){
         var id = $(this).parent().siblings().filter('.graphId');
-        var isMultiplex = $(this).data('ismultiplex') === 'true';
-        deleteGraph(id, isMultiplex);
+        //var isMultiplex = $(this).data('ismultiplex');
+        //deleteGraph(id, isMultiplex);
+        deleteGraph(id);
     });
     /* Save Graph button handler */
     $('.saveGraph').click(function(){

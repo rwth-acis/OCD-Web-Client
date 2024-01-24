@@ -61,6 +61,7 @@
 
         var visualization;
         /* Names of all OCD algorithms */
+        var multiplexAlgorithmNames;
         var algorithmNames;
         /* Names of all centrality measures */
         var centralityMeasureNames;
@@ -125,6 +126,7 @@
                     //registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
                     //registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
                     registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
+                    registerCollapsable("#runMultiplexAlgorithmCollapsable", runMultiplexAlgorithmCollapsableHandler);
                 },
                 /* Error handler */
                 function (errorData) {
@@ -138,11 +140,12 @@
             * Run algorithm form listener.
             */
             $('#runAlgorithmForm').submit(function () {
+                var multiplexAlgo = $('#multiplexalgorithm').val();
                 var algo = $('#algorithm').val();
-                if (algo !== getSelectOptionVal()) {
+                if (multiplexAlgo !== getSelectOptionVal()) {
+                    var multiplexParams = getParameterXml("#multiplexalgorithmParameterDiv");
                     var params = getParameterXml("#algorithmParameterDiv");
                     var coverName = $("#coverName").val();
-                    var contentWeighting = $("#contentWeighting").is(':checked');
                     if (coverName === "") {
                         showErrorMessage('Please define a cover name.');
                         window.scrollTo(0, 0);
@@ -153,7 +156,7 @@
 
                     /* Requests an algorithm execution  */
                     sendRequest("post", "covers/graphs/" + graphId
-                        + "/algorithms?algorithm=" + algo + "&name=" + coverName + "&contentWeighting=" + contentWeighting, params,
+                        + "/multiplexalgorithms?multiplexalgorithm=" + multiplexAlgo + "&algorithm=" + algo + "&name=" + coverName, multiplexParams, params,
                         /* Response handler */
                         function (response) {
                             window.location.href = 'index.html';
@@ -190,6 +193,27 @@
                     showConnectionErrorMessage("Algorithm names were not received.", errorData);
                 });
         }
+
+        /* Requests the names of all multiplex OCD algorithms.
+         * Then executes a callback function */
+         function getMultiplexAlgorithmNames(callback) {
+            sendRequest("get", "multiplexalgorithms", "",
+                /* Response handler */
+                function (response) {
+                    multiplexAlgorithmNames = response;
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * OCD algorithm request failed
+                     */
+                    showConnectionErrorMessage("Algorithm names were not received.", errorData);
+                });
+        }
+
 
         /* Requests all parameter names for a given algorithm.
          * Then executes a calllback function */
@@ -231,6 +255,28 @@
 
         
         /* Handles the collapsable element for the algorithm execution. */
+        function runMultiplexAlgorithmCollapsableHandler() {
+            if (typeof multiplexAlgorithmNames === 'undefined') {
+                /* Adds all algorithm names to the form */
+                getMultiplexAlgorithmNames(function () {
+                    $(multiplexAlgorithmNames).find('Name').each(function () {
+                        if ($(this).text() !== 'UNDEFINED' && $(this).text() !== 'GROUND_TRUTH') {
+                            $("#multiplexalgorithm").append(
+                                '<option value="' + $(this).text()
+                                + '">' + $(this).attr("displayName") + '</option>');
+                        }
+                    });
+                });
+                
+                /* Registers the graph type component for the contentHandler */
+                registerGraphTypes("#multiplexalgorithm", "#multiplexalgorithmGraphTypeDiv", getAlgorithmCompatibleGraphTypes);
+                /* Registers the parameter component for the contentHandler */
+                registerParameterSelect("#multiplexalgorithm", "#multiplexalgorithmParameterDiv", getAlgorithmParameters);
+            }
+            
+        }
+
+        /* Handles the collapsable element for the algorithm execution. */
         function runAlgorithmCollapsableHandler() {
             if (typeof algorithmNames === 'undefined') {
                 /* Adds all algorithm names to the form */
@@ -250,160 +296,21 @@
             }
         }
 
-        /* Handles what happens on the visualization type Button presses */
-        function buttonClick(number) {
-            $(document).ready(function () {
-
-                let svgVizScroll = document.getElementById("visualizationZoomer");
-                let svgViz = document.getElementById("visualizationContent");
-                let forceViz = document.getElementById("forceVisualizationContent");
-
-                highlightNodes = new Set();
-                highlightLinks = new Set();
-
-                if (number === 0) {
-                    forceViz.style.display = "none";
-
-                    svgViz.style.display = "inherit";
-                    svgVizScroll.style.display = "inline";
-                } else if (number === 1 || number === 2) {
-                    forceViz.style.display = "inherit";
-                    if (typeof forceGraph !== "undefined") {
-                        forceGraph.width($('.forceVisualizationContent').width());
-                        forceGraph.height($('.forceVisualizationContent').height());
-                    }
-                    svgViz.style.display = "none";
-                    svgVizScroll.style.display = "none";
-
-                    if (number === 1 && (have3D === true || typeof have3D === "undefined")) {
-                        have3D = false;
-                        //console.log("2D");
-                        if (typeof forceGraph !== "undefined") {
-                            forceGraph._destructor();
-                        }
-                        getJSON();
-                    } else if (number === 2 && (have3D === false || typeof have3D === "undefined")) {
-                        have3D = true;
-                        //console.log("3D");
-                        if (typeof forceGraph !== "undefined") {
-                            forceGraph._destructor();
-                        }
-                        getJSON();
-                    }
+        /* Listener for ABACUS */
+        $(document).ready(function() {
+            $('#multiplexalgorithm').change(function() {
+                var selectedAlgorithm = $(this).val();
+                if (selectedAlgorithm === 'ABACUS_ALGORITHM') {
+                    $('#ABACUS').show();
+                    runAlgorithmCollapsableHandler()
+                } else {
+                    $('#ABACUS').hide();
                 }
-            })
-        }
-
-        /* Listener for Ctrl+C presses */
-        document.addEventListener('keydown', (e) => {
-            if(e.code === "KeyC" || e.code === "ControlLeft") {
-                keysPressed.set(e.code,true);
-            }
+            });
         });
 
-        /* Opens the tool bar(s) */
-        function toolsDropDownDots() {
-            // Close other menus
-            let dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
-            let i;
-            for (i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-            dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
-            for (i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-
-            document.getElementById("toolsFormDropDown").classList.toggle("show");
-        }
-
-        function databaseInfoSubmit() {
-            arangoUser = $("#arangoUser").val();
-            arangoPass = $("#arangoPass").val();
-            arangoDataBase = $("#arangoDataBase").val();
-            arangoCollection = $("#arangoCollection").val();
-
-            localStorage.setItem("arangoUser@WebOCD",arangoUser);
-            localStorage.setItem("arangoPass@WebOCD",arangoPass);
-            localStorage.setItem("arangoDataBase@WebOCD",arangoDataBase);
-            localStorage.setItem("arangoCollection@WebOCD",arangoCollection);
-
-            var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
-            var i;
-            for (i = 0; i < dropdowns.length; i++) {
-                var openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-        }
-
-        // Close the dropdown menu if the user clicks outside of it
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropDownOpenButton') && !event.target.matches('.dataBaseDropDownContentForm') && !event.target.matches('.nodeSearchForm') && !event.target.matches('.nodeSearchButton')
-                && !event.target.matches('.toolsDropDownDots')  && event.target.className !== 'tool-dot' && !event.target.matches('.saveJsonForm') && !event.target.matches('.nodeNameDisplayButton')){
-
-                var dropdowns = document.getElementsByClassName("dataBaseDropDownContent");
-                var i;
-                for (i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-                dropdowns = document.getElementsByClassName("nodeSearchFormDropDown");
-                for (i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-                dropdowns = document.getElementsByClassName("toolsFormDropDown");
-                for (i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-
-        /* Save the Graph in JSON format */
-        function saveJSON() {
-            let fileName = $("#saveJsonForm").val();
-
-            if(typeof jsonGraph === 'undefined') {
-                sendRequest("get", "visualization/graph/" + graphId + "/outputFormat/JSON/layout/ORGANIC", "",
-                    function (response) {
-                        jsonGraph = response;
-                        const blob = new Blob([jsonGraph],
-                            { type: "application/json" });
-                        saveAs(blob, fileName + ".json");
-                    });
-            }
-            else {
-                const blob = new Blob([jsonGraph],
-                    { type: "application/json" });
-                saveAs(blob, fileName + ".json");
-            }
-
-            let  dropdowns = document.getElementsByClassName("toolsFormDropDown");
-            for (let i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-        }
-
         function deleteGraph() {
-            sendRequest("delete", "graphs/" + graphId, "",
+            sendRequest("delete", "multiplexgraph/" + graphId , "",
                 /* Request handler */
                 function (response) {
                     showSuccess(response);
@@ -413,7 +320,7 @@
                     /*
                      * GraphIds request failed
                      */
-                    showConnectionErrorMessage("Graph deletion failed.", errorData);
+                    showConnectionErrorMessage("MultiplexGraph deletion failed.", errorData);
                 });
         }
     </script>
@@ -429,7 +336,6 @@
             <!-- Graph meta information and related data -->
             <div style="margin-bottom: 1em;">
                 <div id="graphHeader" class="col-sm-12 col-md-12 graphColor">
-
                 </div>
                 <div class="side-nav d-flex flex-row">
                     <ul class="nav" style="width: 100%;">
@@ -445,7 +351,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <!-- Collapsable for algorithm execution -->
-                    <div id="runAlgorithmCollapsable" class="collapsable col-sm-12">
+                    <div id="runMultiplexAlgorithmCollapsable" class="collapsable col-sm-12">
                         <div class="collapsableHeader coverColor">
                             <div class="collapsableTitle">Run OCD Algorithm</div>
                             <div class="collapsableCollapser">
@@ -469,26 +375,29 @@
                                     </div>
                                     <!-- Algorithm -->
                                     <div class="form-group row">
-                                        <label for="algorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                                        <label for="multiplexalgorithm" class="col-sm-2 col-form-label">Multiplex Algorithm</label>
                                         <div class="col-sm-10">
-                                            <select id="algorithm" class="form-control custom-select">
+                                            <select id="multiplexalgorithm" class="form-control custom-select">
                                             </select>
                                         </div>
                                     </div>
                                     <!-- Algorithm Graph Types -->
-                                    <div class="col-sm-10" id="algorithmGraphTypeDiv"></div>
+                                    <div class="col-sm-10" id="multiplexalgorithmGraphTypeDiv"></div>
                                     <!-- Algorithm Parameters -->
-                                    <div class="col-sm-10" id="algorithmParameterDiv"></div>
-
-                                    <div class="form-group row">
-                                        <div class="container">
-                                            <label class="custom-control custom-checkbox"> <input
-                                                    id="contentWeighting" type="checkbox"
-                                                    class="custom-control-input"> <span
-                                                    class="custom-control-indicator"></span> <span
-                                                    class="custom-control-label">Content Weighting</span>
-                                            </label>
+                                    <div class="col-sm-10" id="multiplexalgorithmParameterDiv"></div>
+                                    <!-- Abacus -->
+                                    <div id="ABACUS" style="display: none;">
+                                        <div class="form-group row">
+                                            <label for="algorithm" class="col-sm-2 col-form-label">Single-layer Algorithm</label>
+                                            <div class="col-sm-10">
+                                                <select id="algorithm" class="form-control custom-select">
+                                                </select>
+                                            </div>
                                         </div>
+                                        <!-- Algorithm Graph Types -->
+                                        <div class="col-sm-10" id="algorithmGraphTypeDiv"></div>
+                                        <!-- Algorithm Parameters -->
+                                        <div class="col-sm-10" id="algorithmParameterDiv"></div>
                                     </div>
                                     <div class="form-group">
                                         <button type="submit" name="submit" id="runAlgorithmBtn" class="btn btn-primary">
@@ -498,9 +407,9 @@
                                     </div>
                                 </form>
                             </div>
-
                         </div>
                     </div>
+                </div>
             </div>
         </div>
     </div>
