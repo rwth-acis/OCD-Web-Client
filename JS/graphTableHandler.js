@@ -242,7 +242,7 @@ function getGraphTrueOrFalseIcon(isTrue) {
 function deleteGraph(id, isMultiplex) {
     if(isMultiplex) {
         /* Requests deletion */
-        sendRequest("delete", "multiplexgraph/" + id.text() , "",
+        sendRequest("delete", "multiplexgraphs/" + id.text() , "",
             /* Response handler */
             function(confirmXml) {
                 var page = (typeof pageNumber === 'undefined') ? 0 : pageNumber;

@@ -143,20 +143,27 @@
                 var multiplexAlgo = $('#multiplexalgorithm').val();
                 var algo = $('#algorithm').val();
                 if (multiplexAlgo !== getSelectOptionVal()) {
-                    var multiplexParams = getParameterXml("#multiplexalgorithmParameterDiv");
-                    var params = getParameterXml("#algorithmParameterDiv");
                     var coverName = $("#coverName").val();
                     if (coverName === "") {
                         showErrorMessage('Please define a cover name.');
                         window.scrollTo(0, 0);
                         return;
                     }
-
+                    var multiplexParams = getParameterXml("#multiplexalgorithmParameterDiv");
+                    var params = getParameterXml("#algorithmParameterDiv");
+                    var formData = new FormData();
+                    formData.append('graphId', graphId);
+                    formData.append('name', coverName);
+                    formData.append('multiplexalgorithm', multiplexAlgo);
+                    formData.append('algorithm', algo);
+                    formData.append('componentNodeCountFilter', componentNodeCountFilter);
+                    formData.append('multiplexContent', JSON.stringify(multiplexParams));
+                    formData.append('content', JSON.stringify(params));
                     buttonSubmitStart("runAlgorithmBtn");
-
+                    
                     /* Requests an algorithm execution  */
-                    sendRequest("post", "covers/graphs/" + graphId
-                        + "/multiplexalgorithms?multiplexalgorithm=" + multiplexAlgo + "&algorithm=" + algo + "&name=" + coverName, multiplexParams, params,
+                    sendRequest("post", "covers/multiplexgraphs/" + graphId
+                        + "/algorithms", formData,
                         /* Response handler */
                         function (response) {
                             window.location.href = 'index.html';
@@ -253,6 +260,25 @@
                 });
         }
 
+         /* Requests all compatible graph types for a given algorithm.
+         * Then executes a calllback function */
+         function getAlgorithmCompatibleMultiplexGraphTypes(algorithmName, callback) {
+            sendRequest("get", "multiplexalgorithms/" + algorithmName + "/graphTypes", "",
+                /* Response handler */
+                function (response) {
+                    if (typeof callback !== 'undefined') {
+                        callback(response);
+                    }
+                },
+                /* Error handler */
+                function (errorData) {
+                    /*
+                     * GraphTypes request failed
+                     */
+                    showConnectionErrorMessage("Algorithms compatible graph types were not received.", errorData);
+                });
+        }
+
         
         /* Handles the collapsable element for the algorithm execution. */
         function runMultiplexAlgorithmCollapsableHandler() {
@@ -269,7 +295,7 @@
                 });
                 
                 /* Registers the graph type component for the contentHandler */
-                registerGraphTypes("#multiplexalgorithm", "#multiplexalgorithmGraphTypeDiv", getAlgorithmCompatibleGraphTypes);
+                registerGraphTypes("#multiplexalgorithm", "#multiplexalgorithmGraphTypeDiv", getAlgorithmCompatibleMultiplexGraphTypes);
                 /* Registers the parameter component for the contentHandler */
                 registerParameterSelect("#multiplexalgorithm", "#multiplexalgorithmParameterDiv", getAlgorithmParameters);
             }
@@ -310,7 +336,7 @@
         });
 
         function deleteGraph() {
-            sendRequest("delete", "multiplexgraph/" + graphId , "",
+            sendRequest("delete", "multiplexgraphs/" + graphId , "",
                 /* Request handler */
                 function (response) {
                     showSuccess(response);
