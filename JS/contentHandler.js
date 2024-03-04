@@ -181,7 +181,7 @@ function showConnectionErrorMessage(message, errorData) {
             "              data-callback=\"signinCallback\"\n" +
             "              data-name=\"Learning Layers\"\n" +
             "              data-logo=\"http://results.learning-layers.eu/images/learning-layers.svg\"\n" +
-            "              data-server=\"https://auth.las2peer.org/o/oauth2\"\n" +
+            "              data-server=\"https://auth.las2peer.org/auth/realms/main\"\n" +
             "              data-clientid=\"localtestclient\"\n" +
             "              data-redirecturi=\"http://localhost:8090/login.html\"\n" +
             "              data-scope=\"openid email profile\">\n" +
