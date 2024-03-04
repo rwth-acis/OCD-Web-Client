@@ -15,7 +15,7 @@
     "jquery.mousewheel": "^3.1.9",
     "jquery.panzoom": "^3.2.3",
     "js-base64": "^3.6.0",
-    "jsrsasign": "^10.1.4",
+    "jsrsasign": "^11.0.0",
     "tablesorter": "^2.0.5b",
     "three": "^0.125.2",
     "three-spritetext": "^1.5.4",
