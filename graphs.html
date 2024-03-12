@@ -26,7 +26,7 @@
             var GRAPHS_PER_PAGE = 30;
             var pageNumber = 0;
             /* Identifiers for the graph information to be displayed */
-            var cells = [" ", "Name", "NodeCount", "EdgeCount", "LayerCount", "CreationMethod", "D", "W", "Z", "N", "L", "M", "Co", "Cn", "CS", "R", ".txt"];
+            var cells = ["Name", "NodeCount", "EdgeCount", "LayerCount", "CreationMethod", "D", "W", "Z", "N", "L", "M", "Co", "Cn", "CS", "R", ".txt"];
             /* Executed after page loading */
             $(document).ready(function() {
                 /* Number of the graph table page to be displayed */
@@ -64,7 +64,7 @@
                              */
                             try {
                                 $("#graphTable").tablesorter({sortList: [[0,0]],
-                                    headers: { 5: { sorter: false}, 6: {sorter: false}, 7: {sorter: false}, 8: {sorter: false},
+                                    headers: {6: {sorter: false}, 7: {sorter: false}, 8: {sorter: false},
                                         9: {sorter: false}, 10: {sorter: false}, 11: {sorter: false}, 12: {sorter: false}}});
                             } catch(err) { /* table empty */ }
                             /*
@@ -133,8 +133,6 @@
                         <table id="graphTable" class = "table table-striped">
                             <thead>
                             <tr>
-                                <th class="hidden" title="Id"></th>
-                                <th width="1" title="Dropdown for Multiplex Graphs"></th>
                                 <th  title="Graph Name" class="sortable">
                                     Name
                                     <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">

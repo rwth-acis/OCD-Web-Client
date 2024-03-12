@@ -33,42 +33,19 @@
         var graphId = getUrlVar("id");
         /* Graph meta information in xml format */
         var graphMetaXml;
+        /*  */
+        var graphLayerTableRetrieved = false;
         /* Graph structure in edge list format */
         var graphProperties;
-        /* Graph structure in JSON format */
-        var jsonGraph;
-        var forceGraph;
-        var have3D;
-        var haveNodeNames = false;
-        var nodeName = "";
-        var keysPressed = new Map();
-
-        /* Database Information */
-        var arangoUser = localStorage.getItem("arangoUser@WebOCD");
-        var arangoPass = localStorage.getItem("arangoPass@WebOCD");
-        var arangoDataBase = localStorage.getItem("arangoDataBase@WebOCD");
-        var arangoCollection = localStorage.getItem("arangoCollection@WebOCD");
 
         //Testserver: http://ocd-web-client.duckdns.org:7071
         //Server ginkgo from rwth: http://ginkgo.informatik.rwth-aachen.de:8529
         const db = new arangojs.Database('http://127.0.0.1:8529');
 
-        /* Graph visualization in SVG format */
-        var highlightNodes = new Set();
-        var highlightLinks = new Set();
-        var rightClickNode = null;
-        var rightClickLink = null;
-
-        var visualization;
         /* Names of all OCD algorithms */
         var multiplexAlgorithmNames;
         var algorithmNames;
-        /* Names of all centrality measures */
-        var centralityMeasureNames;
-        /* Names of all centrality simulations */
-        var centralitySimulationNames;
-        /* Principal eigenvalue of the grapph's adjacency matrix */
-        var eigenvalue;
+
         /* Executed after page loading */
         $(document).ready(function () {
             /* Identifiers for the graph information to be displayed */
@@ -82,7 +59,8 @@
                     var name = $(graphMetaXml).find('Name').text();
                     var nodes = $(graphMetaXml).find('NodeCount').text();
                     var edges = $(graphMetaXml).find('EdgeCount').text();
-                    //var layers = $(graphMetaXml).find('LayerCount').text();
+                    var layers = $(graphMetaXml).find('LayerCount').text();
+                    var representativeId = $(graphMetaXml).find('RepresentativeGraphKey').text();
                     /* Graph types */
                     var types = [];
                     $(graphMetaXml).children('Types').find('Type').each(function () {
@@ -119,12 +97,12 @@
                     }
 
                     $('#graphHeader').html(getHeadLine(name, description));
-                    $('#graphCovers').html('<a href="covers.html?graphId=' + graphId + '">Covers</a>');
+                    $('#graphCovers').html('<a href="covers.html?graphId=' + representativeId + '">Covers</a>');
                     $('#graphDelete').html('<a onclick="deleteGraph()" href="#">Delete</a>');
 
                     /* Registers components and event handlers */
                     //registerCollapsable("#propertiesCollapsable", propertiesCollapsableHandler);
-                    //registerCollapsable("#edgeListCollapsable", edgeListCollapsableHandler);
+                    registerCollapsable("#layerListCollapsable", layerListCollapsableHandler);
                     registerCollapsable("#runAlgorithmCollapsable", runAlgorithmCollapsableHandler);
                     registerCollapsable("#runMultiplexAlgorithmCollapsable", runMultiplexAlgorithmCollapsableHandler);
                 },
@@ -151,19 +129,18 @@
                     }
                     var multiplexParams = getParameterXml("#multiplexalgorithmParameterDiv");
                     var params = getParameterXml("#algorithmParameterDiv");
-                    var formData = new FormData();
-                    formData.append('graphId', graphId);
-                    formData.append('name', coverName);
-                    formData.append('multiplexalgorithm', multiplexAlgo);
-                    formData.append('algorithm', algo);
-                    formData.append('componentNodeCountFilter', componentNodeCountFilter);
-                    formData.append('multiplexContent', JSON.stringify(multiplexParams));
-                    formData.append('content', JSON.stringify(params));
+
+                    var jsonData = {
+                        'multiplexparams': multiplexParams,
+                        'params': params
+                    };
+                    jsonDataStr = JSON.stringify(jsonData);
+        
                     buttonSubmitStart("runAlgorithmBtn");
                     
                     /* Requests an algorithm execution  */
                     sendRequest("post", "covers/multiplexgraphs/" + graphId
-                        + "/algorithms", formData,
+                        + "/algorithms?multiplexalgorithm=" + multiplexAlgo + "&algorithm=" + algo + "&name=" + coverName, jsonDataStr,
                         /* Response handler */
                         function (response) {
                             window.location.href = 'index.html';
@@ -179,6 +156,18 @@
                 }
                 return false;
             });
+            
+            /* Listener for ABACUS */
+            $('#multiplexalgorithm').change(function() {
+                var selectedAlgorithm = $(this).val();
+                if (selectedAlgorithm === 'ABACUS_ALGORITHM') {
+                    $('#ABACUS').show();
+                    runAlgorithmCollapsableHandler()
+                } else {
+                    $('#ABACUS').hide();
+                }
+            });
+
         });    
 
         /* Requests the names of all OCD algorithms.
@@ -259,26 +248,6 @@
                     showConnectionErrorMessage("Algorithms compatible graph types were not received.", errorData);
                 });
         }
-
-         /* Requests all compatible graph types for a given algorithm.
-         * Then executes a calllback function */
-         function getAlgorithmCompatibleMultiplexGraphTypes(algorithmName, callback) {
-            sendRequest("get", "multiplexalgorithms/" + algorithmName + "/graphTypes", "",
-                /* Response handler */
-                function (response) {
-                    if (typeof callback !== 'undefined') {
-                        callback(response);
-                    }
-                },
-                /* Error handler */
-                function (errorData) {
-                    /*
-                     * GraphTypes request failed
-                     */
-                    showConnectionErrorMessage("Algorithms compatible graph types were not received.", errorData);
-                });
-        }
-
         
         /* Handles the collapsable element for the algorithm execution. */
         function runMultiplexAlgorithmCollapsableHandler() {
@@ -295,11 +264,10 @@
                 });
                 
                 /* Registers the graph type component for the contentHandler */
-                registerGraphTypes("#multiplexalgorithm", "#multiplexalgorithmGraphTypeDiv", getAlgorithmCompatibleMultiplexGraphTypes);
+                registerGraphTypes("#multiplexalgorithm", "#multiplexalgorithmGraphTypeDiv", getAlgorithmCompatibleGraphTypes);
                 /* Registers the parameter component for the contentHandler */
                 registerParameterSelect("#multiplexalgorithm", "#multiplexalgorithmParameterDiv", getAlgorithmParameters);
             }
-            
         }
 
         /* Handles the collapsable element for the algorithm execution. */
@@ -321,19 +289,108 @@
                 registerParameterSelect("#algorithm", "#algorithmParameterDiv", getAlgorithmParameters);
             }
         }
+        
 
-        /* Listener for ABACUS */
-        $(document).ready(function() {
-            $('#multiplexalgorithm').change(function() {
-                var selectedAlgorithm = $(this).val();
-                if (selectedAlgorithm === 'ABACUS_ALGORITHM') {
-                    $('#ABACUS').show();
-                    runAlgorithmCollapsableHandler()
-                } else {
-                    $('#ABACUS').hide();
-                }
+         /* Handles the collapsable element for the layer list. */
+         function layerListCollapsableHandler() {
+            if (!graphLayerTableRetrieved) {
+                var cells =  ["Name", "NodeCount", "EdgeCount", "D", "W", "Z", "N", "L", "Co", "Cn", "CS", "R", ".txt"];
+                sendRequest("get", "multiplexlayers?keyMultiplex=" + graphId, "",
+                    function(GraphMetasXml) {
+                        $(GraphMetasXml).find("Graph").each(function() {
+                        appendLayerRow($('#graphLayerTable'), $(this), cells);
+                        });
+                        try {
+                            $("#graphLayerTable").tablesorter({sortList: [[0,0]],
+                                headers: { 4: {sorter: false}, 5: {sorter: false}, 6: {sorter: false}, 7: {sorter: false}, 8: {sorter: false},
+                                    9: {sorter: false}, 10: {sorter: false}, 11: {sorter: false}, 12: {sorter: false}, 13: {sorter: false}}});
+                        } catch(err) { /* table empty */ }
+                        registerGraphTable();
+                    },
+                    /* Error handler */
+                    function (errorData) {
+                        /* request failed */
+                        showConnectionErrorMessage("Graphs metas of multiplex layers were not received.", errorData);
+                    });
+                graphLayerTableRetrieved = true;
+            }
+        }
+
+        function appendLayerRow(table, graphElt, cells) {
+            var row = "<tr>";
+            /* Graph id */
+            var id = $(graphElt).find('Id').text();
+            row += createGraphIdCell(id);
+            /* Graph types */
+            var types = [];
+            $(graphElt).children('Types').find('Type').each(function() {
+                types.push($(this).text());
             });
-        });
+            /* Graph name  */
+            if($.inArray("Name", cells) > -1) {
+                row += createLayerNameCell($(graphElt).find('Name').text(), id);
+            }
+            /* Node count */
+            if($.inArray("NodeCount", cells) > -1) {
+                row += createGraphTableCell($(graphElt).find('NodeCount').text());
+            }
+            /* Edge count */
+            if($.inArray("EdgeCount", cells) > -1) {
+                row += createGraphTableCell($(graphElt).find('EdgeCount').text());
+            }
+            /* Directed */
+            if($.inArray("D", cells) > -1) {
+                row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("DIRECTED", types) > -1));
+            }
+            /* Weighted */
+            if($.inArray("W", cells) > -1) {
+                row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("WEIGHTED", types) > -1));
+            }
+            /* Zero edge weights */
+            if($.inArray("Z", cells) > -1) {
+                row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("ZERO_WEIGHTS", types) > -1));
+            }
+            /* Negative edge weights */
+            if($.inArray("N", cells) > -1) {
+                row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("NEGATIVE_WEIGHTS", types) > -1));
+            }
+            /* Loops */
+            if($.inArray("L", cells) > -1) {
+                row += createGraphTableCell(getGraphTrueOrFalseIcon($.inArray("SELF_LOOPS", types) > -1));
+            }
+            /* Show corresponding covers */
+            if($.inArray("Co", cells) > -1) {
+                row += createShowGraphCoversCell();
+            }
+            /* Show corresponding centralities */
+            if($.inArray("Cn", cells) > -1) {
+                row += createShowGraphCentralitiesCell();
+            }
+            /* Show corresponding cooperation simulations */
+            if($.inArray("CS", cells) > -1) {
+                row += createShowCooperationSimulationsCell();
+            }
+            /* Delete graph */
+            if($.inArray("R", cells) > -1) {
+                row += createGraphDeleteCell(false);
+            }
+            /* Save graph */
+            if($.inArray(".txt", cells) > -1) {
+                row += createSaveGraphCell();
+            }
+            /* Select graph */
+            if($.inArray("Select", cells) > -1) {
+                row += createSelectGraphCell(id);
+            }
+            row += "</tr>";
+            $(table).children('tbody').append(row);
+        }
+
+        /* Creates graph name cell */
+        function createLayerNameCell(name, id) {
+            return '<td class="graphNameCell"><a href="graph.html?id='+ id + '">' + name + '</a></td>';
+            
+        }
 
         function deleteGraph() {
             sendRequest("delete", "multiplexgraphs/" + graphId , "",
@@ -372,6 +429,74 @@
                             <li id="graphDelete" class="nav-item deleteColor"></li>
                         </div>
                     </ul>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- Collapsable for graph layers list -->
+                <div id="layerListCollapsable" class="collapsable col-sm-12">
+                    <div class="collapsableHeader">
+                        <div class="collapsableTitle">Layers</div>
+
+                        <div class="collapsableCollapser">
+                            <img class="icon iconBtn collapsableDisplayBtn"
+                                 src="IMG/open-iconic/svg/chevron-bottom.svg" alt="d"> <img
+                                class="icon iconBtn collapsableCollapseBtn"
+                                src="IMG/open-iconic/svg/chevron-top.svg" alt="c">
+                        </div>
+                    </div>
+                    <div class="collapsableContent">
+                        <!-- Table for graph layer list -->
+                        <div class="tableWrapper table-responsive">
+                            <table id="graphLayerTable" class = "table table-striped">
+                                <thead>
+                                <tr>
+                                    <th  title="Graph Name" class="sortable">
+                                        Name
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th  title="Node Count" class="sortable">
+                                        Nodes
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th  title="Edge Count" class="sortable">
+                                        Edges
+                                        <img class="icon iconBtn" src="IMG/open-iconic/svg/sort-ascending.svg" alt="d">
+                                    </th>
+                                    <th width="20" title="Has Directed Edges">
+                                        D
+                                    </th>
+                                    <th width="20" title="Has Weighted Edges">
+                                        W
+                                    </th>
+                                    <th width="20" title="Has Zero Edge Weights">
+                                        Z
+                                    </th>
+                                    <th width="20" title="Has Negative Edge Weights">
+                                        N
+                                    </th>
+                                    <th width="20" title="Has Self Loops">
+                                        L
+                                    </th>
+                                    <th width="20" title="Show Covers">
+                                        Co
+                                    <th width="20" title="Show Centralities">
+                                        Cn
+                                    </th>
+                                    <th width="20" title="Show Cooperation Simulations">
+                                        CS
+                                    </th>
+                                    <th width="20" title="Remove Graph">
+                                        R
+                                    </th>
+                                    <th width="30" title="Save Graph">
+                                        .txt
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="container-fluid">

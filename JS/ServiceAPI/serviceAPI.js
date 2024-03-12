@@ -95,7 +95,7 @@
                 else if (login.loginType === LoginTypes.OIDC) {
                   xhr.setRequestHeader("Authorization", "Basic " + login.getBasicAuthLogin());
 				  xhr.setRequestHeader("access-token", login.getAccessToken());
-                  return xhr.setRequestHeader("oidc_provider", "https://auth.las2peer.org/o/oauth2");
+                  return xhr.setRequestHeader("oidc_provider", "https://auth.las2peer.org/auth/realms/main");
                 }
               }
             };
