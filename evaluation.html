@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<!-- Displays detailed information on a single graph. Allows OCD algorithm execution. -->
+<head>
+    <title>OCD - Graph</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="CSS/layout.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="JS/contentHandler.js"></script>
+    <script src="node_modules/js-base64/base64.js"></script>
+    <script src="JS/ServiceAPI/moduleHelper.js"></script>
+    <script src="JS/ServiceAPI/serviceAPI.js"></script>
+    <script src="JS/requestHandler.js"></script>
+    <script src="JS/graphTableHandler.js"></script>
+    <script src="node_modules/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+    <script src="node_modules/jquery.panzoom/dist/jquery.panzoom.min.js"></script>
+    <script src="node_modules/jquery.mousewheel/jquery.mousewheel.js"></script>
+    <script src="JS/simulation/jsonRequestHandler.js"></script>
+    <script src="JS/simulation/simulationForm.js"></script>
+    <script src="node_modules/three/build/three.min.js"></script>
+    <script src="node_modules/force-graph/dist/force-graph.min.js"></script>
+    <script src="node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+    <script src="node_modules/three/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="node_modules/arangojs/lib/web.js"></script>
+    <script src="node_modules/file-saver/dist/FileSaver.min.js"></script>
+    <script type="text/javascript">
+        const db = new arangojs.Database('http://127.0.0.1:8529');
+        $(document).ready(function () {
+            
+            sendRequest("post", "evaluation", "", 
+                function (response) {
+                    window.location.href = 'index.html';
+                    },
+                function (errorData) {
+                    showConnectionErrorMessage("Algorithm request failed.", errorData);
+                });
+        });    
+
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Executing OCD algorithm...</h1>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
